@@ -4,7 +4,7 @@
   "adapter": "gurobi-file",
   "workload": "/home/Projeto_LAMFO_LAPPS/data/facility_location_easy/train/CFL_easy_instance_0.lp",
   "threads": 16,
-  "seed": 10072,
+  "seed": 10091,
   "limits": {},
   "outputs": {
     "metadata": "/home/vrrcelestino/pascal-suite-python/resultados_finais/exp_experiment_gurobi_cfl_instance_0-w_CFL_easy_instance_0-c_16-r_3_app_meta.json",

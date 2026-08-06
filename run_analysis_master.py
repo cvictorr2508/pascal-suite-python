@@ -1,11 +1,49 @@
 import sys
 import yaml
+import json
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
 sys.path.append(str(BASE_DIR / "src"))
 
 from pascalpy.telemetry import TelemetryReader
+
+def consolidar_jsons_pascal(pasta_resultados, nome_experimento):
+    """
+    Lê todos os arquivos _pascal.json isolados e os funde em um único 
+    arquivo compatível com o upload do PaScal Viewer.
+    """
+    pasta = Path(pasta_resultados)
+    arquivos_pascal = list(pasta.glob(f"*{nome_experimento}*_pascal.json"))
+    
+    if not arquivos_pascal:
+        return None
+        
+    json_consolidado = None
+    
+    for arq in arquivos_pascal:
+        try:
+            with arq.open('r', encoding='utf-8') as f:
+                conteudo = json.load(f)
+                
+            if json_consolidado is None:
+                # Usa o primeiro arquivo encontrado como "esqueleto" (para herdar as configs)
+                json_consolidado = conteudo
+            else:
+                # Adiciona as rodadas subsequentes dentro da chave "data"
+                if "data" in conteudo:
+                    json_consolidado["data"].update(conteudo["data"])
+        except Exception as e:
+            print(f"Aviso: Erro ao mesclar {arq.name}: {e}")
+            
+    # Salva o arquivo final consolidado
+    if json_consolidado:
+        caminho_saida = pasta / f"pascal_viewer_consolidado_{nome_experimento}.json"
+        with caminho_saida.open('w', encoding='utf-8') as f:
+            json.dump(json_consolidado, f, indent=4)
+        return caminho_saida
+        
+    return None
 
 def main():
     pasta_resultados = BASE_DIR / "resultados_finais"
@@ -56,6 +94,13 @@ def main():
              print(df.head().to_string())
     else:
         print("\n[Erro] Falha ao ler os dados do experimento.")
+
+    print("\n--- Preparando arquivos para o PaScal Viewer ---")
+    arquivo_viewer = consolidar_jsons_pascal(pasta_resultados, nome_experimento)
+    if arquivo_viewer:
+        print(f"[Sucesso] Arquivo de visualização gerado: {arquivo_viewer.name}")
+    else:
+        print("[Erro] Não foi possível gerar o JSON unificado para o Viewer.")
 
 if __name__ == "__main__":
     main()

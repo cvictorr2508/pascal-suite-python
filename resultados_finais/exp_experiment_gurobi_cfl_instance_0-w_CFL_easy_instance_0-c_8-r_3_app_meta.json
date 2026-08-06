@@ -18,7 +18,7 @@
   "metrics": {
     "status": 2,
     "solution_count": 1,
-    "gurobi_runtime_s": 0.02695298194885254,
+    "gurobi_runtime_s": 0.025936126708984375,
     "work_units": 0.0157312,
     "node_count": 0.0,
     "simplex_iterations": 0.0,
@@ -27,5 +27,5 @@
     "mip_gap": 0.0
   },
   "errors": {},
-  "runner_wall_clock_s": 0.3186155157163739
+  "runner_wall_clock_s": 0.31837767362594604
 }
