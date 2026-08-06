@@ -32,6 +32,11 @@ def main():
     
     out_data["directory"] = BASE_DIR / out_data.get("directory", "resultados")
 
+    # Ler o sentido da otimização (minimizar ou maximizar) do YAML
+    limits_dict = exp_data.get("limits", {})
+    if "model_sense" in exp_data:
+        limits_dict["model_sense"] = exp_data["model_sense"]
+
     # Tratamento super robusto para os caminhos das instâncias (workloads)
     workloads_paths = []
     for w in exp_data["workloads"]:

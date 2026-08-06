@@ -77,6 +77,15 @@ def main():
         env.start()
 
         model = gp.read(config["workload"], env=env)
+
+        # Aplica a direção do modelo se especificado no YAML
+        sense = config.get("limits", {}).get("model_sense")
+        if sense == "MINIMIZE":
+            model.ModelSense = GRB.MINIMIZE
+        elif sense == "MAXIMIZE":
+            model.ModelSense = GRB.MAXIMIZE
+        # Se não houver nada no YAML, o Gurobi usa o que vier nativo no .mps/.lp
+
         model.Params.Threads = config["threads"]
         model.Params.Seed = config["seed"]
         
