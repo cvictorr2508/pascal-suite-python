@@ -46,25 +46,30 @@ def consolidar_jsons_pascal(pasta_resultados, nome_experimento):
     return None
 
 def main():
-    pasta_resultados = BASE_DIR / "resultados_finais"
-    nome_experimento = "pesquisa_gurobi_v1"
-
+    
+    # 1. Define o arquivo YAML padrão caso nenhum seja passado via terminal
+    yaml_path = BASE_DIR / "meu_experimento.yaml"
+    
     if len(sys.argv) >= 2:
-        yaml_path = Path(sys.argv[1])
-        if not yaml_path.is_absolute():
-            yaml_path = BASE_DIR / yaml_path
+        arg_path = Path(sys.argv[1])
+        yaml_path = arg_path if arg_path.is_absolute() else BASE_DIR / arg_path
 
-        if yaml_path.exists():
-            with yaml_path.open('r', encoding='utf-8') as f:
-                config_data = yaml.safe_load(f)
-                
-                if "experiment" in config_data and "name" in config_data["experiment"]:
-                    nome_experimento = config_data["experiment"]["name"]
-                
-                if "output" in config_data and "directory" in config_data["output"]:
-                    pasta_resultados = BASE_DIR / config_data["output"]["directory"]
-        else:
-            print(f"Aviso: Arquivo {yaml_path} não encontrado. Usando valores padrão.")
+    # 2. Se o arquivo não existir, ABORTA para evitar ler lixo/dados velhos
+    if not yaml_path.exists():
+        print(f"[Erro] Arquivo YAML não encontrado: {yaml_path}")
+        sys.exit(1)
+
+    # 3. Lê os dados reais do arquivo
+    with yaml_path.open('r', encoding='utf-8') as f:
+        config_data = yaml.safe_load(f)
+        
+    nome_experimento = config_data.get("experiment", {}).get("name")
+    if not nome_experimento:
+        print("[Erro] O campo 'name' dentro de 'experiment' não foi encontrado no YAML.")
+        sys.exit(1)
+        
+    pasta_str = config_data.get("output", {}).get("directory", "resultados_finais")
+    pasta_resultados = BASE_DIR / pasta_str
 
     print(f"\n--- Iniciando consolidação de dados ---")
     print(f"-> Pasta Alvo: '{pasta_resultados}'")
@@ -73,6 +78,36 @@ def main():
     if not pasta_resultados.exists():
         print(f"[Erro] Pasta de resultados não encontrada: {pasta_resultados}")
         sys.exit(1)
+
+    # ... a partir daqui, o código segue normal com o reader = TelemetryReader ...
+
+    #pasta_resultados = BASE_DIR / "resultados_finais"
+    #nome_experimento = "pesquisa_gurobi_v1"
+
+    #if len(sys.argv) >= 2:
+    #    yaml_path = Path(sys.argv[1])
+    #    if not yaml_path.is_absolute():
+    #        yaml_path = BASE_DIR / yaml_path
+
+    #    if yaml_path.exists():
+    #        with yaml_path.open('r', encoding='utf-8') as f:
+    #            config_data = yaml.safe_load(f)
+                
+    #            if "experiment" in config_data and "name" in config_data["experiment"]:
+    #                nome_experimento = config_data["experiment"]["name"]
+                
+    #            if "output" in config_data and "directory" in config_data["output"]:
+    #                pasta_resultados = BASE_DIR / config_data["output"]["directory"]
+    #    else:
+    #        print(f"Aviso: Arquivo {yaml_path} não encontrado. Usando valores padrão.")
+
+    #print(f"\n--- Iniciando consolidação de dados ---")
+    #print(f"-> Pasta Alvo: '{pasta_resultados}'")
+    #print(f"-> Buscando ID do Experimento: '{nome_experimento}'")
+    
+    #if not pasta_resultados.exists():
+    #    print(f"[Erro] Pasta de resultados não encontrada: {pasta_resultados}")
+    #    sys.exit(1)
 
     reader = TelemetryReader(pasta_resultados)
     resultado = reader.read_experiment(nome_experimento)
