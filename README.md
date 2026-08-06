@@ -1,6 +1,6 @@
 # PaScal Suite Python - Gurobi HPC Integration
 
-Este repositório contém a infraestrutura de orquestração e telemetria automatizada para execução massiva de instâncias de Programação Linear Inteira Mista (MILP) utilizando o solver Gurobi e o framework PaScal Analyzer em ambientes de Computação de Alto Desempenho (HPC).
+Este repositório contém a infraestrutura de orquestração e telemetria automatizada para execução massiva de instâncias de Programação Linear Inteira Mista (MILP) utilizando o solver Gurobi e o framework [PaScal Suite Analyzer](https://pascalsuite.imd.ufrn.br/analyzer/) em ambientes de Computação de Alto Desempenho (HPC), especificamente no [Núcleo de Computação de Alto Desempenho - NPAD](https://npad.ufrn.br/npad/bemvindo) da Universidade Federal do Rio Grande do Norte - UFRN.
 
 ## 🏛 Arquitetura e Metodologia
 
@@ -16,7 +16,7 @@ O fluxo metodológico (Pipeline Declarativo) opera em três estágios estritos:
 
 - `/src/pascalpy/`: Núcleo da biblioteca contendo os adaptadores do solver, modelos estritos de experimento (Pydantic) e lógicas de consolidação.
 - `/instances/`: Diretório público sugerido para armazenar os modelos matemáticos e instâncias base para execução.
-- `/resultados_finais/`: (Ignorado no Git) Diretório onde os artefatos de execução (JSONs, logs) e o arquivo CSV final são salvos.
+- `/resultados_finais/`: Diretório contendo os artefatos de saída, incluindo os logs do Gurobi, os arquivos de telemetria brutos (`_pascal.json`) de cada rodada e as tabelas consolidadas (`.csv`).
 - `meu_experimento.yaml`: Arquivo mestre de configuração da pesquisa.
 - `rodar_yaml.py` / `run_analysis_master.py`: Scripts de orquestração (Turno de HPC e Turno de Análise).
 - `master.slurm`: Job de submissão otimizado para o gerenciador do cluster.
@@ -35,3 +35,13 @@ Para rodar este pipeline em um cluster, é necessário:
 2. Submeta o job para o gerenciador SLURM:
    ```bash
    sbatch master.slurm
+
+## Visualização de Dados (PaScal Viewer)
+
+Para visualizar os gráficos de consumo de energia (Joules), tempo e eficiência:
+
+1. Acesse o [PaScal Viewer](https://pascalsuite.imd.ufrn.br/viewer/).
+
+2. Na interface da aplicação, faça o upload dos arquivos com sufixo _pascal.json gerados na pasta /resultados_finais/ (ex: exp_pesquisa_gurobi_v1-w_dummy-c_8-r_1_pascal.json).
+
+3. O Viewer processará o JSON nativamente, renderizando os gráficos de hardware (como RAPL via sysfs) medidos exatamente durante o tempo de vida do Gurobi.
