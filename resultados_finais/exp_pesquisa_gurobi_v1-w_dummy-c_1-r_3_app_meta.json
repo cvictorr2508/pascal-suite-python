@@ -1,0 +1,24 @@
+{
+  "adapter": "gurobi-file",
+  "run_id": "exp_pesquisa_gurobi_v1-w_dummy-c_1-r_3",
+  "success": true,
+  "environment": {
+    "logical_cpus_available": 1,
+    "cpu_affinity": [
+      0
+    ]
+  },
+  "metrics": {
+    "status": 2,
+    "solution_count": 1,
+    "gurobi_runtime_s": 0.000576019287109375,
+    "work_units": 1.1039666666666665e-05,
+    "node_count": 0.0,
+    "simplex_iterations": 0.0,
+    "barrier_iterations": 0,
+    "objective": 2.0,
+    "mip_gap": 0.0
+  },
+  "errors": {},
+  "runner_wall_clock_s": 0.033888723235577345
+}

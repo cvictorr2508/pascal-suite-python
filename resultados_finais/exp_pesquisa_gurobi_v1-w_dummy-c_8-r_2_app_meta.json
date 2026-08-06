@@ -1,0 +1,31 @@
+{
+  "adapter": "gurobi-file",
+  "run_id": "exp_pesquisa_gurobi_v1-w_dummy-c_8-r_2",
+  "success": true,
+  "environment": {
+    "logical_cpus_available": 8,
+    "cpu_affinity": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ]
+  },
+  "metrics": {
+    "status": 2,
+    "solution_count": 1,
+    "gurobi_runtime_s": 0.0005199909210205078,
+    "work_units": 1.1039666666666665e-05,
+    "node_count": 0.0,
+    "simplex_iterations": 0.0,
+    "barrier_iterations": 0,
+    "objective": 2.0,
+    "mip_gap": 0.0
+  },
+  "errors": {},
+  "runner_wall_clock_s": 0.025332131888717413
+}

@@ -9,9 +9,7 @@ __pycache__/
 
 # Results files
 resultados_avancados/
-resultados_finais/
 *.csv
-*.json
 
 # Licenses and private keys
 secret/

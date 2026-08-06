@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0",
+  "run_id": "exp_pesquisa_gurobi_v1-w_dummy-c_2-r_2",
+  "adapter": "gurobi-file",
+  "workload": "/home/vrrcelestino/pascal-suite-python/instances/dummy.mps",
+  "threads": 2,
+  "seed": 10289,
+  "limits": {},
+  "outputs": {
+    "metadata": "/home/vrrcelestino/pascal-suite-python/resultados_finais/exp_pesquisa_gurobi_v1-w_dummy-c_2-r_2_app_meta.json",
+    "solver_log": "/home/vrrcelestino/pascal-suite-python/resultados_finais/exp_pesquisa_gurobi_v1-w_dummy-c_2-r_2_solver.log"
+  }
+}
