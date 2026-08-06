@@ -1,0 +1,26 @@
+# Virtual environments and packages
+.venv*/
+__pycache__/
+*.pyc
+
+# Log files and SLURM outputs
+*.out
+*.log
+
+# Results files
+resultados_avancados/
+resultados_finais/
+*.csv
+*.json
+
+# Licenses and private keys
+secret/
+*.lic
+
+# Tests
+tests/
+
+# Old files
+slurm_out/
+*.old
+*.sh
