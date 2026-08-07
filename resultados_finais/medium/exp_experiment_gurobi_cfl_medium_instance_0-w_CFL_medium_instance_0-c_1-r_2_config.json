@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0",
+  "run_id": "exp_experiment_gurobi_cfl_medium_instance_0-w_CFL_medium_instance_0-c_1-r_2",
+  "adapter": "gurobi-file",
+  "workload": "/home/Projeto_LAMFO_LAPPS/data/facility_location_easy/medium/CFL_medium_instance_0.lp",
+  "threads": 1,
+  "seed": 10863,
+  "limits": {},
+  "outputs": {
+    "metadata": "/home/vrrcelestino/pascal-suite-python/resultados_finais/medium/exp_experiment_gurobi_cfl_medium_instance_0-w_CFL_medium_instance_0-c_1-r_2_app_meta.json",
+    "solver_log": "/home/vrrcelestino/pascal-suite-python/resultados_finais/medium/exp_experiment_gurobi_cfl_medium_instance_0-w_CFL_medium_instance_0-c_1-r_2_solver.log"
+  }
+}

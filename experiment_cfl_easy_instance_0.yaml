@@ -9,7 +9,7 @@
 # 4. Digitar no terminal: `sbatch run_analysis_master.sh`
 
 experiment:
-  name: "experiment_gurobi_cfl_instance_0"  # O nome que vai nos arquivos JSON e CSV
+  name: "experiment_gurobi_cfl_easy_instance_0"  # O nome que vai nos arquivos JSON e CSV
   model_sense: "MINIMIZE"     # definir sentido "MAXIMIZE" ou "MINIMIZE"
   scaling_mode: "strong"      # "strong" = testa os mesmos arquivos em diferentes cores
   resources: [1, 2, 4, 8, 16] # Quantidade de Threads/Cores a testar
@@ -34,4 +34,4 @@ environment:
 
 output:
   # A pasta onde os milhares de arquivos JSON vão ficar salvos
-  directory: "resultados_finais"
+  directory: "resultados_finais/easy"
