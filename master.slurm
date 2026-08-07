@@ -31,5 +31,5 @@ python3 -m pip install pydantic gurobipy pandas pyyaml > /dev/null
 # 1. Roda a execução lendo o YAML
 python3 rodar_yaml.py experiment_cfl_hard_instance_0.yaml
 
-# 2. Roda a análise logo em seguida (Usaremos o nosso run_analysis.py)
-python3 run_analysis_master.py
+# 2. Roda a análise logo em seguida
+python3 run_analysis_master.py experiment_cfl_hard_instance_0.yaml
