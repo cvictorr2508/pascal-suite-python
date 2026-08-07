@@ -1,0 +1,178 @@
+{
+    "config": {
+        "pkg": "/home/vrrcelestino/pascal-suite-python/resultados_finais/exp_experiment_gurobi_cfl_instance_0-w_CFL_easy_instance_0-c_1-r_1_wrapper.sh",
+        "execdate": "06-08-2026_15:05:04",
+        "command": "pascalanalyzer -c 1 -r 1 --outp /home/vrrcelestino/pascal-suite-python/resultados_finais/exp_experiment_gurobi_cfl_instance_0-w_CFL_easy_instance_0-c_1-r_1_pascal.json --rple sysfs --idtm 5 /home/vrrcelestino/pascal-suite-python/resultados_finais/exp_experiment_gurobi_cfl_instance_0-w_CFL_easy_instance_0-c_1-r_1_wrapper.sh",
+        "hostname": "r1i3n3.npad.internal",
+        "kernel": "Linux-4.18.0-477.10.1.el8_8.x86_64-x86_64-with-glibc2.14",
+        "disable_hyperthread": false,
+        "auto_instrumentation": false,
+        "idle_time": 5.0,
+        "data_descriptor": {
+            "values": [
+                "start_time",
+                "stop_time",
+                "rapl-sysfs"
+            ],
+            "keys": [
+                "input_size",
+                "cores",
+                "repetitions"
+            ]
+        },
+        "disable_cores": false,
+        "discard_ompnt": true
+    },
+    "data": {
+        "2;1;1": {
+            "rapl-sysfs": 147.672108,
+            "start_time": 1786105797.9107194,
+            "stop_time": 1786105800.84535
+        },
+        "2;1;2": {
+            "rapl-sysfs": 146.908133,
+            "start_time": 1786105805.8510542,
+            "stop_time": 1786105808.7580314
+        },
+        "2;2;1": {
+            "rapl-sysfs": 144.523128,
+            "start_time": 1786105822.1397452,
+            "stop_time": 1786105824.9823704
+        },
+        "2;4;1": {
+            "rapl-sysfs": 143.924741,
+            "start_time": 1786105846.2706096,
+            "stop_time": 1786105849.0927072
+        },
+        "2;8;1": {
+            "rapl-sysfs": 145.541742,
+            "start_time": 1786105765.5585647,
+            "stop_time": 1786105768.4283562
+        },
+        "2;2;2": {
+            "rapl-sysfs": 146.497611,
+            "start_time": 1786105829.9879985,
+            "stop_time": 1786105832.8712738
+        },
+        "2;16;1": {
+            "rapl-sysfs": 145.151361,
+            "start_time": 1786105894.3887062,
+            "stop_time": 1786105897.2401662
+        },
+        "2;8;2": {
+            "rapl-sysfs": 144.641476,
+            "start_time": 1786105773.434018,
+            "stop_time": 1786105776.2764091
+        },
+        "2;8;3": {
+            "rapl-sysfs": 141.970767,
+            "start_time": 1786105886.1131997,
+            "stop_time": 1786105888.914277
+        },
+        "2;4;2": {
+            "rapl-sysfs": 146.833731,
+            "start_time": 1786105854.098397,
+            "stop_time": 1786105856.988412
+        },
+        "2;16;2": {
+            "rapl-sysfs": 147.047353,
+            "start_time": 1786105902.2458367,
+            "stop_time": 1786105905.1407063
+        },
+        "2;1;3": {
+            "rapl-sysfs": 146.809194,
+            "start_time": 1786105813.7638533,
+            "stop_time": 1786105816.6662247
+        },
+        "2;2;3": {
+            "rapl-sysfs": 148.504747,
+            "start_time": 1786105837.876887,
+            "stop_time": 1786105840.7990503
+        },
+        "2;4;3": {
+            "rapl-sysfs": 143.729613,
+            "start_time": 1786105861.9939823,
+            "stop_time": 1786105864.8709373
+        },
+        "2;16;3": {
+            "rapl-sysfs": 143.229858,
+            "start_time": 1786105910.146796,
+            "stop_time": 1786105912.9857757
+        },
+        "3;1;1": {
+            "rapl-sysfs": 640.947578,
+            "start_time": 1786105954.4057899,
+            "stop_time": 1786105966.5070198
+        },
+        "3;2;1": {
+            "rapl-sysfs": 643.808655,
+            "start_time": 1786106006.1213267,
+            "stop_time": 1786106018.1959953
+        },
+        "3;2;2": {
+            "rapl-sysfs": 654.46622,
+            "start_time": 1786106023.2019794,
+            "stop_time": 1786106035.549535
+        },
+        "3;4;1": {
+            "rapl-sysfs": 664.504891,
+            "start_time": 1786106058.0857503,
+            "stop_time": 1786106070.5859067
+        },
+        "3;8;1": {
+            "rapl-sysfs": 642.265751,
+            "start_time": 1786106110.3732753,
+            "stop_time": 1786106122.4174004
+        },
+        "3;16;1": {
+            "rapl-sysfs": 652.279275,
+            "start_time": 1786106162.1504645,
+            "stop_time": 1786106174.4076786
+        },
+        "3;1;2": {
+            "rapl-sysfs": 639.286205,
+            "start_time": 1786105971.512942,
+            "stop_time": 1786105983.6060567
+        },
+        "3;4;2": {
+            "rapl-sysfs": 639.873667,
+            "start_time": 1786106075.5917382,
+            "stop_time": 1786106087.6244452
+        },
+        "3;8;2": {
+            "rapl-sysfs": 649.146349,
+            "start_time": 1786106127.4232824,
+            "stop_time": 1786106139.713865
+        },
+        "3;16;2": {
+            "rapl-sysfs": 651.915018,
+            "start_time": 1786106179.4135356,
+            "stop_time": 1786106191.6595497
+        },
+        "3;1;3": {
+            "rapl-sysfs": 638.297377,
+            "start_time": 1786105988.6119661,
+            "stop_time": 1786106000.6555543
+        },
+        "3;2;3": {
+            "rapl-sysfs": 645.582514,
+            "start_time": 1786106040.555383,
+            "stop_time": 1786106052.6182024
+        },
+        "3;4;3": {
+            "rapl-sysfs": 650.399153,
+            "start_time": 1786106092.630734,
+            "stop_time": 1786106104.9047801
+        },
+        "3;8;3": {
+            "rapl-sysfs": 630.244541,
+            "start_time": 1786106144.7199316,
+            "stop_time": 1786106156.6839
+        },
+        "3;16;3": {
+            "rapl-sysfs": 635.537313,
+            "start_time": 1786106196.6653962,
+            "stop_time": 1786106208.656881
+        }
+    }
+}
