@@ -57,7 +57,8 @@ class GurobiFileAdapter:
         base_cmd = [
             "pascalanalyzer",
             "-c", str(cores),
-            "-r", str(repetition),
+            #"-r", str(repetition), # parâmetro pode gerar tempos inflados
+            "-t", "man",        # Habilita recepção de regiões manuais
             "--outp", str(pascal_telemetry.resolve())
         ]
 
@@ -77,8 +78,14 @@ class GurobiFileAdapter:
         # Criamos um shell script wrapper dinâmico para encapsular o Python.
         wrapper_path = output_dir / f"{run_id}_wrapper.sh"
         
-        # Usamos sys.executable para garantir que o wrapper use o Python do ambiente virtual atual
-        runner_cmd_str = f"#!/bin/bash\n{sys.executable} {runner_path.resolve()} --run-config {run_config_path.resolve()}\n"
+        ## Usamos sys.executable para garantir que o wrapper use o Python do ambiente virtual atual
+        #runner_cmd_str = f"#!/bin/bash\n{sys.executable} {runner_path.resolve()} --run-config {run_config_path.resolve()}\n"
+
+        # 2. Wrapper com 'exec' para não gerar processo shell zumbi
+        runner_cmd_str = (
+            f"#!/bin/bash\n"
+            f"exec {sys.executable} {runner_path.resolve()} --run-config {run_config_path.resolve()}\n"
+        )
         
         with wrapper_path.open("w", encoding="utf-8") as f:
             f.write(runner_cmd_str)
