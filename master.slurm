@@ -2,11 +2,11 @@
 #SBATCH --job-name=pascal_master
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=64
+#SBATCH --cpus-per-task=4 # anteriormente era 64
 #SBATCH --time=12:00:00
-# #SBATCH --exclusive # Anteriormente não estava comentado, mas agora foi para teste
+# #SBATCH --exclusive # anteriormente não estava comentado, mas agora foi para teste
 #SBATCH --output=master_%j.out
-#SBATCH --partition=intel-128 # Anteriormente era intel-256
+#SBATCH --partition=intel-128 # anteriormente era intel-256
 
 source /etc/profile
 source /etc/profile.d/modules.sh 2>/dev/null || true

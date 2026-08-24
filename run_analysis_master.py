@@ -28,6 +28,12 @@ def main():
             meta_records.append(json.load(f))
             
     df_meta = pd.DataFrame(meta_records)
+
+    # Trava de Segurança
+    if df_meta.empty:
+        print("\n[Erro Crítico] Nenhum metadado do Gurobi foi encontrado.")
+        print("Os runners falharam antes de otimizar a instância. Verifique os logs.")
+        sys.exit(1)
     
     # COMO LIGAMOS OS DADOS?
     # Agrupamos por (Cores, Input) e ordenamos pelo Timestamp.

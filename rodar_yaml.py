@@ -2,6 +2,13 @@ import yaml
 import subprocess
 import sys
 from pathlib import Path
+
+# Descobre o diretório raiz do projeto (onde este script está)
+BASE_DIR = Path(__file__).resolve().parent
+
+# Garante que o Python ache a nossa biblioteca src/pascalpy
+sys.path.append(str(BASE_DIR / "src"))
+
 from pascalpy.adapters.gurobi_adapter import GurobiFileAdapter
 
 def main():

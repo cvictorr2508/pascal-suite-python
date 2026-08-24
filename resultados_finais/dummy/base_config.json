@@ -1,0 +1,8 @@
+{
+  "experiment_name": "pesquisa_gurobi_dummy",
+  "limits": {},
+  "output_dir": "/home/vrrcelestino/pascal-suite-python/resultados_finais/dummy",
+  "workloads_list": [
+    "/home/vrrcelestino/pascal-suite-python/instances/dummy.mps"
+  ]
+}

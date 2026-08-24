@@ -12,19 +12,24 @@ def _load_library() -> None:
     """Tenta carregar libmpascalops.so em tempo de execução."""
     global _lib, PASCAL_AVAILABLE
     
-    # Busca da variável de ambiente, ou usa o nome default torcendo para estar no PATH
-    lib_path = os.environ.get("PASCAL_OPS_LIB", "libmpascalops.so")
+    # Caminho exato da biblioteca que você validou no NPAD
+    lib_path = os.environ.get("PASCAL_OPS_LIB", "/opt/npad/shared/softwares/pascalsuite/pascal-suite-2025-07-08/lib/libmpascalops.so")
     
     try:
         _lib = ctypes.CDLL(lib_path)
-        _lib.pascal_start.argtypes = [ctypes.c_int]
-        _lib.pascal_start.restype  = None
-        _lib.pascal_stop.argtypes  = [ctypes.c_int]
-        _lib.pascal_stop.restype   = None
+        
+        # AQUI ESTÁ O SEGREDO: Mapeando as funções com o prefixo '_'
+        _lib._pascal_start.argtypes = [ctypes.c_int]
+        _lib._pascal_start.restype  = None
+        _lib._pascal_stop.argtypes  = [ctypes.c_int]
+        _lib._pascal_stop.restype   = None
+        
         PASCAL_AVAILABLE = True
         logger.info("libmpascalops carregada com sucesso: %s", lib_path)
-    except OSError as exc:
-        logger.warning("libmpascalops não disponível — executando sem região manual: %s", exc)
+        
+    except Exception as exc:
+        logger.warning(f"PaScal C-API falhou. Usando fallback de medição Python. Erro: {exc}")
+        PASCAL_AVAILABLE = False
 
 _load_library()
 
@@ -32,13 +37,19 @@ _load_library()
 def pascal_region(region_id: int):
     """
     Context manager que delimita uma região de medição PaScal.
-    Requer que o pascalanalyzer seja iniciado com a flag -t man.
-    Garante pascal_stop mesmo diante de exceção Gurobi ou interrupção.
+    Garante pascal_stop mesmo diante de exceção.
     """
     if PASCAL_AVAILABLE:
-        _lib.pascal_start(region_id)
+        try:
+            # Chama a função nativa com underscore
+            _lib._pascal_start(region_id)
+        except: pass
+        
     try:
         yield
     finally:
         if PASCAL_AVAILABLE:
-            _lib.pascal_stop(region_id)
+            try:
+                # Chama a função nativa com underscore
+                _lib._pascal_stop(region_id)
+            except: pass
