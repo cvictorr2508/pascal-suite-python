@@ -33,7 +33,7 @@ class GurobiFileAdapter:
             "-c", c_str,
             "-i", i_str,
             "-r", str(repetitions),
-            "-t", "man",  # Mantemos a instrumentação manual cirúrgica
+            #"-t", "man",  # Mantemos a instrumentação manual cirúrgica
             "--outp", str(pascal_telemetry.resolve())
         ]
 

@@ -5,8 +5,8 @@ import sys
 import time
 from pathlib import Path
 
-sys.path.append(str(Path(__file__).resolve().parents[2]))
-from pascalpy.instrumentation.pascalops import pascal_region
+#sys.path.append(str(Path(__file__).resolve().parents[2]))
+#from pascalpy.instrumentation.pascalops import pascal_region
 
 try:
     import gurobipy as gp
@@ -67,8 +67,9 @@ def main():
         
         # 3. Medição Cirúrgica
         t_solve_start = time.perf_counter()
-        with pascal_region(1):
-            model.optimize()
+        #with pascal_region(1):
+        #    model.optimize()
+        model.optimize()
         solve_wall_s = time.perf_counter() - t_solve_start
 
         metadata["metrics"] = {

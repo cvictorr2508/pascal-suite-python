@@ -1,0 +1,12 @@
+{
+  "workload": "/home/vrrcelestino/pascal-suite-python/instances/dummy.mps",
+  "cores": 4,
+  "input_idx": 0,
+  "start_timestamp": 1787589549.8391843,
+  "metrics": {
+    "status": 2,
+    "gurobi_runtime_s": 0.0004699230194091797,
+    "solve_wall_clock_s": 0.00048608100041747093,
+    "objective": 2.0
+  }
+}
