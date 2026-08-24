@@ -1,64 +1,39 @@
 import json
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional
 
 class GurobiFileAdapter:
-    """
-    Adaptador padrão para problemas científicos lidos diretamente de arquivos (ex: .mps, .lp).
-    Implementa a injeção determinística de parâmetros e gera a configuração imutável do runner.
-    """
-    def __init__(self, limits: Optional[Dict[str, Any]] = None):
-        """
-        :param limits: Dicionário com limites do solver, ex: {"time_limit_s": 3600}
-        """
+    def __init__(self, limits=None):
         self.limits = limits or {}
 
-    def build_analyzer_command(
-        self, 
-        experiment_id: str,
-        cores: int, 
-        workload: Path, 
-        repetition: int, 
-        output_dir: Path,
-        env_policy: Any = None
-    ) -> List[str]:
-        """
-        Gera a configuração isolada da rodada e constrói o comando da CLI.
-        """
-        run_id = f"exp_{experiment_id}-w_{workload.stem}-c_{cores}-r_{repetition}"
-        
+    def build_batch_command(self, exp_name: str, cores_list: list, workloads_list: list, repetitions: int, output_dir: Path, env_policy=None):
+        run_id = f"exp_{exp_name}_batch"
         pascal_telemetry = output_dir / f"{run_id}_pascal.json"
-        gurobi_metadata = output_dir / f"{run_id}_app_meta.json"
-        gurobi_log = output_dir / f"{run_id}_solver.log"
-        run_config_path = output_dir / f"{run_id}_config.json"
+        base_config_path = output_dir / f"base_config.json"
         
-        base_seed = 10000
-        paired_seed = base_seed + repetition + (hash(workload.name) % 1000)
+        # Converte caminhos para strings absolutas
+        workloads_str_list = [str(w.resolve()) for w in workloads_list]
 
-        # Usamos .resolve() para evitar qualquer problema de caminhos relativos no subprocesso
-        run_config = {
-            "schema_version": "1.0",
-            "run_id": run_id,
-            "adapter": "gurobi-file",
-            "workload": str(workload.resolve()),
-            "threads": cores,
-            "seed": paired_seed,
+        # Salva as configurações estáticas que o runner vai ler em todas as rodadas
+        base_config = {
+            "experiment_name": exp_name,
             "limits": self.limits,
-            "outputs": {
-                "metadata": str(gurobi_metadata.resolve()),
-                "solver_log": str(gurobi_log.resolve())
-            }
+            "output_dir": str(output_dir.resolve()),
+            "workloads_list": workloads_str_list # Usado para o runner saber qual é o input atual
         }
+        with base_config_path.open("w", encoding="utf-8") as f:
+            json.dump(base_config, f, indent=2)
 
-        with run_config_path.open("w", encoding="utf-8") as f:
-            json.dump(run_config, f, indent=2)
+        # Monta as strings separadas por vírgula para o PaScal
+        c_str = ",".join(map(str, cores_list))
+        i_str = ",".join(workloads_str_list)
 
         base_cmd = [
             "pascalanalyzer",
-            "-c", str(cores),
-            #"-r", str(repetition), # parâmetro pode gerar tempos inflados
-            "-t", "man",        # Habilita recepção de regiões manuais
+            "-c", c_str,
+            "-i", i_str,
+            "-r", str(repetitions),
+            "-t", "man",  # Mantemos a instrumentação manual cirúrgica
             "--outp", str(pascal_telemetry.resolve())
         ]
 
@@ -67,24 +42,16 @@ class GurobiFileAdapter:
                 base_cmd.extend(["--rple", str(env_policy.track_energy_rapl)])
             if getattr(env_policy, "track_cores", False):
                 base_cmd.append("--prcs")
-            if getattr(env_policy, "performance_events", None):
-                base_cmd.extend(["--fgpe", ",".join(env_policy.performance_events)])
             if getattr(env_policy, "idle_time_seconds", 0) > 0:
                 base_cmd.extend(["--idtm", str(int(env_policy.idle_time_seconds))])
 
         runner_path = Path(__file__).parent.parent / "runners" / "gurobi_runner.py"
-        
-        # O PaScal Analyzer rejeita strings complexas. 
-        # Criamos um shell script wrapper dinâmico para encapsular o Python.
         wrapper_path = output_dir / f"{run_id}_wrapper.sh"
         
-        ## Usamos sys.executable para garantir que o wrapper use o Python do ambiente virtual atual
-        #runner_cmd_str = f"#!/bin/bash\n{sys.executable} {runner_path.resolve()} --run-config {run_config_path.resolve()}\n"
-
-        # 2. Wrapper com 'exec' para não gerar processo shell zumbi
+        # O $1 recebe o arquivo .lp injetado dinamicamente pelo -i do PaScal
         runner_cmd_str = (
             f"#!/bin/bash\n"
-            f"exec {sys.executable} {runner_path.resolve()} --run-config {run_config_path.resolve()}\n"
+            f"exec {sys.executable} {runner_path.resolve()} --base-config {base_config_path.resolve()} --workload \"$1\"\n"
         )
         
         with wrapper_path.open("w", encoding="utf-8") as f:
@@ -92,6 +59,4 @@ class GurobiFileAdapter:
         wrapper_path.chmod(0o755)
 
         base_cmd.append(str(wrapper_path.resolve()))
-
         return base_cmd
-    

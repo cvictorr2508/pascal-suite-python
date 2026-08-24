@@ -9,7 +9,7 @@
 # 4. Digitar no terminal: `sbatch run_analysis_master.sh`
 
 experiment:
-  name: "pesquisa_gurobi_v1"  # O nome que vai nos arquivos JSON e CSV
+  name: "pesquisa_gurobi_dummy"  # O nome que vai nos arquivos JSON e CSV
   model_sense: "MAXIMIZE"     # definir sentido "MAXIMIZE" ou "MINIMIZE"
   scaling_mode: "strong"      # "strong" = testa os mesmos arquivos em diferentes cores
   resources: [1, 2, 4, 8, 16] # Quantidade de Threads/Cores a testar
@@ -20,6 +20,9 @@ experiment:
     - "instances/dummy.mps"
     # - "instances/meu_modelo_pesado_1.mps"
     # - "instances/meu_modelo_pesado_2.lp"
+    # - "/home/Projeto_LAMFO_LAPPS/data/facility_location_easy/train/CFL_easy_instance_0.lp"
+    # - "/home/Projeto_LAMFO_LAPPS/data/facility_location_easy/medium/CFL_medium_instance_0.lp"
+    # - "/home/Projeto_LAMFO_LAPPS/data/facility_location_easy/hard/CFL_hard_instance_0.lp"
     
 
 environment:
@@ -33,4 +36,4 @@ environment:
 
 output:
   # A pasta onde os milhares de arquivos JSON vão ficar salvos
-  directory: "resultados_finais"
+  directory: "resultados_finais/dummy"

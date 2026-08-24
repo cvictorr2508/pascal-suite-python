@@ -4,9 +4,9 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=64
 #SBATCH --time=12:00:00
-#SBATCH --exclusive
+# #SBATCH --exclusive # Anteriormente não estava comentado, mas agora foi para teste
 #SBATCH --output=master_%j.out
-#SBATCH --partition=intel-256
+#SBATCH --partition=intel-128 # Anteriormente era intel-256
 
 source /etc/profile
 source /etc/profile.d/modules.sh 2>/dev/null || true
@@ -29,7 +29,7 @@ source .venv_313/bin/activate
 python3 -m pip install pydantic gurobipy pandas pyyaml > /dev/null
 
 # 1. Roda a execução lendo o YAML
-python3 rodar_yaml.py experiment_cfl_hard_instance_0.yaml
+python3 rodar_yaml.py meu_experimento.yaml
 
 # 2. Roda a análise logo em seguida
-python3 run_analysis_master.py experiment_cfl_hard_instance_0.yaml
+python3 run_analysis_master.py meu_experimento.yaml
