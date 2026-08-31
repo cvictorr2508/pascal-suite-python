@@ -10,8 +10,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parents[2]))
 
 from pascalpy.instrumentation.pascalops import (  # noqa: E402
-    PASCAL_AVAILABLE,
-    PASCAL_LIBRARY_PATH,
+    instrumentation_status,
     pascal_region,
 )
 
@@ -80,6 +79,7 @@ def main():
         os.sched_setaffinity(0, set(affinity_before[:cores]))
 
     affinity_effective = _current_affinity()
+    pascal_status = instrumentation_status()
 
     metadata = {
         "workload": workload_str,
@@ -89,8 +89,10 @@ def main():
         "cpu_affinity": affinity_effective,
         "pascal_instrumentation": {
             "requested": True,
-            "available": PASCAL_AVAILABLE,
-            "library_path": PASCAL_LIBRARY_PATH,
+            "available": pascal_status["available"],
+            "library_path": pascal_status["library_path"],
+            "start_symbol": pascal_status["start_symbol"],
+            "stop_symbol": pascal_status["stop_symbol"],
             "region_id": GUROBI_OPTIMIZE_REGION,
         },
         "parameters": {
