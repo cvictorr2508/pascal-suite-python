@@ -32,6 +32,17 @@ def _resolve_symbol(library, candidates):
     )
 
 
+def _configure_manual_instrumentation_abi() -> None:
+    """Configura a ABI C declarada em pascalops.h para start/stop manuais."""
+    # pascalops.h:
+    # void _pascal_start(long id, int start_line, const char *filename);
+    # void _pascal_stop(long id, int stop_line, const char *filename);
+    _pascal_start_fn.argtypes = [ctypes.c_long, ctypes.c_int, ctypes.c_char_p]
+    _pascal_start_fn.restype = None
+    _pascal_stop_fn.argtypes = [ctypes.c_long, ctypes.c_int, ctypes.c_char_p]
+    _pascal_stop_fn.restype = None
+
+
 def _load_library() -> None:
     """Carrega libmpascalops.so e valida os simbolos exigidos pelo runner."""
     global _lib
@@ -49,11 +60,7 @@ def _load_library() -> None:
         _pascal_stop_fn, PASCAL_STOP_SYMBOL = _resolve_symbol(
             _lib, ("_pascal_stop", "pascal_stop")
         )
-
-        _pascal_start_fn.argtypes = [ctypes.c_int]
-        _pascal_start_fn.restype = None
-        _pascal_stop_fn.argtypes = [ctypes.c_int]
-        _pascal_stop_fn.restype = None
+        _configure_manual_instrumentation_abi()
     except Exception as exc:
         _lib = None
         _pascal_start_fn = None
@@ -106,15 +113,22 @@ def require_pascal() -> None:
 
 
 @contextmanager
-def pascal_region(region_id: int):
-    """Delimita uma regiao PaScal e garante o fechamento mesmo diante de excecao."""
+def pascal_region(
+    region_id: int,
+    *,
+    filename: str = "python",
+    start_line: int = 0,
+    stop_line: int = 0,
+):
+    """Delimita uma regiao PaScal usando a ABI nativa declarada em pascalops.h."""
     if region_id < 0:
         raise ValueError("region_id deve ser maior ou igual a zero")
 
     require_pascal()
+    filename_bytes = os.fsencode(filename)
 
     try:
-        _pascal_start_fn(region_id)
+        _pascal_start_fn(region_id, start_line, filename_bytes)
     except Exception as exc:
         raise PascalInstrumentationError(
             f"Falha ao iniciar a regiao PaScal {region_id}: {exc}"
@@ -124,7 +138,7 @@ def pascal_region(region_id: int):
         yield
     finally:
         try:
-            _pascal_stop_fn(region_id)
+            _pascal_stop_fn(region_id, stop_line, filename_bytes)
         except Exception as exc:
             raise PascalInstrumentationError(
                 f"Falha ao encerrar a regiao PaScal {region_id}: {exc}"
