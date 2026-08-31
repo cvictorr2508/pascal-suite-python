@@ -1,3 +1,4 @@
+import ctypes
 import sys
 import unittest
 from pathlib import Path
@@ -9,7 +10,29 @@ sys.path.insert(0, str(PROJECT_ROOT / "src"))
 from pascalpy.instrumentation import pascalops
 
 
+class _FakeCFunction:
+    def __init__(self):
+        self.argtypes = None
+        self.restype = object()
+
+
 class PascalOpsAbiTests(unittest.TestCase):
+    def test_configures_three_argument_ctypes_signature(self):
+        start_fn = _FakeCFunction()
+        stop_fn = _FakeCFunction()
+
+        with (
+            patch.object(pascalops, "_pascal_start_fn", start_fn),
+            patch.object(pascalops, "_pascal_stop_fn", stop_fn),
+        ):
+            pascalops._configure_manual_instrumentation_abi()
+
+        expected = [ctypes.c_long, ctypes.c_int, ctypes.c_char_p]
+        self.assertEqual(start_fn.argtypes, expected)
+        self.assertEqual(stop_fn.argtypes, expected)
+        self.assertIsNone(start_fn.restype)
+        self.assertIsNone(stop_fn.restype)
+
     def test_region_passes_three_arguments_to_native_api(self):
         start_mock = Mock()
         stop_mock = Mock()
