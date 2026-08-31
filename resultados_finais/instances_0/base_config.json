@@ -1,0 +1,10 @@
+{
+  "experiment_name": "pesquisa_gurobi_v1_instances_0",
+  "limits": {},
+  "output_dir": "/home/vrrcelestino/pascal-suite-python/resultados_finais/instances_0",
+  "workloads_list": [
+    "/home/Projeto_LAMFO_LAPPS/data/facility_location_easy/train/CFL_easy_instance_0.lp",
+    "/home/Projeto_LAMFO_LAPPS/data/facility_location_easy/medium/CFL_medium_instance_0.lp",
+    "/home/Projeto_LAMFO_LAPPS/data/facility_location_easy/hard/CFL_hard_instance_0.lp"
+  ]
+}

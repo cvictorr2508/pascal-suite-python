@@ -1,0 +1,12 @@
+{
+  "workload": "/home/Projeto_LAMFO_LAPPS/data/facility_location_easy/medium/CFL_medium_instance_0.lp",
+  "cores": 4,
+  "input_idx": 1,
+  "start_timestamp": 1787594428.3085372,
+  "metrics": {
+    "status": 2,
+    "gurobi_runtime_s": 0.2579061985015869,
+    "solve_wall_clock_s": 0.2579470189521089,
+    "objective": 71838.20661065276
+  }
+}
