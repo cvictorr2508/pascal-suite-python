@@ -5,7 +5,7 @@ import sys
 import time
 from pathlib import Path
 
-# O runner e executado como arquivo pelo wrapper gerado pelo adapter.
+# O runner e executado como arquivo pelo supervisor nativo gerado pelo adapter.
 # Adicionamos src/ ao sys.path para importar o pacote local sem exigir instalacao editavel.
 sys.path.append(str(Path(__file__).resolve().parents[2]))
 
@@ -51,7 +51,6 @@ def main():
     with open(args.base_config, "r", encoding="utf-8") as f:
         base_config = json.load(f)
 
-    # 1. Descobre a configuracao dinamica injetada pelo PaScal.
     cores = int(os.environ.get("OMP_NUM_THREADS", "1"))
     workload_str = str(Path(args.workload).resolve())
 
@@ -60,7 +59,6 @@ def main():
     except ValueError:
         input_idx = 0
 
-    # 2. Gera um nome de arquivo seguro e unico baseado no timestamp.
     start_timestamp = time.time()
     meta_path = (
         Path(base_config["output_dir"])
@@ -69,7 +67,6 @@ def main():
 
     affinity_before = _current_affinity()
 
-    # Limita o processo aos primeiros CPUs permitidos pela alocacao atual.
     if affinity_before is not None and hasattr(os, "sched_setaffinity"):
         if cores > len(affinity_before):
             raise RuntimeError(
@@ -90,9 +87,12 @@ def main():
         "pascal_instrumentation": {
             "requested": True,
             "available": pascal_status["available"],
+            "backend": pascal_status.get("backend"),
             "library_path": pascal_status["library_path"],
             "start_symbol": pascal_status["start_symbol"],
             "stop_symbol": pascal_status["stop_symbol"],
+            "proxy_command_fd": pascal_status.get("proxy_command_fd"),
+            "proxy_ack_fd": pascal_status.get("proxy_ack_fd"),
             "region_id": GUROBI_OPTIMIZE_REGION,
         },
         "parameters": {
@@ -111,8 +111,6 @@ def main():
         env.start()
         model = gp.read(args.workload, env=env)
 
-        # Invariante experimental: o Gurobi recebe exatamente a quantidade de
-        # threads correspondente a configuracao de cores analisada pelo PaScal.
         model.Params.Threads = cores
         model.Params.Seed = 10000 + input_idx
         metadata["parameters"]["threads_effective"] = int(model.Params.Threads)
@@ -123,9 +121,16 @@ def main():
                 f"requested={cores}, effective={model.Params.Threads}"
             )
 
-        # 3. Medicao cirurgica: a regiao PaScal 1 cobre somente model.optimize().
+        # A região PaScal 1 cobre somente model.optimize(). O supervisor nativo
+        # executa os marcadores, mas recebe filename/linha do ponto Python real.
+        optimize_line = sys._getframe().f_lineno + 2
         t_solve_start = time.perf_counter()
-        with pascal_region(GUROBI_OPTIMIZE_REGION):
+        with pascal_region(
+            GUROBI_OPTIMIZE_REGION,
+            filename=Path(__file__).name,
+            start_line=optimize_line,
+            stop_line=optimize_line,
+        ):
             model.optimize()
         solve_wall_s = time.perf_counter() - t_solve_start
 
@@ -151,7 +156,6 @@ def main():
         if env is not None:
             env.dispose()
 
-        # Salva as metricas locais mesmo em caso de falha para diagnostico no NPAD.
         with open(meta_path, "w", encoding="utf-8") as f:
             json.dump(metadata, f, indent=2)
 
