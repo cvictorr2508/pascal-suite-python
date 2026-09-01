@@ -38,6 +38,14 @@ O Issue #3 possui agora um caminho de produção validado:
 4. `_pascal_start/_pascal_stop` são executados no processo nativo reconhecido pelo Analyzer;
 5. o JSON permanece integralmente produzido pelo Analyzer.
 
-A implementação de produção deve manter o `model.optimize()` como única região `1` e usar o backend proxy automaticamente quando os descritores herdados estiverem presentes.
+A implementação de produção foi promovida no mesmo draft PR:
+
+- backend `proxy` automático em `pascalops.py`;
+- fonte C de produção em `src/pascalpy/instrumentation/native/`;
+- compilação determinística do supervisor no diretório de saída do experimento;
+- `GurobiFileAdapter` usando o supervisor ELF como alvo direto do Analyzer;
+- `gurobi_runner.py` mantendo `model.optimize()` como única região `1`.
+
+O gate seguinte é um smoke Gurobi de `1 core x 1 repetição` usando `instances/dummy.mps`, validando região `1`, backend `proxy` e invariante de threads.
 
 `region_energy` continua fora de escopo e permanece no Issue #4.
