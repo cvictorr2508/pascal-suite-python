@@ -20,6 +20,8 @@ PASCAL_LIBRARY_PATH = os.environ.get(
 _PROXY_COMMAND_FD_ENV = "PASCAL_REGION_PROXY_COMMAND_FD"
 _PROXY_ACK_FD_ENV = "PASCAL_REGION_PROXY_ACK_FD"
 _proxy_lock = threading.Lock()
+_native_load_lock = threading.Lock()
+_native_load_attempted = False
 
 
 class PascalInstrumentationError(RuntimeError):
@@ -73,13 +75,16 @@ def _configure_manual_instrumentation_abi() -> None:
 
 
 def _load_library() -> None:
-    """Carrega libmpascalops.so e valida os simbolos exigidos pelo runner."""
+    """Carrega libmpascalops.so e valida os símbolos do fallback ctypes."""
     global _lib
     global _pascal_start_fn
     global _pascal_stop_fn
     global PASCAL_AVAILABLE
     global PASCAL_START_SYMBOL
     global PASCAL_STOP_SYMBOL
+    global _native_load_attempted
+
+    _native_load_attempted = True
 
     try:
         _lib = ctypes.CDLL(PASCAL_LIBRARY_PATH)
@@ -113,22 +118,33 @@ def _load_library() -> None:
     )
 
 
+def _ensure_native_loaded() -> None:
+    """Carrega o fallback ctypes somente quando ele for realmente necessário."""
+    if PASCAL_PROXY_AVAILABLE or _native_load_attempted:
+        return
+
+    with _native_load_lock:
+        if not _native_load_attempted:
+            _load_library()
+
+
 if PASCAL_PROXY_AVAILABLE:
-    # O processo Python não deve abrir libmpascalops diretamente neste modo.
+    # No modo de produção atual o Python não abre libmpascalops.
     # O supervisor ELF reconhecido pelo Analyzer executa _pascal_start/_pascal_stop.
     PASCAL_AVAILABLE = True
-elif not _proxy_env_requested:
-    _load_library()
 
 
 def instrumentation_status() -> dict:
-    """Retorna diagnostico serializavel da instrumentacao manual do PaScal."""
+    """Retorna diagnóstico serializável da instrumentação manual do PaScal."""
     if PASCAL_PROXY_AVAILABLE:
         backend = "proxy"
-    elif PASCAL_AVAILABLE:
-        backend = "ctypes"
-    else:
+    elif _proxy_env_requested:
         backend = "unavailable"
+    else:
+        # Consultar explicitamente o status do fallback continua sendo uma operação
+        # de probe; apenas o import do módulo deixou de carregar libmpascalops.
+        _ensure_native_loaded()
+        backend = "ctypes" if PASCAL_AVAILABLE else "unavailable"
 
     return {
         "available": PASCAL_AVAILABLE,
@@ -142,7 +158,7 @@ def instrumentation_status() -> dict:
 
 
 def require_pascal() -> None:
-    """Falha explicitamente quando a instrumentacao manual nao esta disponivel."""
+    """Falha explicitamente quando a instrumentação manual não está disponível."""
     if PASCAL_PROXY_AVAILABLE:
         return
 
@@ -151,6 +167,8 @@ def require_pascal() -> None:
             "Backend proxy PaScal foi solicitado, mas os descritores "
             f"{_PROXY_COMMAND_FD_ENV}/{_PROXY_ACK_FD_ENV} são inválidos ou incompletos."
         )
+
+    _ensure_native_loaded()
 
     if (
         not PASCAL_AVAILABLE
