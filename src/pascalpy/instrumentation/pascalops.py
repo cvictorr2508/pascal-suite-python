@@ -1,6 +1,7 @@
 import ctypes
 import logging
 import os
+import threading
 from contextlib import contextmanager
 
 logger = logging.getLogger(__name__)
@@ -16,9 +17,37 @@ PASCAL_LIBRARY_PATH = os.environ.get(
     "/opt/npad/shared/softwares/pascalsuite/pascal-suite-2025-07-08/lib/libmpascalops.so",
 )
 
+_PROXY_COMMAND_FD_ENV = "PASCAL_REGION_PROXY_COMMAND_FD"
+_PROXY_ACK_FD_ENV = "PASCAL_REGION_PROXY_ACK_FD"
+_proxy_lock = threading.Lock()
+
 
 class PascalInstrumentationError(RuntimeError):
     """Raised when the PaScal manual-instrumentation runtime cannot be used."""
+
+
+def _parse_proxy_fd(name: str):
+    raw = os.environ.get(name)
+    if raw is None:
+        return None
+    try:
+        fd = int(raw)
+    except ValueError:
+        logger.error("%s não contém um descritor numérico válido: %r", name, raw)
+        return None
+    if fd < 0:
+        logger.error("%s contém descritor negativo: %s", name, fd)
+        return None
+    return fd
+
+
+_proxy_env_requested = (
+    os.environ.get(_PROXY_COMMAND_FD_ENV) is not None
+    or os.environ.get(_PROXY_ACK_FD_ENV) is not None
+)
+_proxy_command_fd = _parse_proxy_fd(_PROXY_COMMAND_FD_ENV)
+_proxy_ack_fd = _parse_proxy_fd(_PROXY_ACK_FD_ENV)
+PASCAL_PROXY_AVAILABLE = _proxy_command_fd is not None and _proxy_ack_fd is not None
 
 
 def _resolve_symbol(library, candidates):
@@ -84,21 +113,45 @@ def _load_library() -> None:
     )
 
 
-_load_library()
+if PASCAL_PROXY_AVAILABLE:
+    # O processo Python não deve abrir libmpascalops diretamente neste modo.
+    # O supervisor ELF reconhecido pelo Analyzer executa _pascal_start/_pascal_stop.
+    PASCAL_AVAILABLE = True
+elif not _proxy_env_requested:
+    _load_library()
 
 
 def instrumentation_status() -> dict:
     """Retorna diagnostico serializavel da instrumentacao manual do PaScal."""
+    if PASCAL_PROXY_AVAILABLE:
+        backend = "proxy"
+    elif PASCAL_AVAILABLE:
+        backend = "ctypes"
+    else:
+        backend = "unavailable"
+
     return {
         "available": PASCAL_AVAILABLE,
+        "backend": backend,
         "library_path": PASCAL_LIBRARY_PATH,
         "start_symbol": PASCAL_START_SYMBOL,
         "stop_symbol": PASCAL_STOP_SYMBOL,
+        "proxy_command_fd": _proxy_command_fd if PASCAL_PROXY_AVAILABLE else None,
+        "proxy_ack_fd": _proxy_ack_fd if PASCAL_PROXY_AVAILABLE else None,
     }
 
 
 def require_pascal() -> None:
     """Falha explicitamente quando a instrumentacao manual nao esta disponivel."""
+    if PASCAL_PROXY_AVAILABLE:
+        return
+
+    if _proxy_env_requested:
+        raise PascalInstrumentationError(
+            "Backend proxy PaScal foi solicitado, mas os descritores "
+            f"{_PROXY_COMMAND_FD_ENV}/{_PROXY_ACK_FD_ENV} são inválidos ou incompletos."
+        )
+
     if (
         not PASCAL_AVAILABLE
         or _lib is None
@@ -112,6 +165,59 @@ def require_pascal() -> None:
         )
 
 
+def _write_all(fd: int, payload: bytes) -> None:
+    view = memoryview(payload)
+    while view:
+        try:
+            written = os.write(fd, view)
+        except OSError as exc:
+            raise PascalInstrumentationError(
+                f"Falha ao escrever no supervisor PaScal: {exc}"
+            ) from exc
+        if written <= 0:
+            raise PascalInstrumentationError(
+                "Supervisor PaScal encerrou o canal de comando durante a escrita."
+            )
+        view = view[written:]
+
+
+def _read_ack_line(fd: int) -> str:
+    data = bytearray()
+    while len(data) < 512:
+        try:
+            chunk = os.read(fd, 1)
+        except OSError as exc:
+            raise PascalInstrumentationError(
+                f"Falha ao ler confirmação do supervisor PaScal: {exc}"
+            ) from exc
+        if not chunk:
+            raise PascalInstrumentationError(
+                "Supervisor PaScal encerrou o canal de confirmação inesperadamente."
+            )
+        data.extend(chunk)
+        if chunk == b"\n":
+            return data.decode("utf-8", errors="replace").rstrip("\r\n")
+    raise PascalInstrumentationError("Confirmação do supervisor PaScal excedeu 512 bytes.")
+
+
+def _proxy_roundtrip(command: str, region_id: int, line_no: int, filename: str) -> None:
+    if not PASCAL_PROXY_AVAILABLE:
+        raise PascalInstrumentationError("Backend proxy PaScal não está disponível.")
+    if any(char in filename for char in ("\t", "\r", "\n")):
+        raise ValueError("filename da região PaScal não pode conter tab ou quebra de linha")
+
+    payload = f"{command}\t{region_id}\t{line_no}\t{filename}\n".encode("utf-8")
+    with _proxy_lock:
+        _write_all(_proxy_command_fd, payload)
+        ack = _read_ack_line(_proxy_ack_fd)
+
+    expected = f"OK {command}"
+    if ack != expected:
+        raise PascalInstrumentationError(
+            f"Supervisor PaScal rejeitou {command} da região {region_id}: {ack}"
+        )
+
+
 @contextmanager
 def pascal_region(
     region_id: int,
@@ -120,11 +226,20 @@ def pascal_region(
     start_line: int = 0,
     stop_line: int = 0,
 ):
-    """Delimita uma regiao PaScal usando a ABI nativa declarada em pascalops.h."""
+    """Delimita uma região PaScal via supervisor IPC ou ABI nativa direta."""
     if region_id < 0:
         raise ValueError("region_id deve ser maior ou igual a zero")
 
     require_pascal()
+
+    if PASCAL_PROXY_AVAILABLE:
+        _proxy_roundtrip("START", region_id, start_line, filename)
+        try:
+            yield
+        finally:
+            _proxy_roundtrip("STOP", region_id, stop_line, filename)
+        return
+
     filename_bytes = os.fsencode(filename)
 
     try:
