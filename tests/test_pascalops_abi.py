@@ -1,4 +1,6 @@
 import ctypes
+import os
+import subprocess
 import sys
 import unittest
 from pathlib import Path
@@ -17,6 +19,23 @@ class _FakeCFunction:
 
 
 class PascalOpsAbiTests(unittest.TestCase):
+    def test_import_does_not_probe_native_pascal_runtime(self):
+        env = os.environ.copy()
+        env.pop("PASCAL_REGION_PROXY_COMMAND_FD", None)
+        env.pop("PASCAL_REGION_PROXY_ACK_FD", None)
+        env["PYTHONPATH"] = str(PROJECT_ROOT / "src")
+
+        result = subprocess.run(
+            [sys.executable, "-c", "import pascalpy.instrumentation.pascalops"],
+            env=env,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn("[Pascal]", result.stderr)
+
     def test_configures_three_argument_ctypes_signature(self):
         start_fn = _FakeCFunction()
         stop_fn = _FakeCFunction()
