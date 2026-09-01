@@ -57,10 +57,13 @@ class PascalOpsAbiTests(unittest.TestCase):
         stop_mock = Mock()
 
         with (
+            patch.object(pascalops, "PASCAL_PROXY_AVAILABLE", False),
+            patch.object(pascalops, "_proxy_env_requested", False),
             patch.object(pascalops, "PASCAL_AVAILABLE", True),
             patch.object(pascalops, "_lib", object()),
             patch.object(pascalops, "_pascal_start_fn", start_mock),
             patch.object(pascalops, "_pascal_stop_fn", stop_mock),
+            patch.object(pascalops, "_ensure_native_loaded") as ensure_native_loaded,
         ):
             with pascalops.pascal_region(
                 1,
@@ -70,6 +73,7 @@ class PascalOpsAbiTests(unittest.TestCase):
             ):
                 pass
 
+        ensure_native_loaded.assert_called_once_with()
         start_mock.assert_called_once_with(1, 123, b"gurobi_runner.py")
         stop_mock.assert_called_once_with(1, 125, b"gurobi_runner.py")
 
