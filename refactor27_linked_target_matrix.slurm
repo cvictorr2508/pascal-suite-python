@@ -134,4 +134,10 @@ run_launcher_case linked_exec exec
 # Mantem o processo ELF instrumentado vivo enquanto o Python roda em um filho.
 run_launcher_case linked_spawn spawn
 
+printf '\n%s\n' "=== TARGET MATRIX SUMMARY ==="
+python3 scripts/summarize_pascal_target_matrix.py \
+  "$SLURM_SUBMIT_DIR/refactor27_target_linked_selftest.json" \
+  "$SLURM_SUBMIT_DIR/refactor27_target_linked_exec.json" \
+  "$SLURM_SUBMIT_DIR/refactor27_target_linked_spawn.json"
+
 printf '\n%s\n' "=== TARGET MATRIX COMPLETED ==="
