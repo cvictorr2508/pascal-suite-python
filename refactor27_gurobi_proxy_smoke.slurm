@@ -20,11 +20,14 @@ module load softwares/pascalsuite/2025-07-08
 
 cd "$SLURM_SUBMIT_DIR"
 
-if [ ! -f ".venv_313/bin/activate" ]; then
-    echo "ERROR: .venv_313/bin/activate não encontrado" >&2
+if [ -f ".venv_313/bin/activate" ]; then
+    source .venv_313/bin/activate
+elif [ -n "${VIRTUAL_ENV:-}" ] && [ -f "$VIRTUAL_ENV/bin/activate" ]; then
+    source "$VIRTUAL_ENV/bin/activate"
+elif ! python3 -c 'import gurobipy, yaml' 2>/dev/null; then
+    echo "ERROR: nenhum ambiente Python com gurobipy e PyYAML foi encontrado" >&2
     exit 3
 fi
-source .venv_313/bin/activate
 
 export GRB_LICENSE_FILE="$SLURM_SUBMIT_DIR/secret/gurobi.lic"
 
