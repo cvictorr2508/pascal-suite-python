@@ -46,6 +46,17 @@ A implementação de produção foi promovida no mesmo draft PR:
 - `GurobiFileAdapter` usando o supervisor ELF como alvo direto do Analyzer;
 - `gurobi_runner.py` mantendo `model.optimize()` como única região `1`.
 
-O gate seguinte é um smoke Gurobi de `1 core x 1 repetição` usando `instances/dummy.mps`, validando região `1`, backend `proxy` e invariante de threads.
+## Gate final do Issue #3
+
+Executar `refactor27_gurobi_proxy_smoke.slurm`, que usa `instances/dummy.mps` com `1 core x 1 repetição` e exige:
+
+- região `1` no JSON nativo do Analyzer;
+- backend `proxy` no metadata do runner;
+- `threads_requested == threads_effective == 1`;
+- métricas Gurobi presentes;
+- Analyzer apontando diretamente para o ELF `_region_proxy`;
+- ausência de erro do runner.
+
+Após esse gate, a validação pode avançar para uma matriz curta `[1,2,4] x 1` antes da limpeza final do PR.
 
 `region_energy` continua fora de escopo e permanece no Issue #4.
