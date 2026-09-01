@@ -1,0 +1,16 @@
+experiment:
+  name: "refactor27_proxy_smoke"
+  model_sense: "MAXIMIZE"
+  scaling_mode: "strong"
+  resources: [1]
+  repetitions: 1
+  workloads:
+    - "instances/dummy.mps"
+
+environment:
+  track_cores: false
+  track_energy_rapl: "sysfs"
+  idle_time_seconds: 0
+
+output:
+  directory: "resultados_finais/refactor27_proxy_smoke"
