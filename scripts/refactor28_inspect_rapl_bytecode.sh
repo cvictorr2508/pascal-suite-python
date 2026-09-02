@@ -9,6 +9,8 @@ PYZ_ROOT="$EXTRACT_ROOT/PYZ-00.pyz_extracted"
 RAPL_DIR="$PYZ_ROOT/pascalanalyzer/sensors/rapl"
 OUT="$PROJECT_ROOT/refactor28_rapl_bytecode_inspect.txt"
 DISASM="$PROJECT_ROOT/refactor28_rapl_bytecode_disassembly.txt"
+TARGET_MATCHES="$PROJECT_ROOT/refactor28_rapl_target_matches.txt"
+GLOBAL_MATCHES="$PROJECT_ROOT/refactor28_rapl_global_matches.txt"
 
 RAPL_PYC="$RAPL_DIR/rapl.pyc"
 RAPL_SAMPLE_PYC="$RAPL_DIR/rapl_sample.pyc"
@@ -23,8 +25,11 @@ done
 
 : > "$OUT"
 : > "$DISASM"
+: > "$TARGET_MATCHES"
+: > "$GLOBAL_MATCHES"
 
-TERMS='performance_features|profiler|Profiler|perfmon|RAPL_ENERGY|SYSTEMWIDE|region_energy|package|dram|energy|event'
+TERMS='performance_features|profiler|Profiler|perfmon|RAPL_ENERGY|SYSTEMWIDE|region_energy|rapl|package|dram|energy|event'
+CORE_TERMS='performance_features|profiler|Profiler|perfmon|RAPL_ENERGY|SYSTEMWIDE|region_energy'
 
 echo "=== TARGET FILES ===" | tee -a "$OUT"
 file "$RAPL_PYC" "$RAPL_SAMPLE_PYC" | tee -a "$OUT"
@@ -33,15 +38,21 @@ sha256sum "$RAPL_PYC" "$RAPL_SAMPLE_PYC" | tee -a "$OUT"
 for path in "$RAPL_PYC" "$RAPL_SAMPLE_PYC"; do
     echo | tee -a "$OUT"
     echo "=== STRINGS: $path ===" | tee -a "$OUT"
-    strings -a -n 3 -t d "$path" | grep -Ei "$TERMS" | tee -a "$OUT" || true
-
+    strings -a -n 3 -t d "$path" \
+        | grep -Ei "$TERMS" \
+        | sed "s#^#$path:#" \
+        | tee -a "$OUT" "$TARGET_MATCHES" || true
 done
 
 echo | tee -a "$OUT"
 echo "=== GLOBAL PYC SEARCH ===" | tee -a "$OUT"
-find "$PYZ_ROOT" -type f -name '*.pyc' -print0 \
-    | xargs -0 grep -aHnEi 'performance_features|profiler|Profiler|perfmon|RAPL_ENERGY|SYSTEMWIDE|region_energy' \
-    | tee -a "$OUT" || true
+while IFS= read -r -d '' path; do
+    strings -a -n 3 -t d "$path" \
+        | grep -Ei "$CORE_TERMS" \
+        | sed "s#^#$path:#" \
+        >> "$GLOBAL_MATCHES" || true
+done < <(find "$PYZ_ROOT" -type f -name '*.pyc' -print0)
+cat "$GLOBAL_MATCHES" | tee -a "$OUT"
 
 echo | tee -a "$OUT"
 echo "=== OPTIONAL PYTHON 3.8 DISASSEMBLY ===" | tee -a "$OUT"
@@ -78,18 +89,41 @@ PY
     echo "disassembly=$DISASM" | tee -a "$OUT"
 else
     echo "python38_available=false" | tee -a "$OUT"
-    echo "String/name inspection above remains valid; no runtime package was installed." | tee -a "$OUT"
+    echo "Target-local strings above remain valid; global matches are reported separately." | tee -a "$OUT"
 fi
 
-echo | tee -a "$OUT"
-echo "=== CLASSIFICATION ===" | tee -a "$OUT"
-for term in performance_features profiler Profiler perfmon RAPL_ENERGY SYSTEMWIDE region_energy; do
-    if grep -aEiq "$term" "$OUT"; then
-        echo "${term}_reference_present=true" | tee -a "$OUT"
+classify_file() {
+    local prefix="$1"
+    local source="$2"
+    local term="$3"
+    local label="$4"
+    if grep -aEiq "$term" "$source"; then
+        echo "${prefix}_${label}=true" | tee -a "$OUT"
     else
-        echo "${term}_reference_present=false" | tee -a "$OUT"
+        echo "${prefix}_${label}=false" | tee -a "$OUT"
     fi
-done
+}
 
+echo | tee -a "$OUT"
+echo "=== CLASSIFICATION: RAPL TARGETS ONLY ===" | tee -a "$OUT"
+classify_file target_rapl "$TARGET_MATCHES" 'performance_features' performance_features_reference_present
+classify_file target_rapl "$TARGET_MATCHES" '(^|[^[:alnum:]_])profiler([^[:alnum:]_]|$)' profiler_reference_present
+classify_file target_rapl "$TARGET_MATCHES" '(^|[^[:alnum:]_])Profiler([^[:alnum:]_]|$)' Profiler_reference_present
+classify_file target_rapl "$TARGET_MATCHES" 'perfmon' perfmon_reference_present
+classify_file target_rapl "$TARGET_MATCHES" 'RAPL_ENERGY' RAPL_ENERGY_reference_present
+classify_file target_rapl "$TARGET_MATCHES" 'SYSTEMWIDE' SYSTEMWIDE_reference_present
+classify_file target_rapl "$TARGET_MATCHES" 'region_energy' region_energy_reference_present
+
+echo "=== CLASSIFICATION: GLOBAL PYZ ===" | tee -a "$OUT"
+classify_file global_pyz "$GLOBAL_MATCHES" 'performance_features' performance_features_reference_present
+classify_file global_pyz "$GLOBAL_MATCHES" '(^|[^[:alnum:]_])profiler([^[:alnum:]_]|$)' profiler_reference_present
+classify_file global_pyz "$GLOBAL_MATCHES" '(^|[^[:alnum:]_])Profiler([^[:alnum:]_]|$)' Profiler_reference_present
+classify_file global_pyz "$GLOBAL_MATCHES" 'perfmon' perfmon_reference_present
+classify_file global_pyz "$GLOBAL_MATCHES" 'RAPL_ENERGY' RAPL_ENERGY_reference_present
+classify_file global_pyz "$GLOBAL_MATCHES" 'SYSTEMWIDE' SYSTEMWIDE_reference_present
+classify_file global_pyz "$GLOBAL_MATCHES" 'region_energy' region_energy_reference_present
+
+echo "target_matches=$TARGET_MATCHES" | tee -a "$OUT"
+echo "global_matches=$GLOBAL_MATCHES" | tee -a "$OUT"
 echo "report=$OUT" | tee -a "$OUT"
 echo "=== RAPL BYTECODE INSPECTION COMPLETED ===" | tee -a "$OUT"
