@@ -50,7 +50,9 @@ class GurobiAdapterProxyTests(unittest.TestCase):
         self.assertIn("-t", command)
         self.assertIn("man", command)
         self.assertIn("--rple", command)
-        self.assertIn("sysfs", command)
+        self.assertIn("--rpls", command)
+        self.assertEqual(command[command.index("--rple") + 1], "sysfs")
+        self.assertEqual(command[command.index("--rpls") + 1], "sysfs")
         self.assertEqual(command[-1], str(proxy.resolve()))
         self.assertTrue(
             any(item.startswith("PASCAL_PROXY_PYTHON_BIN=") for item in command)

@@ -70,6 +70,7 @@ def main() -> int:
 
     summaries = {}
     ready_modes = []
+    derivable_modes = []
     for raw_path in sys.argv[1:]:
         path = Path(raw_path)
         mode = path.stem.removeprefix("refactor28_energy_")
@@ -77,9 +78,14 @@ def main() -> int:
         summaries[mode] = summary
         if (summary.get("energy_validation") or {}).get("viewer_energy_ready") is True:
             ready_modes.append(mode)
+        if (summary.get("energy_validation") or {}).get(
+            "sampled_energy_derivable"
+        ) is True:
+            derivable_modes.append(mode)
 
     print(json.dumps(summaries, indent=2, sort_keys=True, ensure_ascii=False))
     print("viewer_energy_ready_modes=" + ",".join(sorted(ready_modes)))
+    print("sampled_energy_derivable_modes=" + ",".join(sorted(derivable_modes)))
     return 0
 
 
