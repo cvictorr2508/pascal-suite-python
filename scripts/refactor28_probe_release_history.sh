@@ -58,6 +58,8 @@ fi
 declare -A SEEN_BLOBS=()
 CANDIDATE_COUNT=0
 DISTINCT_COUNT=0
+LFS_POINTER_COUNT=0
+INCONCLUSIVE_COUNT=0
 
 for commit in "${COMMITS[@]}"; do
     blob="$(git -C "$RELEASES" rev-parse "$commit:bin/pascalanalyzer" 2>/dev/null || true)"
@@ -75,10 +77,23 @@ for commit in "${COMMITS[@]}"; do
     mkdir -p "$case_dir"
     analyzer="$case_dir/pascalanalyzer"
     git -C "$RELEASES" show "$commit:bin/pascalanalyzer" > "$analyzer"
-    chmod 700 "$analyzer"
 
     sha="$(sha256sum "$analyzer" | awk '{print $1}')"
     log "--- analyzer commit=$commit blob=$blob sha256=$sha meta=$meta ---"
+
+    if grep -aq '^version https://git-lfs.github.com/spec/v1$' "$analyzer"; then
+        LFS_POINTER_COUNT=$((LFS_POINTER_COUNT + 1))
+        INCONCLUSIVE_COUNT=$((INCONCLUSIVE_COUNT + 1))
+        log "git_lfs_pointer=true"
+        log "lfs_oid_sha256=$(sed -n 's/^oid sha256://p' "$analyzer" | head -n 1)"
+        log "lfs_declared_size=$(sed -n 's/^size //p' "$analyzer" | head -n 1)"
+        log "analysis_status=inconclusive_pointer_not_materialized"
+        continue
+    fi
+
+    chmod 700 "$analyzer"
+    log "git_lfs_pointer=false"
+    file "$analyzer" | sed 's/^/file: /' | tee -a "$REPORT"
 
     tree_matches="$case_dir/tree_matches.txt"
     git -C "$RELEASES" ls-tree -r --name-only "$commit" \
@@ -125,10 +140,10 @@ for commit in "${COMMITS[@]}"; do
     profiler=false
     performance_features=false
 
-    if grep -aEiq 'region_energy' "$extracted_matches"; then region_energy=true; fi
-    if grep -aEiq 'raplpackage|raplcorepackage' "$extracted_matches"; then rapl_domains=true; fi
-    if grep -aEiq '(^|[^[:alnum:]_])profiler([^[:alnum:]_]|$)' "$extracted_matches" || grep -aEiq 'profiler' "$tree_matches"; then profiler=true; fi
-    if grep -aEiq 'performance_features|perfmon' "$extracted_matches" || grep -aEiq 'performance_features|perfmon' "$tree_matches"; then performance_features=true; fi
+    if grep -aEiq 'region_energy' "$outer_matches" "$extracted_matches"; then region_energy=true; fi
+    if grep -aEiq 'raplpackage|raplcorepackage' "$outer_matches" "$extracted_matches"; then rapl_domains=true; fi
+    if grep -aEiq '(^|[^[:alnum:]_])profiler([^[:alnum:]_]|$)' "$outer_matches" "$extracted_matches" || grep -aEiq 'profiler' "$tree_matches"; then profiler=true; fi
+    if grep -aEiq 'performance_features|perfmon' "$outer_matches" "$extracted_matches" || grep -aEiq 'performance_features|perfmon' "$tree_matches"; then performance_features=true; fi
 
     log "region_energy_present=$region_energy"
     log "rapl_domain_names_present=$rapl_domains"
@@ -141,15 +156,18 @@ for commit in "${COMMITS[@]}"; do
             "$commit" "$sha" "$meta" "$region_energy" "$rapl_domains" "$profiler" "$performance_features" \
             | tee -a "$CANDIDATES" "$REPORT"
     fi
-
 done
 
 log "=== CLASSIFICATION ==="
-log "distinct_analyzer_binaries=$DISTINCT_COUNT"
+log "distinct_repository_blobs=$DISTINCT_COUNT"
+log "git_lfs_pointer_count=$LFS_POINTER_COUNT"
+log "inconclusive_analyzer_count=$INCONCLUSIVE_COUNT"
 log "viewer_energy_candidate_count=$CANDIDATE_COUNT"
 log "candidates=$CANDIDATES"
 if [[ $CANDIDATE_COUNT -gt 0 ]]; then
     log "historical_viewer_energy_candidate_found=true"
+elif [[ $INCONCLUSIVE_COUNT -gt 0 ]]; then
+    log "historical_viewer_energy_candidate_found=inconclusive"
 else
     log "historical_viewer_energy_candidate_found=false"
 fi
