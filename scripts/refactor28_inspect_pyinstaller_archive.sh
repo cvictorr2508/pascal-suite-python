@@ -9,6 +9,8 @@ TOOLS_ROOT="$PROJECT_ROOT/.refactor28-pyi-tools"
 VENV="$TOOLS_ROOT/venv"
 LISTING="$PROJECT_ROOT/refactor28_pyinstaller_archive_listing.txt"
 MATCHES="$PROJECT_ROOT/refactor28_pyinstaller_archive_matches.txt"
+REQUIREMENT='pyinstaller>=6.10,<7'
+PUBLIC_PYPI='https://pypi.org/simple'
 
 if [[ ! -x "$PASCAL_ANALYZER" ]]; then
     echo "analyzer_missing=$PASCAL_ANALYZER" >&2
@@ -21,12 +23,31 @@ if [[ ! -x "$VENV/bin/python" ]]; then
     python3 -m venv "$VENV"
 fi
 
-"$VENV/bin/python" -m pip install \
-    --disable-pip-version-check \
-    --quiet \
-    'pyinstaller>=6,<7'
-
 ARCHIVE_VIEWER="$VENV/bin/pyi-archive_viewer"
+
+if [[ ! -x "$ARCHIVE_VIEWER" ]]; then
+    echo "=== INSTALL PYINSTALLER TOOL ==="
+    echo "requirement=$REQUIREMENT"
+
+    set +e
+    "$VENV/bin/python" -m pip install \
+        --disable-pip-version-check \
+        --quiet \
+        "$REQUIREMENT"
+    install_rc=$?
+    set -e
+
+    if [[ $install_rc -ne 0 ]]; then
+        echo "default_index_install_failed=true"
+        echo "retry_index=$PUBLIC_PYPI"
+        "$VENV/bin/python" -m pip install \
+            --disable-pip-version-check \
+            --quiet \
+            --index-url "$PUBLIC_PYPI" \
+            "$REQUIREMENT"
+    fi
+fi
+
 if [[ ! -x "$ARCHIVE_VIEWER" ]]; then
     echo "pyi_archive_viewer_missing=$ARCHIVE_VIEWER" >&2
     exit 3
@@ -39,7 +60,9 @@ file "$PASCAL_ANALYZER"
 
 echo "=== PYINSTALLER TOOL ==="
 "$VENV/bin/python" - <<'PY'
+import sys
 import PyInstaller
+print("python_version=", sys.version.replace("\n", " "))
 print("pyinstaller_version=", PyInstaller.__version__)
 PY
 
