@@ -1,0 +1,1 @@
+Temporary diagnostic note: PyInstaller archive inspection requires PyInstaller >=6.10 on Python 3.13. The probe retries installation from public PyPI inside .refactor28-pyi-tools/venv if the NPAD default pip index lacks a compatible version. This file is diagnostic and may be removed before merge.

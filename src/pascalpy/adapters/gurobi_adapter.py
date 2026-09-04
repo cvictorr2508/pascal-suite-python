@@ -70,7 +70,13 @@ class GurobiFileAdapter:
 
         if env_policy:
             if getattr(env_policy, "track_energy_rapl", None):
-                base_cmd.extend(["--rple", str(env_policy.track_energy_rapl)])
+                rapl_backend = str(env_policy.track_energy_rapl)
+                # --rple fornece a energia global independente usada como controle;
+                # --rpls preserva a serie de potencia necessaria para o Viewer
+                # integrar energia sobre os intervalos das regioes.
+                base_cmd.extend(
+                    ["--rple", rapl_backend, "--rpls", rapl_backend]
+                )
             if getattr(env_policy, "track_cores", False):
                 base_cmd.append("--prcs")
             if getattr(env_policy, "idle_time_seconds", 0) > 0:
