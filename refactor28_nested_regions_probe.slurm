@@ -76,7 +76,7 @@ path = pathlib.Path(sys.argv[1])
 with path.open("r", encoding="utf-8") as stream:
     document = json.load(stream)
 
-required = {"0", "1", "2"}
+required = {"0", "0.1", "0.2"}
 data = document.get("data") or {}
 if not data:
     raise SystemExit("JSON sem execuções em data")
@@ -100,8 +100,8 @@ for run_key, run in data.items():
         intervals[region_id] = (float(entries[0][0]), float(entries[0][1]))
 
     start0, stop0 = intervals["0"]
-    start1, stop1 = intervals["1"]
-    start2, stop2 = intervals["2"]
+    start1, stop1 = intervals["0.1"]
+    start2, stop2 = intervals["0.2"]
     ordered = start0 <= start1 < stop1 <= start2 < stop2 <= stop0
     print(f"nested_intervals_valid={ordered}")
     if not ordered:
