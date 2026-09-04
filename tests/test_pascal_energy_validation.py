@@ -172,6 +172,25 @@ class PascalEnergyValidationTests(unittest.TestCase):
         self.assertEqual(report.runs_with_sampled_rapl, 1)
         self.assertEqual(report.runs_with_derivable_sampled_energy, 0)
 
+    def test_accepts_hierarchical_region_key(self):
+        document = self._regional_document(1.25)
+        run = document["data"]["4;0;1"]
+        run["regions"] = {
+            "0": [[0.5, 2.5, 0, 0, 10, "binary"]],
+            "0.2": [[1.0, 2.0, 0, 0, 10, "binary"]],
+        }
+        run["rapl-domain-any-name"] = {"0": 20.0, "0.2": 1.25}
+
+        report = validate_pascal_energy_document(
+            document,
+            required_region_id="0.2",
+        )
+
+        self.assertTrue(report.structurally_valid)
+        self.assertTrue(report.viewer_energy_ready)
+        self.assertEqual(report.required_region_id, "0.2")
+        self.assertEqual(report.runs_with_required_region, 1)
+
 
 if __name__ == "__main__":
     unittest.main()

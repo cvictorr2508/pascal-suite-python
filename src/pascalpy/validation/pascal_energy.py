@@ -11,7 +11,7 @@ class PascalEnergyValidationReport:
     """Resultado da validacao estrutural da telemetria energetica regional."""
 
     source: str
-    required_region_id: int
+    required_region_id: int | str
     has_data_descriptor: bool
     has_extras: bool
     has_regions_descriptor: bool
@@ -178,7 +178,7 @@ def validate_pascal_energy_document(
     document: Any,
     *,
     source: str = "<memory>",
-    required_region_id: int = 1,
+    required_region_id: int | str = 1,
 ) -> PascalEnergyValidationReport:
     """Valida o contrato observado nos JSONs PaScal aceitos pelo Viewer.
 
@@ -373,7 +373,7 @@ def validate_pascal_energy_document(
 def validate_pascal_energy_file(
     path: str | Path,
     *,
-    required_region_id: int = 1,
+    required_region_id: int | str = 1,
 ) -> PascalEnergyValidationReport:
     source_path = Path(path)
     try:

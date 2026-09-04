@@ -11,6 +11,7 @@
 
 #define MAX_LINE 512
 #define MAX_FILENAME 256
+#define MAX_OPEN_REGIONS 64
 
 static int write_all(int fd, const char *message) {
     size_t remaining = strlen(message);
@@ -53,8 +54,8 @@ static int supervise_child(int command_fd, int ack_fd, pid_t child_pid) {
     }
 
     char line[MAX_LINE];
-    int region_open = 0;
-    long open_region_id = -1;
+    long open_region_ids[MAX_OPEN_REGIONS] = {0};
+    size_t open_region_count = 0;
 
     while (fgets(line, sizeof(line), commands) != NULL) {
         char command[16] = {0};
@@ -69,16 +70,22 @@ static int supervise_child(int command_fd, int ack_fd, pid_t child_pid) {
         }
 
         if (strcmp(command, "START") == 0) {
-            if (region_open) {
-                fprintf(stderr, "proxy: região %ld já está aberta\n", open_region_id);
-                write_all(ack_fd, "ERR region-already-open\n");
+            if (open_region_count >= MAX_OPEN_REGIONS) {
+                fprintf(stderr, "proxy: limite de regiões aninhadas excedido\n");
+                write_all(ack_fd, "ERR region-stack-full\n");
                 continue;
             }
 
             _pascal_start(region_id, line_no, filename);
-            region_open = 1;
-            open_region_id = region_id;
-            printf("PASCAL_PROXY START region=%ld line=%d file=%s\n", region_id, line_no, filename);
+            open_region_ids[open_region_count] = region_id;
+            open_region_count += 1;
+            printf(
+                "PASCAL_PROXY START region=%ld depth=%zu line=%d file=%s\n",
+                region_id,
+                open_region_count,
+                line_no,
+                filename
+            );
             fflush(stdout);
             if (write_all(ack_fd, "OK START\n") != 0) {
                 break;
@@ -87,16 +94,28 @@ static int supervise_child(int command_fd, int ack_fd, pid_t child_pid) {
         }
 
         if (strcmp(command, "STOP") == 0) {
-            if (!region_open || open_region_id != region_id) {
-                fprintf(stderr, "proxy: STOP inconsistente para região %ld\n", region_id);
+            if (
+                open_region_count == 0
+                || open_region_ids[open_region_count - 1] != region_id
+            ) {
+                fprintf(
+                    stderr,
+                    "proxy: STOP inconsistente para região %ld\n",
+                    region_id
+                );
                 write_all(ack_fd, "ERR region-not-open\n");
                 continue;
             }
 
             _pascal_stop(region_id, line_no, filename);
-            region_open = 0;
-            open_region_id = -1;
-            printf("PASCAL_PROXY STOP region=%ld line=%d file=%s\n", region_id, line_no, filename);
+            open_region_count -= 1;
+            printf(
+                "PASCAL_PROXY STOP region=%ld depth=%zu line=%d file=%s\n",
+                region_id,
+                open_region_count,
+                line_no,
+                filename
+            );
             fflush(stdout);
             if (write_all(ack_fd, "OK STOP\n") != 0) {
                 break;
@@ -117,8 +136,13 @@ static int supervise_child(int command_fd, int ack_fd, pid_t child_pid) {
         return 41;
     }
 
-    if (region_open) {
-        fprintf(stderr, "proxy: child terminou com região %ld ainda aberta\n", open_region_id);
+    if (open_region_count > 0) {
+        fprintf(
+            stderr,
+            "proxy: child terminou com %zu região(ões) ainda aberta(s); topo=%ld\n",
+            open_region_count,
+            open_region_ids[open_region_count - 1]
+        );
         return 42;
     }
 

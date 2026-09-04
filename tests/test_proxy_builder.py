@@ -39,6 +39,31 @@ class ProxyBuilderTests(unittest.TestCase):
         self.assertIn("_pascal_start", text)
         self.assertIn("_pascal_stop", text)
         self.assertIn("PASCAL_REGION_PROXY_COMMAND_FD", text)
+        self.assertIn("MAX_OPEN_REGIONS", text)
+        self.assertIn("open_region_ids", text)
+        self.assertIn("region-stack-full", text)
+
+
+class SolverRegionSchemaTests(unittest.TestCase):
+    def test_schema_uses_stable_hierarchical_region_keys(self):
+        from pascalpy.instrumentation.solver_regions import solver_region_schema
+
+        schema = solver_region_schema()
+
+        self.assertEqual(schema["version"], 1)
+        self.assertEqual(
+            set(schema["regions"]),
+            {"0", "0.1", "0.2"},
+        )
+        self.assertEqual(schema["regions"]["0"]["name"], "solver_pipeline")
+        self.assertEqual(schema["regions"]["0.1"]["name"], "model_build")
+        self.assertEqual(
+            schema["regions"]["0.2"]["name"],
+            "solve_execution",
+        )
+        self.assertTrue(schema["regions"]["0"]["inclusive"])
+        self.assertEqual(schema["regions"]["0.1"]["parent"], "0")
+        self.assertEqual(schema["regions"]["0.2"]["parent"], "0")
 
 
 if __name__ == "__main__":
