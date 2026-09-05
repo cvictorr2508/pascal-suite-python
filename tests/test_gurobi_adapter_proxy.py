@@ -80,6 +80,16 @@ class GurobiAdapterProxyTests(unittest.TestCase):
         self.assertIn("CFL_hard_instance_20.lp.gz", configuration)
         self.assertNotIn("CFL_hard_instance_20.lp\n", configuration)
 
+        candidate_probe = (
+            PROJECT_ROOT / "refactor28_gurobi_candidate_probe.slurm"
+        ).read_text(encoding="utf-8")
+        profiler_probe = (
+            PROJECT_ROOT / "refactor28_profiler_import_probe.slurm"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn("CFL_hard_instance_${candidate_id}.lp.gz", candidate_probe)
+        self.assertIn("#SBATCH --partition=intel-128", profiler_probe)
+
 
 if __name__ == "__main__":
     unittest.main()

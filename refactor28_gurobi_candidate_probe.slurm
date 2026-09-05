@@ -28,7 +28,7 @@ fi
 
 candidate_id="${candidate_ids[$task_index]}"
 dataset_dir="${CFL_HARD_DIR:-/home/Projeto_LAMFO_LAPPS/data/facility_location_easy/hard}"
-workload="$dataset_dir/CFL_hard_instance_${candidate_id}.lp"
+workload="$dataset_dir/CFL_hard_instance_${candidate_id}.lp.gz"
 output_dir="${GUROBI_PROBE_OUTPUT_DIR:-$SLURM_SUBMIT_DIR/resultados_finais/refactor28_gurobi_candidate_probe}"
 python_bin="$SLURM_SUBMIT_DIR/.venv_313/bin/python"
 license_file="$SLURM_SUBMIT_DIR/secret/gurobi.lic"

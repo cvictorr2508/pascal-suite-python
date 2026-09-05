@@ -5,7 +5,7 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --time=00:10:00
 #SBATCH --exclusive
-#SBATCH --partition=intel-256
+#SBATCH --partition=intel-128
 #SBATCH --output=profiler28_%j.out
 #SBATCH --error=profiler28_%j.err
 

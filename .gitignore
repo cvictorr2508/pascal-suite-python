@@ -3,22 +3,31 @@
 __pycache__/
 *.pyc
 
+# Local build and investigation scratch directories
+/.refactor*/
+
 # Log files and SLURM outputs
 *.out
+*.err
 *.log
+*.stdout
+*.stderr
 
-# Results files
+# Generated experiment results
+/resultados_finais/
 resultados_avancados/
 *.csv
+
+# Generated telemetry and diagnostic reports in the repository root
+/refactor*_*.json
+/refactor*_*.txt
+/smoke_*.json
+/perf*_direct_*.txt
 
 # Licenses and private keys
 secret/
 *.lic
 
-# Tests
-tests/
-
 # Old files
 slurm_out/
 *.old
-*.sh
