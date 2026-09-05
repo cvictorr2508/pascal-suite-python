@@ -1,0 +1,16 @@
+experiment:
+  name: refactor28_gurobi_nested_smoke
+  model_sense: MINIMIZE
+  scaling_mode: strong
+  resources: [1]
+  repetitions: 1
+  workloads:
+    - /home/Projeto_LAMFO_LAPPS/data/facility_location_easy/hard/CFL_hard_instance_20.lp.gz
+
+environment:
+  track_cores: false
+  track_energy_rapl: sysfs
+  idle_time_seconds: 0
+
+output:
+  directory: resultados_finais/refactor28_gurobi_nested_smoke

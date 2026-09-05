@@ -65,6 +65,21 @@ class GurobiAdapterProxyTests(unittest.TestCase):
         )
         self.assertFalse(any(item.endswith("_wrapper.sh") for item in command))
 
+    def test_nested_smoke_uses_available_partition_and_compressed_workload(self):
+        slurm = (
+            PROJECT_ROOT / "refactor28_gurobi_nested_smoke.slurm"
+        ).read_text(encoding="utf-8")
+        configuration = (
+            PROJECT_ROOT / "refactor28_gurobi_nested_smoke.yaml"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn("#SBATCH --partition=intel-128", slurm)
+        self.assertIn("preflight_error=", slurm)
+        self.assertIn("command -v gzip", slurm)
+        self.assertIn("CFL_hard_instance_20.lp.gz", slurm)
+        self.assertIn("CFL_hard_instance_20.lp.gz", configuration)
+        self.assertNotIn("CFL_hard_instance_20.lp\n", configuration)
+
 
 if __name__ == "__main__":
     unittest.main()
