@@ -131,4 +131,3 @@ class Refactor28NestedEnergySummaryTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

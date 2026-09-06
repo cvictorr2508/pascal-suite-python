@@ -72,4 +72,3 @@ require_file "$JSON_FILE" "analyzer_json_missing_or_empty"
 
 printf 'validation_json=%s\n' "$JSON_FILE"
 printf 'validation_summary=%s\n' "$SUMMARY_FILE"
-

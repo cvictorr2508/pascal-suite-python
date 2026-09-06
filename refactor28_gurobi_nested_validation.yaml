@@ -14,4 +14,3 @@ environment:
 
 output:
   directory: resultados_finais/refactor28_gurobi_nested_validation
-
