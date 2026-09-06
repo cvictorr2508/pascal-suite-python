@@ -96,3 +96,39 @@ sumarizador registra tentativas inválidas, exige pelo menos cinco runs válidos
 cada uma das 15 configurações e calcula erro e CV separadamente por combinação
 de instância e núcleos. Misturar configurações heterogêneas produziria um CV sem
 interpretação física.
+
+## Resultado final da campanha — job NPAD 2080062
+
+A campanha redundante terminou no Slurm com estado `COMPLETED` e código `0:0`.
+Foram realizadas 90 tentativas nas 15 combinações de cinco instâncias e recursos
+`[1, 2, 4]`. O sumarizador aceitou 89 runs. O run `4;3;3` foi rejeitado por
+energia global não positiva e por uma amostra de potência negativa; seus valores
+não foram integrados, corrigidos ou imputados. A configuração afetada conservou
+cinco runs válidos e, portanto, satisfez o gate mínimo.
+
+Resultados consolidados:
+
+- 15 de 15 configurações aceitas;
+- erro absoluto mediano: `0.207439%`;
+- erro absoluto médio: `0.206935%`;
+- erro absoluto máximo: `0.479272%`;
+- maior CV da energia da região `0` entre configurações: `2.160181%`;
+- cobertura temporal da região raiz: `85.497455%` a `99.092470%`;
+- maior diferença entre a duração da raiz e de suas regiões filhas:
+  `0.000598 s`;
+- nenhuma configuração ficou abaixo dos cinco runs válidos exigidos.
+
+A evidência foi preservada fora do repositório em
+`pascal-suite-python-evidence/refactor28/job-2080062`. Os hashes SHA-256 dos
+artefatos auditados são:
+
+- stdout: `649ce6565663d936566642c40424ed5c3f85bdc789665ce42ba738b167ac1c18`;
+- stderr: `ba9a2160a46ae3133b6fb1cd5931e334f5f38882f738ebd830745b0a3df9eed1`;
+- `summary.json`: `d1ed590c4c39b396002124a565e9b80c2f301cba1dc1f03b32b5fc51bd6ae2e0`;
+- arquivo compactado da campanha:
+  `294cb83dda64f43af0deec62592410a5f225095307077ae902a38e21dfcfdd26`.
+
+A campanha aprova o erro obrigatório de até `5%` e a preferência de CV de até
+`10%`. Com isso, o componente Python atinge o MVP TRL 5 no ambiente relevante
+do NPAD. A progressão para TRL 6 depende da integração e demonstração ponta a
+ponta no PaScal Viewer.
