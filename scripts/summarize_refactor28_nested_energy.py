@@ -19,6 +19,24 @@ class EnergySummaryError(ValueError):
     """Raised when an Analyzer document cannot support the validation."""
 
 
+def parse_run_key(run_key: Any) -> tuple[int, int, int]:
+    """Return ``(cores, input_index, repetition)`` from an Analyzer run key."""
+    parts = str(run_key).split(";")
+    if len(parts) != 3:
+        raise EnergySummaryError(
+            f"run key {run_key!r} must use cores;input;repetition"
+        )
+    try:
+        cores, input_index, repetition = (int(part) for part in parts)
+    except ValueError as exc:
+        raise EnergySummaryError(
+            f"run key {run_key!r} must contain integer fields"
+        ) from exc
+    if cores < 1 or input_index < 0 or repetition < 1:
+        raise EnergySummaryError(f"run key {run_key!r} contains invalid values")
+    return cores, input_index, repetition
+
+
 def _number(value: Any, label: str) -> float:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise EnergySummaryError(f"{label} must be numeric")
@@ -164,6 +182,8 @@ def summarize_document(
     required_runs: int = 5,
     max_median_error_percent: float = 5.0,
     preferred_max_cv_percent: float = 10.0,
+    workloads: list[str] | None = None,
+    required_configurations: int | None = None,
 ) -> dict[str, Any]:
     if not isinstance(document, dict):
         raise EnergySummaryError("JSON root must be an object")
@@ -173,6 +193,7 @@ def summarize_document(
 
     runs: list[dict[str, Any]] = []
     for run_key in sorted(data):
+        cores, input_index, repetition = parse_run_key(run_key)
         run = data[run_key]
         if not isinstance(run, dict):
             raise EnergySummaryError(f"run {run_key} must be an object")
@@ -217,6 +238,10 @@ def summarize_document(
                 sample_period,
                 intervals,
             )
+            if energy <= 0:
+                raise EnergySummaryError(
+                    f"run {run_key} region {region_id} energy must be positive"
+                )
             region_summaries[region_id] = {
                 "duration_s": duration,
                 "energy_j": energy,
@@ -232,6 +257,16 @@ def summarize_document(
         runs.append(
             {
                 "run": str(run_key),
+                "configuration": {
+                    "cores": cores,
+                    "input_index": input_index,
+                    "repetition": repetition,
+                    "workload": (
+                        workloads[input_index]
+                        if workloads is not None and input_index < len(workloads)
+                        else None
+                    ),
+                },
                 "sample_count": len(samples),
                 "sample_period_s": sample_period,
                 "whole_program": {
@@ -248,6 +283,54 @@ def summarize_document(
             }
         )
 
+    grouped_runs: dict[tuple[int, int], list[dict[str, Any]]] = {}
+    for run in runs:
+        configuration = run["configuration"]
+        key = (configuration["cores"], configuration["input_index"])
+        grouped_runs.setdefault(key, []).append(run)
+
+    configuration_groups: list[dict[str, Any]] = []
+    for (cores, input_index), group_runs in sorted(grouped_runs.items()):
+        group_errors = [
+            run["whole_program"]["absolute_error_percent"]
+            for run in group_runs
+        ]
+        group_regional_statistics = {
+            region_id: _series_statistics(
+                [run["regions"][region_id]["energy_j"] for run in group_runs]
+            )
+            for region_id in REQUIRED_REGION_IDS
+        }
+        group_run_count_accepted = len(group_runs) >= required_runs
+        group_median_error = statistics.median(group_errors)
+        group_root_cv = group_regional_statistics["0"]["cv_percent"]
+        workload = group_runs[0]["configuration"]["workload"]
+        configuration_groups.append(
+            {
+                "cores": cores,
+                "input_index": input_index,
+                "workload": workload,
+                "workload_name": Path(workload).name if workload else None,
+                "run_count": len(group_runs),
+                "required_runs": required_runs,
+                "accuracy": {
+                    "median_absolute_error_percent": group_median_error,
+                    "mean_absolute_error_percent": statistics.fmean(group_errors),
+                    "maximum_absolute_error_percent": max(group_errors),
+                    "threshold_percent": max_median_error_percent,
+                    "accepted": group_run_count_accepted
+                    and group_median_error <= max_median_error_percent,
+                },
+                "variability": {
+                    "region_0_cv_percent": group_root_cv,
+                    "preferred_threshold_percent": preferred_max_cv_percent,
+                    "preferred": group_run_count_accepted
+                    and group_root_cv <= preferred_max_cv_percent,
+                },
+                "regional_energy_statistics": group_regional_statistics,
+            }
+        )
+
     errors = [run["whole_program"]["absolute_error_percent"] for run in runs]
     global_energies = [run["whole_program"]["global_energy_j"] for run in runs]
     sampled_whole_energies = [
@@ -261,11 +344,27 @@ def summarize_document(
     }
 
     median_error = statistics.median(errors)
-    root_cv = regional_statistics["0"]["cv_percent"]
-    run_count_accepted = len(runs) >= required_runs
+    accuracy_accepted = all(
+        group["accuracy"]["accepted"] for group in configuration_groups
+    )
+    configuration_count_accepted = (
+        required_configurations is None
+        or len(configuration_groups) == required_configurations
+    )
+    variability_preferred = all(
+        group["variability"]["preferred"] for group in configuration_groups
+    )
+    maximum_group_root_cv = max(
+        group["variability"]["region_0_cv_percent"]
+        for group in configuration_groups
+    )
     return {
         "run_count": len(runs),
         "required_runs": required_runs,
+        "configuration_count": len(configuration_groups),
+        "required_configuration_count": required_configurations,
+        "configuration_count_accepted": configuration_count_accepted,
+        "configuration_groups": configuration_groups,
         "sensor_name": sensor_name,
         "global_domain": global_domain,
         "runs": runs,
@@ -275,15 +374,18 @@ def summarize_document(
             "mean_absolute_error_percent": statistics.fmean(errors),
             "maximum_absolute_error_percent": max(errors),
             "threshold_percent": max_median_error_percent,
-            "accepted": run_count_accepted
-            and median_error <= max_median_error_percent,
+            "accepted": configuration_count_accepted and accuracy_accepted,
         },
         "variability": {
-            "primary_metric": "region 0 sampled energy",
-            "region_0_cv_percent": root_cv,
+            "primary_metric": "per-configuration region 0 sampled energy",
+            "region_0_cv_percent": (
+                maximum_group_root_cv
+                if len(configuration_groups) == 1
+                else None
+            ),
+            "maximum_group_region_0_cv_percent": maximum_group_root_cv,
             "preferred_threshold_percent": preferred_max_cv_percent,
-            "preferred": run_count_accepted
-            and root_cv <= preferred_max_cv_percent,
+            "preferred": variability_preferred,
         },
         "global_energy_statistics": _series_statistics(global_energies),
         "sampled_whole_energy_statistics": _series_statistics(
@@ -306,6 +408,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--require-runs", type=int, default=5)
     parser.add_argument("--max-median-error-percent", type=float, default=5.0)
     parser.add_argument("--preferred-max-cv-percent", type=float, default=10.0)
+    parser.add_argument("--require-configurations", type=int)
+    parser.add_argument(
+        "--base-config",
+        type=Path,
+        help="base_config.json used to label Analyzer input indexes",
+    )
     parser.add_argument("--output-json", type=Path)
     return parser
 
@@ -315,6 +423,23 @@ def main() -> int:
     try:
         with args.json_path.open("r", encoding="utf-8") as stream:
             document = json.load(stream)
+        workloads = None
+        base_config_path = args.base_config
+        if base_config_path is None:
+            candidate = args.json_path.parent / "base_config.json"
+            if candidate.is_file():
+                base_config_path = candidate
+        if base_config_path is not None:
+            with base_config_path.open("r", encoding="utf-8") as stream:
+                base_config = json.load(stream)
+            raw_workloads = base_config.get("workloads_list")
+            if not isinstance(raw_workloads, list) or not all(
+                isinstance(workload, str) for workload in raw_workloads
+            ):
+                raise EnergySummaryError(
+                    "base config must contain a string workloads_list"
+                )
+            workloads = raw_workloads
         summary = summarize_document(
             document,
             sensor_name=args.sensor,
@@ -322,6 +447,8 @@ def main() -> int:
             required_runs=args.require_runs,
             max_median_error_percent=args.max_median_error_percent,
             preferred_max_cv_percent=args.preferred_max_cv_percent,
+            workloads=workloads,
+            required_configurations=args.require_configurations,
         )
     except (OSError, UnicodeDecodeError, json.JSONDecodeError, EnergySummaryError) as exc:
         print(f"validation_error={exc}", file=sys.stderr)
@@ -334,7 +461,12 @@ def main() -> int:
         args.output_json.write_text(rendered + "\n", encoding="utf-8")
         print(f"summary={args.output_json}")
 
-    if summary["run_count"] < args.require_runs:
+    if any(
+        group["run_count"] < args.require_runs
+        for group in summary["configuration_groups"]
+    ):
+        return 3
+    if not summary["configuration_count_accepted"]:
         return 3
     if not summary["accuracy"]["accepted"]:
         return 4

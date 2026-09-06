@@ -62,3 +62,28 @@ inalterado.
 
 O probe inicial já obteve erro de `0.269%` em uma região de aproximadamente três
 segundos, o que valida a abordagem antes da alteração no Viewer.
+
+## Gate de calibração no NPAD
+
+O job `2079023` executou cinco repetições da instância
+`CFL_hard_instance_20.lp.gz` com um núcleo e concluiu com código zero. O controle
+entre a energia integrada na execução completa e `rapl-sysfs` apresentou:
+
+- erro absoluto mediano: `0.196%`;
+- erro absoluto máximo: `0.333%`;
+- CV da energia da região `0`: `1.688%`;
+- CV da região `0.1`: `1.269%`;
+- CV da região `0.2`: `6.412%`.
+
+As cinco execuções produziram energia positiva nas regiões `0`, `0.1` e `0.2`.
+Quatro execuções tiveram cobertura da região raiz próxima de `99%`; a primeira
+teve `85.534%`, efeito de inicialização que não comprometeu o controle global.
+O gate de calibração, portanto, aprovou tanto o limite obrigatório de erro mediano
+de `5%` quanto a preferência de CV de `10%`.
+
+## Campanha representativa
+
+O segundo gate usa as instâncias hard `5`, `10`, `15`, `20` e `25`, os recursos
+`[1, 2, 4]` e cinco repetições, totalizando 75 execuções. Erro e CV devem ser
+calculados separadamente para cada combinação de instância e número de núcleos;
+misturar configurações heterogêneas produziria um CV sem interpretação física.

@@ -41,6 +41,7 @@ class Refactor28NestedEnergySummaryTests(unittest.TestCase):
         self.assertIn("repetitions: 5", yaml_source)
         self.assertIn("CFL_hard_instance_20.lp.gz", yaml_source)
         self.assertIn("--require-runs 5", slurm_source)
+        self.assertIn("--require-configurations 1", slurm_source)
         self.assertIn("--max-median-error-percent 5", slurm_source)
         self.assertIn("--preferred-max-cv-percent 10", slurm_source)
 
@@ -58,6 +59,9 @@ class Refactor28NestedEnergySummaryTests(unittest.TestCase):
         )
         self.assertTrue(result["variability"]["preferred"])
         self.assertEqual(result["variability"]["region_0_cv_percent"], 0.0)
+        self.assertEqual(result["configuration_count"], 1)
+        self.assertEqual(result["configuration_groups"][0]["cores"], 1)
+        self.assertEqual(result["configuration_groups"][0]["input_index"], 0)
         first_run = result["runs"][0]
         self.assertEqual(first_run["regions"]["0"]["energy_j"], 80.0)
         self.assertEqual(first_run["regions"]["0.1"]["energy_j"], 40.0)
@@ -127,6 +131,104 @@ class Refactor28NestedEnergySummaryTests(unittest.TestCase):
             100.0,
         )
         self.assertEqual(result["runs"][0]["regions"]["0"]["energy_j"], 80.0)
+
+    def test_groups_variability_by_input_and_core_configuration(self):
+        data = {}
+        for repetition in range(1, 6):
+            data[f"1;0;{repetition}"] = _run(power=10.0, global_energy=100.0)
+            data[f"4;1;{repetition}"] = _run(power=20.0, global_energy=200.0)
+
+        result = SUMMARY.summarize_document(
+            {"data": data},
+            workloads=["/data/instance-5.lp.gz", "/data/instance-10.lp.gz"],
+            required_configurations=2,
+        )
+
+        self.assertEqual(result["run_count"], 10)
+        self.assertEqual(result["configuration_count"], 2)
+        self.assertTrue(result["accuracy"]["accepted"])
+        self.assertTrue(result["configuration_count_accepted"])
+        self.assertTrue(result["variability"]["preferred"])
+        self.assertIsNone(result["variability"]["region_0_cv_percent"])
+        self.assertEqual(
+            result["variability"]["maximum_group_region_0_cv_percent"],
+            0.0,
+        )
+        self.assertEqual(
+            [group["workload_name"] for group in result["configuration_groups"]],
+            ["instance-5.lp.gz", "instance-10.lp.gz"],
+        )
+
+    def test_rejects_campaign_when_one_configuration_has_too_few_runs(self):
+        data = {
+            f"1;0;{repetition}": _run()
+            for repetition in range(1, 6)
+        }
+        data.update(
+            {
+                f"2;0;{repetition}": _run()
+                for repetition in range(1, 5)
+            }
+        )
+
+        result = SUMMARY.summarize_document({"data": data})
+
+        self.assertFalse(result["accuracy"]["accepted"])
+        self.assertEqual(
+            [group["run_count"] for group in result["configuration_groups"]],
+            [5, 4],
+        )
+
+    def test_hard_campaign_covers_five_instances_and_three_core_counts(self):
+        yaml_source = (
+            PROJECT_ROOT / "refactor28_gurobi_hard_validation.yaml"
+        ).read_text(encoding="utf-8")
+        slurm_source = (
+            PROJECT_ROOT / "refactor28_gurobi_hard_validation.slurm"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn("resources: [1, 2, 4]", yaml_source)
+        self.assertIn("repetitions: 5", yaml_source)
+        for instance_id in (5, 10, 15, 20, 25):
+            self.assertIn(f"CFL_hard_instance_{instance_id}.lp.gz", yaml_source)
+        self.assertIn("#SBATCH --cpus-per-task=4", slurm_source)
+        self.assertIn("campaign_runs=%s", slurm_source)
+        self.assertIn('--base-config "$BASE_CONFIG_FILE"', slurm_source)
+        self.assertIn("--require-configurations 15", slurm_source)
+
+    def test_rejects_noncanonical_run_key(self):
+        with self.assertRaisesRegex(
+            SUMMARY.EnergySummaryError,
+            "cores;input;repetition",
+        ):
+            SUMMARY.summarize_document({"data": {"1;0": _run()}})
+
+    def test_rejects_campaign_with_missing_configuration(self):
+        document = {
+            "data": {f"1;0;{repetition}": _run() for repetition in range(1, 6)}
+        }
+
+        result = SUMMARY.summarize_document(
+            document,
+            required_configurations=2,
+        )
+
+        self.assertFalse(result["configuration_count_accepted"])
+        self.assertFalse(result["accuracy"]["accepted"])
+
+    def test_rejects_nonpositive_regional_energy(self):
+        document = {
+            "data": {
+                f"1;0;{repetition}": _run(power=0.0, global_energy=100.0)
+                for repetition in range(1, 6)
+            }
+        }
+
+        with self.assertRaisesRegex(
+            SUMMARY.EnergySummaryError,
+            "energy must be positive",
+        ):
+            SUMMARY.summarize_document(document)
 
 
 if __name__ == "__main__":
