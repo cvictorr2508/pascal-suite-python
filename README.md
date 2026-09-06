@@ -54,7 +54,7 @@ Para inspecionar os dados no Viewer:
 
 ## Validação energética reproduzível
 
-`refactor28_gurobi_nested_validation.slurm` calibra o método em uma configuração com cinco repetições. `refactor28_gurobi_hard_validation.slurm` executa a campanha representativa com cinco instâncias hard, recursos `[1, 2, 4]` e cinco repetições, totalizando 75 execuções. As métricas de erro e variabilidade são avaliadas separadamente por combinação de instância e núcleos.
+`refactor28_gurobi_nested_validation.slurm` calibra o método em uma configuração com cinco repetições. `refactor28_gurobi_hard_validation.slurm` executa a campanha representativa com cinco instâncias hard, recursos `[1, 2, 4]` e seis tentativas, totalizando 90 runs. O gate exige pelo menos cinco runs válidos por configuração, registra tentativas RAPL rejeitadas e avalia erro e variabilidade separadamente por combinação de instância e núcleos.
 
 ---
 

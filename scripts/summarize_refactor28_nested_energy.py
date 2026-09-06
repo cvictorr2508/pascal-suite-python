@@ -191,8 +191,68 @@ def summarize_document(
     if not isinstance(data, dict) or not data:
         raise EnergySummaryError("JSON must contain non-empty data")
 
-    runs: list[dict[str, Any]] = []
+    valid_run_keys: list[str] = []
+    invalid_runs: list[dict[str, Any]] = []
     for run_key in sorted(data):
+        configuration: dict[str, int] | None = None
+        reasons: list[str] = []
+        try:
+            cores, input_index, repetition = parse_run_key(run_key)
+            configuration = {
+                "cores": cores,
+                "input_index": input_index,
+                "repetition": repetition,
+            }
+        except EnergySummaryError as exc:
+            reasons.append(str(exc))
+
+        run = data[run_key]
+        if not isinstance(run, dict):
+            reasons.append(f"run {run_key} must be an object")
+        else:
+            try:
+                global_energy = _number(
+                    run.get(global_domain),
+                    f"run {run_key}.{global_domain}",
+                )
+                if global_energy <= 0:
+                    raise EnergySummaryError(
+                        f"run {run_key} global energy must be positive"
+                    )
+            except EnergySummaryError as exc:
+                reasons.append(str(exc))
+
+            try:
+                sensors = run.get("sensors")
+                if not isinstance(sensors, dict) or sensor_name not in sensors:
+                    raise EnergySummaryError(
+                        f"run {run_key} lacks sensor {sensor_name}"
+                    )
+                normalize_power_samples(sensors[sensor_name])
+            except EnergySummaryError as exc:
+                reasons.append(str(exc))
+
+        if reasons:
+            invalid_runs.append(
+                {
+                    "run": str(run_key),
+                    "configuration": configuration,
+                    "reasons": reasons,
+                }
+            )
+        else:
+            valid_run_keys.append(run_key)
+
+    if not valid_run_keys:
+        details = "; ".join(
+            reason
+            for invalid_run in invalid_runs
+            for reason in invalid_run["reasons"]
+        )
+        raise EnergySummaryError(f"JSON contains no valid energy runs: {details}")
+
+    runs: list[dict[str, Any]] = []
+    for run_key in valid_run_keys:
         cores, input_index, repetition = parse_run_key(run_key)
         run = data[run_key]
         if not isinstance(run, dict):
@@ -359,7 +419,10 @@ def summarize_document(
         for group in configuration_groups
     )
     return {
+        "attempted_run_count": len(data),
         "run_count": len(runs),
+        "invalid_run_count": len(invalid_runs),
+        "invalid_runs": invalid_runs,
         "required_runs": required_runs,
         "configuration_count": len(configuration_groups),
         "required_configuration_count": required_configurations,

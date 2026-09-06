@@ -83,7 +83,16 @@ de `5%` quanto a preferência de CV de `10%`.
 
 ## Campanha representativa
 
-O segundo gate usa as instâncias hard `5`, `10`, `15`, `20` e `25`, os recursos
-`[1, 2, 4]` e cinco repetições, totalizando 75 execuções. Erro e CV devem ser
-calculados separadamente para cada combinação de instância e número de núcleos;
-misturar configurações heterogêneas produziria um CV sem interpretação física.
+O primeiro ensaio do segundo gate executou as 75 combinações previstas, mas o
+backend `sysfs` produziu uma anomalia isolada no run `4;1;4`: energia global de
+`-261400.335 J` e uma amostra de potência de `-2621371.789 W`. Os outros quatro
+runs da mesma configuração apresentaram energia global entre `728.700 J` e
+`765.659 J`. O valor negativo é fisicamente inválido e não pode ser integrado ou
+imputado.
+
+A campanha representativa passa, portanto, a usar as instâncias hard `5`, `10`,
+`15`, `20` e `25`, recursos `[1, 2, 4]` e seis tentativas, totalizando 90 runs. O
+sumarizador registra tentativas inválidas, exige pelo menos cinco runs válidos em
+cada uma das 15 configurações e calcula erro e CV separadamente por combinação
+de instância e núcleos. Misturar configurações heterogêneas produziria um CV sem
+interpretação física.

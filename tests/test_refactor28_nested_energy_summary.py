@@ -188,11 +188,11 @@ class Refactor28NestedEnergySummaryTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
 
         self.assertIn("resources: [1, 2, 4]", yaml_source)
-        self.assertIn("repetitions: 5", yaml_source)
+        self.assertIn("repetitions: 6", yaml_source)
         for instance_id in (5, 10, 15, 20, 25):
             self.assertIn(f"CFL_hard_instance_{instance_id}.lp.gz", yaml_source)
         self.assertIn("#SBATCH --cpus-per-task=4", slurm_source)
-        self.assertIn("campaign_runs=%s", slurm_source)
+        self.assertIn("campaign_attempts=%s", slurm_source)
         self.assertIn('--base-config "$BASE_CONFIG_FILE"', slurm_source)
         self.assertIn("--require-configurations 15", slurm_source)
 
@@ -229,6 +229,46 @@ class Refactor28NestedEnergySummaryTests(unittest.TestCase):
             "energy must be positive",
         ):
             SUMMARY.summarize_document(document)
+
+    def test_reports_invalid_rapl_attempt_and_accepts_five_valid_runs(self):
+        data = {
+            f"4;1;{repetition}": _run()
+            for repetition in range(1, 6)
+        }
+        invalid = _run()
+        invalid["rapl-sysfs"] = -261400.0
+        invalid["sensors"]["rapl_sample-sysfs"][3][0] = -2621371.0
+        data["4;1;6"] = invalid
+
+        result = SUMMARY.summarize_document(
+            {"data": data},
+            required_configurations=1,
+        )
+
+        self.assertEqual(result["attempted_run_count"], 6)
+        self.assertEqual(result["run_count"], 5)
+        self.assertEqual(result["invalid_run_count"], 1)
+        self.assertEqual(result["invalid_runs"][0]["run"], "4;1;6")
+        self.assertEqual(len(result["invalid_runs"][0]["reasons"]), 2)
+        self.assertTrue(result["accuracy"]["accepted"])
+
+    def test_fails_gate_when_invalid_attempt_leaves_only_four_valid_runs(self):
+        data = {
+            f"4;1;{repetition}": _run()
+            for repetition in range(1, 5)
+        }
+        invalid = _run()
+        invalid["rapl-sysfs"] = -1.0
+        data["4;1;5"] = invalid
+
+        result = SUMMARY.summarize_document(
+            {"data": data},
+            required_configurations=1,
+        )
+
+        self.assertEqual(result["run_count"], 4)
+        self.assertEqual(result["invalid_run_count"], 1)
+        self.assertFalse(result["accuracy"]["accepted"])
 
 
 if __name__ == "__main__":

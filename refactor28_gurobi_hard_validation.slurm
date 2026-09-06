@@ -63,7 +63,7 @@ printf 'host=%s\n' "$(hostname -f)"
 printf 'python=%s\n' "$PYTHON_BIN"
 printf 'config=%s\n' "$CONFIG_FILE"
 printf 'partition=%s\n' "${SLURM_JOB_PARTITION:-unknown}"
-printf 'campaign_runs=%s\n' "75"
+printf 'campaign_attempts=%s\n' "90"
 
 "$PYTHON_BIN" rodar_yaml.py "$CONFIG_FILE"
 
