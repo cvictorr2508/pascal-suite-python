@@ -9,7 +9,7 @@ Para garantir o isolamento de performance, precisão na coleta de métricas de h
 O fluxo metodológico (Pipeline Declarativo) opera em três estágios estritos:
 
 1. **Definição do Experimento (YAML):** Os parâmetros da pesquisa — instâncias matemáticas (`.mps`, `.lp`), threads de CPU alocadas (`resources`), políticas de afinidade de núcleo e repetições — são declarados no arquivo de configuração (ex: `meu_experimento.yaml`), garantindo que o código-fonte permaneça inalterado entre diferentes testes.
-2. **Isolamento em Lote (Batch) e Execução Cirúrgica:** Acionado via gerenciador de recursos (SLURM), o motor `rodar_yaml.py` traduz a configuração e delega o controle do loop experimental ao binário nativo do PaScal Analyzer. A biblioteca impõe trava de afinidade de CPU em nível de Sistema Operacional (OS CPU Affinity) para cada subprocesso, para evitar *cache thrashing*. Além disso, utilizando um *binding* nativo (`ctypes`), a ferramenta aciona a instrumentação do PaScal de forma manual e cirúrgica apenas durante a resolução matemática (`model.optimize()`), isolando completamente o *overhead* de I/O e de inicialização do interpretador Python.
+2. **Isolamento em Lote (Batch) e Regiões do Solver:** Acionado via gerenciador de recursos (SLURM), o motor `rodar_yaml.py` traduz a configuração e delega o controle do loop experimental ao binário nativo do PaScal Analyzer. A biblioteca impõe afinidade de CPU em nível de sistema operacional e registra três regiões hierárquicas: pipeline completo (`0`), leitura/construção do modelo (`0.1`) e otimização (`0.2`). Assim, custos de preparação e solução permanecem distinguíveis sem acoplar a instrumentação ao Gurobi.
 3. **Consolidação de Telemetria:** Após o término computacional, o motor `run_analysis_master.py` lê o único arquivo de telemetria unificado gerado nativamente pelo PaScal e cruza essas informações com os metadados matemáticos locais do Gurobi, exportando um `DataFrame` relacional final para `.csv`.
 
 ## 📁 Estrutura de Diretórios
@@ -17,7 +17,7 @@ O fluxo metodológico (Pipeline Declarativo) opera em três estágios estritos:
 * `/src/pascalpy/`: Núcleo da biblioteca contendo os adaptadores do solver, modelos estritos de experimento (Pydantic) e lógicas de consolidação.
 * `/src/pascalpy/instrumentation/`: Contém o módulo nativo `pascalops.py`, responsável pelo *binding* em C com a biblioteca `libmpascalops.so`, habilitando a marcação de regiões de telemetria rigorosas (*Solve-Only*).
 * `/instances/`: Diretório público sugerido para armazenar os modelos matemáticos e instâncias base para execução.
-* `/resultados_finais/`: Diretório contendo os artefatos de saída, incluindo os logs do Gurobi, o arquivo de telemetria unificado do motor C++ (`_batch_pascal.json`) e a tabela consolidada (`.csv`).
+* `/resultados_finais/`: Diretório local ignorado pelo Git contendo os artefatos gerados, incluindo o JSON de telemetria (`_batch_pascal.json`), metadados e resumos de validação.
 * `meu_experimento.yaml`: Arquivo mestre de configuração da pesquisa.
 * `rodar_yaml.py` / `run_analysis_master.py`: Scripts de orquestração (Turno de HPC e Turno de Análise).
 * `master.slurm`: Job de submissão otimizado para o gerenciador do cluster.
@@ -44,11 +44,17 @@ sbatch master.slurm
 
 ## 📊 Visualização de Dados (PaScal Viewer)
 
-Para visualizar os gráficos de consumo de energia (Joules), tempo e eficiência:
+O wrapper solicita simultaneamente energia global (`--rple`) e potência RAPL amostrada (`--rpls`). O JSON nativo resultante contém a matéria-prima necessária para integrar energia sobre as regiões sem reescrever o arquivo.
+
+Para inspecionar os dados no Viewer:
 
 1. Acesse o [PaScal Viewer](https://pascalsuite.imd.ufrn.br/viewer/).
 2. Na interface da aplicação, faça o upload dos arquivos consolidados finais gerados pelo pipeline (ex: `exp_pesquisa_gurobi_batch_pascal.json`).
-3. O Viewer processará o JSON nativamente, renderizando as matrizes 2D de instâncias vs. núcleos e exibindo as métricas de hardware (como RAPL via sysfs) medidos durante a fase de otimização do Gurobi.
+3. A integração da Trilha A no Viewer deve reconhecer `rapl_sample-*`, integrar a potência sobre a união temporal dos intervalos e então exibir Energy e EDP. Até essa integração ser concluída, o JSON é validado pelo sumarizador Python, mas o Viewer publicado pode não apresentar os gráficos energéticos derivados.
+
+## Validação energética reproduzível
+
+`refactor28_gurobi_nested_validation.slurm` calibra o método em uma configuração com cinco repetições. `refactor28_gurobi_hard_validation.slurm` executa a campanha representativa com cinco instâncias hard, recursos `[1, 2, 4]` e seis tentativas, totalizando 90 runs. O gate exige pelo menos cinco runs válidos por configuração, registra tentativas RAPL rejeitadas e avalia erro e variabilidade separadamente por combinação de instância e núcleos.
 
 ---
 

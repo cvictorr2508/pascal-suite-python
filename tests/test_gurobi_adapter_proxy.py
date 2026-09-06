@@ -50,7 +50,9 @@ class GurobiAdapterProxyTests(unittest.TestCase):
         self.assertIn("-t", command)
         self.assertIn("man", command)
         self.assertIn("--rple", command)
-        self.assertIn("sysfs", command)
+        self.assertIn("--rpls", command)
+        self.assertEqual(command[command.index("--rple") + 1], "sysfs")
+        self.assertEqual(command[command.index("--rpls") + 1], "sysfs")
         self.assertEqual(command[-1], str(proxy.resolve()))
         self.assertTrue(
             any(item.startswith("PASCAL_PROXY_PYTHON_BIN=") for item in command)
@@ -62,6 +64,31 @@ class GurobiAdapterProxyTests(unittest.TestCase):
             any(item.startswith("PASCAL_PROXY_BASE_CONFIG=") for item in command)
         )
         self.assertFalse(any(item.endswith("_wrapper.sh") for item in command))
+
+    def test_nested_smoke_uses_available_partition_and_compressed_workload(self):
+        slurm = (
+            PROJECT_ROOT / "refactor28_gurobi_nested_smoke.slurm"
+        ).read_text(encoding="utf-8")
+        configuration = (
+            PROJECT_ROOT / "refactor28_gurobi_nested_smoke.yaml"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn("#SBATCH --partition=intel-128", slurm)
+        self.assertIn("preflight_error=", slurm)
+        self.assertIn("command -v gzip", slurm)
+        self.assertIn("CFL_hard_instance_20.lp.gz", slurm)
+        self.assertIn("CFL_hard_instance_20.lp.gz", configuration)
+        self.assertNotIn("CFL_hard_instance_20.lp\n", configuration)
+
+        candidate_probe = (
+            PROJECT_ROOT / "refactor28_gurobi_candidate_probe.slurm"
+        ).read_text(encoding="utf-8")
+        profiler_probe = (
+            PROJECT_ROOT / "refactor28_profiler_import_probe.slurm"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn("CFL_hard_instance_${candidate_id}.lp.gz", candidate_probe)
+        self.assertIn("#SBATCH --partition=intel-128", profiler_probe)
 
 
 if __name__ == "__main__":

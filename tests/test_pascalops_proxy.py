@@ -32,6 +32,30 @@ class PascalOpsProxyTests(unittest.TestCase):
             ],
         )
 
+    def test_nested_regions_preserve_lifo_event_order(self):
+        with (
+            patch.object(pascalops, "PASCAL_PROXY_AVAILABLE", True),
+            patch.object(pascalops, "PASCAL_AVAILABLE", True),
+            patch.object(pascalops, "_proxy_roundtrip") as roundtrip,
+        ):
+            with pascalops.pascal_region(0, filename="runner.py"):
+                with pascalops.pascal_region(1, filename="runner.py"):
+                    pass
+                with pascalops.pascal_region(2, filename="runner.py"):
+                    pass
+
+        self.assertEqual(
+            roundtrip.call_args_list,
+            [
+                call("START", 0, 0, "runner.py"),
+                call("START", 1, 0, "runner.py"),
+                call("STOP", 1, 0, "runner.py"),
+                call("START", 2, 0, "runner.py"),
+                call("STOP", 2, 0, "runner.py"),
+                call("STOP", 0, 0, "runner.py"),
+            ],
+        )
+
     def test_proxy_rejects_filename_with_protocol_delimiter(self):
         with (
             patch.object(pascalops, "PASCAL_PROXY_AVAILABLE", True),

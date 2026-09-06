@@ -13,8 +13,8 @@ from pascalpy.validation.pascal_energy import validate_pascal_energy_file  # noq
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
-            "Valida se um JSON nativo do PaScal contem o contrato de regioes e "
-            "region_energy esperado para a analise energetica no Viewer."
+            "Classifica um JSON nativo do PaScal como pronto para o Viewer ou "
+            "derivavel a partir de regioes e potencia RAPL amostrada."
         )
     )
     parser.add_argument("json_path", help="Caminho para o JSON produzido pelo pascalanalyzer")
@@ -23,6 +23,14 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=1,
         help="Regiao de interesse (padrao: 1 = model.optimize())",
+    )
+    parser.add_argument(
+        "--accept-sampled",
+        action="store_true",
+        help=(
+            "Aceita telemetria regional com potencia RAPL amostrada, mesmo que o "
+            "Viewer ainda precise realizar a integracao."
+        ),
     )
     parser.add_argument(
         "--require-nonzero-energy",
@@ -43,7 +51,10 @@ def main() -> int:
     )
     print(json.dumps(report.to_dict(), indent=2, ensure_ascii=False))
 
-    if not report.viewer_energy_ready:
+    accepted = report.viewer_energy_ready or (
+        args.accept_sampled and report.sampled_energy_derivable
+    )
+    if not accepted:
         return 2
     if args.require_nonzero_energy and not report.required_region_has_nonzero_energy:
         return 3

@@ -13,14 +13,17 @@ from pascalpy.instrumentation.pascalops import (  # noqa: E402
     instrumentation_status,
     pascal_region,
 )
+from pascalpy.instrumentation.solver_regions import (  # noqa: E402
+    MODEL_BUILD_REGION_ID,
+    SOLVE_EXECUTION_REGION_ID,
+    SOLVER_PIPELINE_REGION_ID,
+    solver_region_schema,
+)
 
 try:
     import gurobipy as gp
 except ImportError:
     gp = None
-
-
-GUROBI_OPTIMIZE_REGION = 1
 
 
 def safe_get(model, attr_name, default=None):
@@ -93,7 +96,7 @@ def main():
             "stop_symbol": pascal_status["stop_symbol"],
             "proxy_command_fd": pascal_status.get("proxy_command_fd"),
             "proxy_ack_fd": pascal_status.get("proxy_ack_fd"),
-            "region_id": GUROBI_OPTIMIZE_REGION,
+            "region_schema": solver_region_schema(),
         },
         "parameters": {
             "threads_requested": cores,
@@ -104,38 +107,57 @@ def main():
 
     env = None
     model = None
+    read_wall_s = 0.0
     solve_wall_s = 0.0
     try:
         env = gp.Env(empty=True)
         env.setParam("OutputFlag", 0)
         env.start()
-        model = gp.read(args.workload, env=env)
 
-        model.Params.Threads = cores
-        model.Params.Seed = 10000 + input_idx
-        metadata["parameters"]["threads_effective"] = int(model.Params.Threads)
+        pipeline_line = sys._getframe().f_lineno + 2
+        with pascal_region(
+            SOLVER_PIPELINE_REGION_ID,
+            filename=Path(__file__).name,
+            start_line=pipeline_line,
+            stop_line=pipeline_line,
+        ):
+            build_line = sys._getframe().f_lineno + 2
+            with pascal_region(
+                MODEL_BUILD_REGION_ID,
+                filename=Path(__file__).name,
+                start_line=build_line,
+                stop_line=build_line,
+            ):
+                read_started = time.perf_counter()
+                model = gp.read(args.workload, env=env)
+                read_wall_s = time.perf_counter() - read_started
 
-        if metadata["parameters"]["threads_effective"] != cores:
-            raise RuntimeError(
-                "Gurobi Threads divergiu da configuracao PaScal: "
-                f"requested={cores}, effective={model.Params.Threads}"
+            model.Params.Threads = cores
+            model.Params.Seed = 10000 + input_idx
+            metadata["parameters"]["threads_effective"] = int(
+                model.Params.Threads
             )
 
-        # A região PaScal 1 cobre somente model.optimize(). O supervisor nativo
-        # executa os marcadores, mas recebe filename/linha do ponto Python real.
-        optimize_line = sys._getframe().f_lineno + 2
-        t_solve_start = time.perf_counter()
-        with pascal_region(
-            GUROBI_OPTIMIZE_REGION,
-            filename=Path(__file__).name,
-            start_line=optimize_line,
-            stop_line=optimize_line,
-        ):
-            model.optimize()
-        solve_wall_s = time.perf_counter() - t_solve_start
+            if metadata["parameters"]["threads_effective"] != cores:
+                raise RuntimeError(
+                    "Gurobi Threads divergiu da configuracao PaScal: "
+                    f"requested={cores}, effective={model.Params.Threads}"
+                )
+
+            solve_line = sys._getframe().f_lineno + 2
+            with pascal_region(
+                SOLVE_EXECUTION_REGION_ID,
+                filename=Path(__file__).name,
+                start_line=solve_line,
+                stop_line=solve_line,
+            ):
+                solve_started = time.perf_counter()
+                model.optimize()
+                solve_wall_s = time.perf_counter() - solve_started
 
         metadata["metrics"] = {
             "status": int(model.Status),
+            "read_wall_clock_s": read_wall_s,
             "gurobi_runtime_s": safe_get(model, "Runtime"),
             "solve_wall_clock_s": solve_wall_s,
             "work": safe_get(model, "Work"),
