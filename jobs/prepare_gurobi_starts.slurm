@@ -52,4 +52,3 @@ done
 sha256sum "$OUTPUT_DIR"/*.mst "$OUTPUT_DIR"/*.mst.json \
     > "$OUTPUT_DIR/SHA256SUMS"
 printf 'warm_start_directory=%s\n' "$OUTPUT_DIR"
-
