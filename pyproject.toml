@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pascal-suite-python"
+version = "0.1.0.dev0"
+description = "Reproducible PaScal Analyzer experiments for mathematical optimization solvers on HPC systems."
+readme = "README.md"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "pydantic>=2.10,<3",
+    "PyYAML>=6.0,<7",
+]
+
+[project.optional-dependencies]
+gurobi = ["gurobipy>=12,<14"]
+scip = ["PySCIPOpt==6.2.1"]
+analysis = [
+    "matplotlib>=3.9,<4",
+    "pandas>=2.2,<4",
+    "seaborn>=0.13,<1",
+]
+dev = [
+    "pytest>=8,<10",
+    "pytest-cov>=5,<8",
+    "ruff>=0.11,<1",
+]
+
+[project.scripts]
+pascal-experiment = "pascalpy.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

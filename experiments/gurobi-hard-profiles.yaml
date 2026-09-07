@@ -1,0 +1,35 @@
+experiment:
+  name: gurobi_hard_profiles
+  solver: gurobi
+  scaling_mode: strong
+  resources: [1, 2, 4]
+  repetitions: 6
+  workloads:
+    - /home/Projeto_LAMFO_LAPPS/data/facility_location_easy/hard/CFL_hard_instance_5.lp.gz
+    - /home/Projeto_LAMFO_LAPPS/data/facility_location_easy/hard/CFL_hard_instance_10.lp.gz
+    - /home/Projeto_LAMFO_LAPPS/data/facility_location_easy/hard/CFL_hard_instance_15.lp.gz
+    - /home/Projeto_LAMFO_LAPPS/data/facility_location_easy/hard/CFL_hard_instance_20.lp.gz
+    - /home/Projeto_LAMFO_LAPPS/data/facility_location_easy/hard/CFL_hard_instance_25.lp.gz
+  profiles:
+    - id: default
+      kind: default
+    - id: presolve-off
+      kind: presolve-off
+    - id: warm-start
+      kind: warm-start
+      initial_solution:
+        required: true
+        files:
+          CFL_hard_instance_5.lp.gz: initial_solutions/gurobi/CFL_hard_instance_5.mst
+          CFL_hard_instance_10.lp.gz: initial_solutions/gurobi/CFL_hard_instance_10.mst
+          CFL_hard_instance_15.lp.gz: initial_solutions/gurobi/CFL_hard_instance_15.mst
+          CFL_hard_instance_20.lp.gz: initial_solutions/gurobi/CFL_hard_instance_20.mst
+          CFL_hard_instance_25.lp.gz: initial_solutions/gurobi/CFL_hard_instance_25.mst
+
+environment:
+  track_cores: false
+  track_energy_rapl: sysfs
+  idle_time_seconds: 0
+
+output:
+  directory: resultados_finais/gurobi_hard_profiles

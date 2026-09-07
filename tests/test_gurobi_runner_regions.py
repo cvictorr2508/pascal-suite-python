@@ -41,6 +41,9 @@ class _FakeModel:
         self.SolCount = 1
         self.ObjVal = 42.0
 
+    def setParam(self, name, value):
+        setattr(self.Params, name, value)
+
     def optimize(self):
         pass
 
@@ -139,3 +142,4 @@ class GurobiRunnerRegionTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
