@@ -28,11 +28,12 @@ class GurobiAdapterProxyTests(unittest.TestCase):
 
             with (
                 patch(
-                    "pascalpy.adapters.gurobi_adapter.build_region_proxy",
+                    "pascalpy.adapters.solver_file_adapter.build_region_proxy",
                     return_value=proxy,
                 ),
                 patch(
-                    "pascalpy.adapters.gurobi_adapter.resolve_pascal_ops_library",
+                    "pascalpy.adapters.solver_file_adapter."
+                    "resolve_pascal_ops_library",
                     return_value=Path("/opt/pascal/lib/libmpascalops.so"),
                 ),
             ):
