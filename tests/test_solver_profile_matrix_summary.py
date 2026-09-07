@@ -77,7 +77,7 @@ def _write_matrix(root: Path, solver: str) -> None:
             initial_solution = {
                 "applied": True,
                 "accepted": True,
-                "format": "mst" if solver == "gurobi" else "sol",
+                "format": "mst" if solver == "gurobi" else "sol.gz",
             }
         metadata = {
             "profile": {"id": profile_id},
