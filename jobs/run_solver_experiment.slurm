@@ -54,4 +54,3 @@ printf 'config=%s\n' "$CONFIG_FILE"
 printf 'partition=%s\n' "${SLURM_JOB_PARTITION:-unknown}"
 
 "$PYTHON_BIN" rodar_yaml.py "$CONFIG_FILE"
-
