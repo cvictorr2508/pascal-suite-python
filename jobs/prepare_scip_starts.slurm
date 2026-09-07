@@ -35,7 +35,7 @@ fi
 mkdir -p "$OUTPUT_DIR"
 for instance_id in 5 10 15 20 25; do
     workload="$DATASET_DIR/CFL_hard_instance_${instance_id}.lp.gz"
-    output="$OUTPUT_DIR/CFL_hard_instance_${instance_id}.sol"
+    output="$OUTPUT_DIR/CFL_hard_instance_${instance_id}.sol.gz"
     if [[ ! -s "$workload" ]]; then
         printf 'preflight_error=workload_missing_or_empty path=%s\n' \
             "$workload" >&2
@@ -45,6 +45,6 @@ for instance_id in 5 10 15 20 25; do
         "$workload" "$output" --seed 10000
 done
 
-sha256sum "$OUTPUT_DIR"/*.sol "$OUTPUT_DIR"/*.sol.json \
+sha256sum "$OUTPUT_DIR"/*.sol.gz "$OUTPUT_DIR"/*.sol.gz.json \
     > "$OUTPUT_DIR/SHA256SUMS"
 printf 'warm_start_directory=%s\n' "$OUTPUT_DIR"
