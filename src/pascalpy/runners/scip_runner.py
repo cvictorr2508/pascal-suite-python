@@ -143,14 +143,19 @@ def _apply_profile(model: Any, workload: Path, profile: dict) -> dict:
                 )
         else:
             suffix = solution_path.suffix.lower()
-            if suffix == ".sol":
+            filename = solution_path.name.lower()
+            if suffix == ".sol" or filename.endswith(".sol.gz"):
+                solution_format = (
+                    "sol.gz" if filename.endswith(".sol.gz") else "sol"
+                )
                 solution = model.readSolFile(str(solution_path))
                 assigned = 0
             elif suffix == ".json":
+                solution_format = "json"
                 solution, assigned = _json_solution(model, solution_path)
             else:
                 raise ValueError(
-                    "SCIP warm starts must use .sol or a JSON "
+                    "SCIP warm starts must use .sol, .sol.gz, or a JSON "
                     "variable-to-value mapping"
                 )
             accepted = bool(model.addSol(solution, free=True))
@@ -163,7 +168,7 @@ def _apply_profile(model: Any, workload: Path, profile: dict) -> dict:
                     "applied": True,
                     "accepted": accepted,
                     "path": str(solution_path),
-                    "format": suffix.removeprefix("."),
+                    "format": solution_format,
                     "variables_assigned": assigned,
                 }
             )
