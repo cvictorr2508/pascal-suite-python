@@ -13,8 +13,9 @@ __pycache__/
 *.stdout
 *.stderr
 
-# Generated experiment results
+# Generated experiment results and solver starts
 /resultados_finais/
+/initial_solutions/
 resultados_avancados/
 *.csv
 
@@ -31,3 +32,4 @@ secret/
 # Old files
 slurm_out/
 *.old
+

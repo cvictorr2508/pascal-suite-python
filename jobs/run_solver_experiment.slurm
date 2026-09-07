@@ -1,0 +1,57 @@
+#!/bin/bash
+#SBATCH --job-name=solver_matrix
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=64G
+#SBATCH --time=04:00:00
+#SBATCH --exclusive
+#SBATCH --partition=intel-128
+#SBATCH --output=solver_matrix_%j.out
+#SBATCH --error=solver_matrix_%j.err
+
+source /etc/profile
+source /etc/profile.d/modules.sh 2>/dev/null || true
+set -Eeuo pipefail
+
+module purge
+module load softwares/python/3.13.7-gnu8
+module load softwares/pascalsuite/2025-07-08
+
+cd "$SLURM_SUBMIT_DIR"
+
+CONFIG_FILE="${PASCAL_EXPERIMENT_CONFIG:-experiments/gurobi-profile-smoke.yaml}"
+LICENSE_FILE="${GRB_LICENSE_FILE:-$SLURM_SUBMIT_DIR/secret/gurobi.lic}"
+PYTHON_BIN="${PASCAL_PYTHON_BIN:-$(command -v python || true)}"
+
+require_file() {
+    local path="$1"
+    local label="$2"
+    if [[ ! -s "$path" ]]; then
+        printf 'preflight_error=%s path=%s\n' "$label" "$path" >&2
+        exit 11
+    fi
+}
+
+if [[ -z "$PYTHON_BIN" || ! -x "$PYTHON_BIN" ]]; then
+    printf 'preflight_error=python_not_available_on_path\n' >&2
+    exit 10
+fi
+if ! command -v pascalanalyzer >/dev/null 2>&1; then
+    printf 'preflight_error=pascalanalyzer_not_available_on_path\n' >&2
+    exit 10
+fi
+
+require_file "$CONFIG_FILE" "configuration_missing_or_empty"
+require_file "$LICENSE_FILE" "gurobi_license_missing_or_empty"
+export GRB_LICENSE_FILE="$LICENSE_FILE"
+
+printf 'host=%s\n' "$(hostname -f)"
+printf 'python=%s\n' "$PYTHON_BIN"
+printf 'python_version=%s\n' "$("$PYTHON_BIN" --version 2>&1)"
+printf 'git_commit=%s\n' "$(git rev-parse HEAD)"
+printf 'config=%s\n' "$CONFIG_FILE"
+printf 'partition=%s\n' "${SLURM_JOB_PARTITION:-unknown}"
+
+"$PYTHON_BIN" rodar_yaml.py "$CONFIG_FILE"
+
