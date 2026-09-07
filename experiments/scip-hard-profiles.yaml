@@ -20,11 +20,11 @@ experiment:
       initial_solution:
         required: true
         files:
-          CFL_hard_instance_5.lp.gz: initial_solutions/scip/CFL_hard_instance_5.sol
-          CFL_hard_instance_10.lp.gz: initial_solutions/scip/CFL_hard_instance_10.sol
-          CFL_hard_instance_15.lp.gz: initial_solutions/scip/CFL_hard_instance_15.sol
-          CFL_hard_instance_20.lp.gz: initial_solutions/scip/CFL_hard_instance_20.sol
-          CFL_hard_instance_25.lp.gz: initial_solutions/scip/CFL_hard_instance_25.sol
+          CFL_hard_instance_5.lp.gz: initial_solutions/scip/CFL_hard_instance_5.sol.gz
+          CFL_hard_instance_10.lp.gz: initial_solutions/scip/CFL_hard_instance_10.sol.gz
+          CFL_hard_instance_15.lp.gz: initial_solutions/scip/CFL_hard_instance_15.sol.gz
+          CFL_hard_instance_20.lp.gz: initial_solutions/scip/CFL_hard_instance_20.sol.gz
+          CFL_hard_instance_25.lp.gz: initial_solutions/scip/CFL_hard_instance_25.sol.gz
 
 environment:
   track_cores: false
