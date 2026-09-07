@@ -2,6 +2,7 @@ import json
 import sys
 from pathlib import Path
 
+from pascalpy.experiment_profiles import SolverProfile, default_solver_profile
 from pascalpy.instrumentation.proxy_builder import (
     build_region_proxy,
     resolve_pascal_ops_library,
@@ -9,8 +10,28 @@ from pascalpy.instrumentation.proxy_builder import (
 
 
 class GurobiFileAdapter:
-    def __init__(self, limits=None):
-        self.limits = limits or {}
+    """Build one PaScal Analyzer batch for a validated Gurobi profile."""
+
+    def __init__(
+        self,
+        profile: SolverProfile | None = None,
+        limits: dict | None = None,
+    ):
+        if profile is not None and limits:
+            raise ValueError("Use either profile or legacy limits, not both")
+        self.profile = profile or default_solver_profile()
+        if limits:
+            self.profile = self.profile.model_copy(update={"parameters": limits})
+
+    def _profile_payload(self) -> dict:
+        payload = self.profile.model_dump(mode="json")
+        initial_solution = payload.get("initial_solution")
+        if isinstance(initial_solution, dict):
+            initial_solution["files"] = {
+                key: str(Path(value).expanduser().resolve())
+                for key, value in initial_solution["files"].items()
+            }
+        return payload
 
     def build_batch_command(
         self,
@@ -29,15 +50,16 @@ class GurobiFileAdapter:
 
         base_config = {
             "experiment_name": exp_name,
-            "limits": self.limits,
+            "solver": "gurobi",
+            "profile": self._profile_payload(),
             "output_dir": str(output_dir.resolve()),
             "workloads_list": workloads_str_list,
         }
-        with base_config_path.open("w", encoding="utf-8") as f:
-            json.dump(base_config, f, indent=2)
+        with base_config_path.open("w", encoding="utf-8") as stream:
+            json.dump(base_config, stream, indent=2)
 
-        c_str = ",".join(map(str, cores_list))
-        i_str = ",".join(workloads_str_list)
+        cores_arg = ",".join(map(str, cores_list))
+        inputs_arg = ",".join(workloads_str_list)
 
         runner_path = Path(__file__).parent.parent / "runners" / "gurobi_runner.py"
         proxy_path = build_region_proxy(
@@ -46,9 +68,6 @@ class GurobiFileAdapter:
         )
         pascal_library = resolve_pascal_ops_library().resolve()
 
-        # O Analyzer deve iniciar diretamente o ELF linkado com libmpascalops.
-        # Configuração estática do processo Python é herdada via ambiente; o workload
-        # continua sendo injetado pelo próprio PaScal através de -i.
         base_cmd = [
             "env",
             f"PASCAL_PROXY_PYTHON_BIN={sys.executable}",
@@ -57,9 +76,9 @@ class GurobiFileAdapter:
             f"PASCAL_OPS_LIB={pascal_library}",
             "pascalanalyzer",
             "-c",
-            c_str,
+            cores_arg,
             "-i",
-            i_str,
+            inputs_arg,
             "-r",
             str(repetitions),
             "-t",
@@ -71,16 +90,16 @@ class GurobiFileAdapter:
         if env_policy:
             if getattr(env_policy, "track_energy_rapl", None):
                 rapl_backend = str(env_policy.track_energy_rapl)
-                # --rple fornece a energia global independente usada como controle;
-                # --rpls preserva a serie de potencia necessaria para o Viewer
-                # integrar energia sobre os intervalos das regioes.
                 base_cmd.extend(
                     ["--rple", rapl_backend, "--rpls", rapl_backend]
                 )
             if getattr(env_policy, "track_cores", False):
                 base_cmd.append("--prcs")
             if getattr(env_policy, "idle_time_seconds", 0) > 0:
-                base_cmd.extend(["--idtm", str(int(env_policy.idle_time_seconds))])
+                base_cmd.extend(
+                    ["--idtm", str(int(env_policy.idle_time_seconds))]
+                )
 
         base_cmd.append(str(proxy_path.resolve()))
         return base_cmd
+
