@@ -45,14 +45,20 @@ class ResearchManifestTests(unittest.TestCase):
             ]
 
             with (
-                patch("pascalpy.cli._git_value", return_value="abc123"),
+                patch.dict(
+                    "os.environ",
+                    {
+                        "PASCAL_SOURCE_COMMIT": "a" * 40,
+                        "PASCAL_SOURCE_BRANCH": "feature/test",
+                        "PASCAL_SOURCE_TRACKED_CLEAN": "true",
+                    },
+                ),
                 patch("pascalpy.cli._distribution_version", return_value="1.0"),
             ):
                 manifest = build_research_manifest(
                     config_path=configuration_path,
                     configuration=configuration,
                     profiles=profiles,
-                    project_root=root,
                 )
 
         self.assertEqual(
@@ -63,7 +69,12 @@ class ResearchManifestTests(unittest.TestCase):
             manifest["initial_solutions"][0]["sha256"],
             hashlib.sha256(b"start").hexdigest(),
         )
-        self.assertEqual(manifest["source"]["git_commit"], "abc123")
+        self.assertEqual(manifest["source"]["git_commit"], "a" * 40)
+        self.assertEqual(manifest["source"]["git_branch"], "feature/test")
+        self.assertTrue(manifest["source"]["tracked_worktree_clean"])
+        self.assertEqual(
+            manifest["source"]["capture_method"], "submission-environment"
+        )
         self.assertEqual(
             manifest["experiment"]["profiles"][0]["kind"], "warm-start"
         )
@@ -71,4 +82,3 @@ class ResearchManifestTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

@@ -23,6 +23,9 @@ cd "$SLURM_SUBMIT_DIR"
 CONFIG_FILE="${PASCAL_EXPERIMENT_CONFIG:-experiments/gurobi-profile-smoke.yaml}"
 LICENSE_FILE="${GRB_LICENSE_FILE:-$SLURM_SUBMIT_DIR/secret/gurobi.lic}"
 PYTHON_BIN="${PASCAL_PYTHON_BIN:-$(command -v python || true)}"
+SOURCE_COMMIT="${PASCAL_SOURCE_COMMIT:-}"
+SOURCE_BRANCH="${PASCAL_SOURCE_BRANCH:-detached}"
+SOURCE_TRACKED_CLEAN="${PASCAL_SOURCE_TRACKED_CLEAN:-}"
 
 require_file() {
     local path="$1"
@@ -41,6 +44,20 @@ if ! command -v pascalanalyzer >/dev/null 2>&1; then
     printf 'preflight_error=pascalanalyzer_not_available_on_path\n' >&2
     exit 10
 fi
+if [[ ! "$SOURCE_COMMIT" =~ ^[0-9a-fA-F]{40}$ ]]; then
+    printf 'preflight_error=source_commit_missing_or_invalid value=%s\n' \
+        "$SOURCE_COMMIT" >&2
+    exit 12
+fi
+if [[ "$SOURCE_TRACKED_CLEAN" != "true" ]]; then
+    printf 'preflight_error=tracked_worktree_not_clean value=%s\n' \
+        "$SOURCE_TRACKED_CLEAN" >&2
+    exit 12
+fi
+
+export PASCAL_SOURCE_COMMIT="$SOURCE_COMMIT"
+export PASCAL_SOURCE_BRANCH="$SOURCE_BRANCH"
+export PASCAL_SOURCE_TRACKED_CLEAN="$SOURCE_TRACKED_CLEAN"
 
 require_file "$CONFIG_FILE" "configuration_missing_or_empty"
 require_file "$LICENSE_FILE" "gurobi_license_missing_or_empty"
@@ -49,7 +66,9 @@ export GRB_LICENSE_FILE="$LICENSE_FILE"
 printf 'host=%s\n' "$(hostname -f)"
 printf 'python=%s\n' "$PYTHON_BIN"
 printf 'python_version=%s\n' "$("$PYTHON_BIN" --version 2>&1)"
-printf 'git_commit=%s\n' "$(git rev-parse HEAD)"
+printf 'source_commit=%s\n' "$SOURCE_COMMIT"
+printf 'source_branch=%s\n' "$SOURCE_BRANCH"
+printf 'source_tracked_clean=%s\n' "$SOURCE_TRACKED_CLEAN"
 printf 'config=%s\n' "$CONFIG_FILE"
 printf 'partition=%s\n' "${SLURM_JOB_PARTITION:-unknown}"
 

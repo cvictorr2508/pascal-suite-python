@@ -42,20 +42,6 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def _git_value(project_root: Path, *arguments: str) -> str | None:
-    try:
-        result = subprocess.run(
-            ["git", *arguments],
-            cwd=project_root,
-            check=True,
-            capture_output=True,
-            text=True,
-        )
-    except (OSError, subprocess.CalledProcessError):
-        return None
-    return result.stdout.strip()
-
-
 def _distribution_version(name: str) -> str | None:
     try:
         return importlib.metadata.version(name)
@@ -128,20 +114,30 @@ def build_research_manifest(
     config_path: Path,
     configuration: dict,
     profiles: list[SolverProfile],
-    project_root: Path,
 ) -> dict:
     """Build a checksummed description of code, data, runtime, and treatments."""
 
     experiment = configuration["experiment"]
     workloads = [Path(item).expanduser().resolve() for item in experiment["workloads"]]
-    status = _git_value(project_root, "status", "--porcelain", "--untracked-files=no")
+    source_commit = os.environ.get("PASCAL_SOURCE_COMMIT")
+    source_branch = os.environ.get("PASCAL_SOURCE_BRANCH")
+    tracked_clean_value = os.environ.get("PASCAL_SOURCE_TRACKED_CLEAN")
+    tracked_clean = (
+        tracked_clean_value.lower() == "true"
+        if tracked_clean_value is not None
+        else None
+    )
     return {
         "schema_version": 1,
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
         "configuration": _file_record(config_path),
         "source": {
-            "git_commit": _git_value(project_root, "rev-parse", "HEAD"),
-            "tracked_worktree_clean": status == "" if status is not None else None,
+            "git_commit": source_commit,
+            "git_branch": source_branch,
+            "tracked_worktree_clean": tracked_clean,
+            "capture_method": (
+                "submission-environment" if source_commit else "not-provided"
+            ),
         },
         "runtime": {
             "hostname": socket.getfqdn(),
@@ -195,13 +191,10 @@ def run_configuration(config_path: Path) -> Path:
     profiles, profiles_declared = _load_profiles(experiment)
     output_root = Path(configuration["output"]["directory"])
     output_root.mkdir(parents=True, exist_ok=True)
-    project_root = Path.cwd().resolve()
-
     manifest = build_research_manifest(
         config_path=config_path,
         configuration=configuration,
         profiles=profiles,
-        project_root=project_root,
     )
     manifest_path = output_root / "research_manifest.json"
     with manifest_path.open("w", encoding="utf-8") as stream:
@@ -252,4 +245,3 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
