@@ -36,6 +36,7 @@ def _single_file(directory: Path, pattern: str) -> Path:
 
 
 def _metadata_errors(
+    solver: str,
     profile_id: str,
     profile_kind: str,
     metadata_paths: list[Path],
@@ -49,14 +50,24 @@ def _metadata_errors(
             errors.append(f"{path.name}: profile ID mismatch")
         if profile_kind == "presolve-off":
             effective = metadata.get("parameters", {}).get("profile_effective", {})
-            if effective.get("Presolve") != 0:
-                errors.append(f"{path.name}: effective Presolve is not zero")
+            presolve_disabled = (
+                effective.get("Presolve") == 0
+                if solver == "gurobi"
+                else effective.get("presolve") == "off"
+            )
+            if not presolve_disabled:
+                errors.append(f"{path.name}: presolve is not effectively disabled")
         if profile_kind == "warm-start":
             initial_solution = metadata.get("initial_solution", {})
             if initial_solution.get("applied") is not True:
                 errors.append(f"{path.name}: initial solution was not applied")
-            if initial_solution.get("format") not in {"mst", "sol", "json"}:
+            allowed_formats = (
+                {"mst", "sol", "json"} if solver == "gurobi" else {"sol", "json"}
+            )
+            if initial_solution.get("format") not in allowed_formats:
                 errors.append(f"{path.name}: unsupported initial-solution format")
+            if solver == "scip" and initial_solution.get("accepted") is not True:
+                errors.append(f"{path.name}: SCIP did not accept the initial solution")
     return errors
 
 
@@ -64,7 +75,7 @@ def summarize_profile_matrix(
     output_root: Path,
     *,
     required_runs: int = 5,
-    required_configurations: int = 15,
+    required_configurations: int | None = None,
     max_median_error_percent: float = 5.0,
     preferred_max_cv_percent: float = 10.0,
 ) -> dict[str, Any]:
@@ -75,16 +86,18 @@ def summarize_profile_matrix(
     solver = experiment.get("solver")
     profiles = experiment.get("profiles")
     workloads = [item["path"] for item in manifest.get("workloads", [])]
-    if solver != "gurobi":
-        raise ProfileMatrixError(f"Unsupported solver for this sprint: {solver!r}")
+    if solver not in {"gurobi", "scip"}:
+        raise ProfileMatrixError(f"Unsupported solver: {solver!r}")
     if not isinstance(profiles, list) or not profiles:
         raise ProfileMatrixError("Research manifest contains no profiles")
 
+    resource_count = len(experiment.get("resources", []))
+    expected_configurations = len(workloads) * resource_count
     expected_attempts = (
-        len(workloads)
-        * len(experiment.get("resources", []))
-        * int(experiment.get("repetitions", 0))
+        expected_configurations * int(experiment.get("repetitions", 0))
     )
+    if required_configurations is None:
+        required_configurations = expected_configurations
     if expected_attempts < 1:
         raise ProfileMatrixError("Research manifest has an empty experiment matrix")
 
@@ -101,6 +114,7 @@ def summarize_profile_matrix(
 
         metadata_paths = sorted(profile_dir.glob("meta_*.json"))
         metadata_errors = _metadata_errors(
+            solver,
             profile_id,
             profile_kind,
             metadata_paths,
@@ -169,11 +183,11 @@ def summarize_profile_matrix(
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Validate a complete Gurobi profile experiment matrix."
+        description="Validate a complete solver-profile experiment matrix."
     )
     parser.add_argument("output_root", type=Path)
     parser.add_argument("--require-runs", type=int, default=5)
-    parser.add_argument("--require-configurations", type=int, default=15)
+    parser.add_argument("--require-configurations", type=int)
     parser.add_argument("--max-median-error-percent", type=float, default=5.0)
     parser.add_argument("--preferred-max-cv-percent", type=float, default=10.0)
     parser.add_argument("--output-json", type=Path)

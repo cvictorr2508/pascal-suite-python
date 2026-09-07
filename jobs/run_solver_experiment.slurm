@@ -55,13 +55,40 @@ if [[ "$SOURCE_TRACKED_CLEAN" != "true" ]]; then
     exit 12
 fi
 
+require_file "$CONFIG_FILE" "configuration_missing_or_empty"
+SOLVER="$(
+    "$PYTHON_BIN" - "$CONFIG_FILE" <<'PY'
+import sys
+from pathlib import Path
+
+import yaml
+
+with Path(sys.argv[1]).open("r", encoding="utf-8") as stream:
+    document = yaml.safe_load(stream)
+print(document["experiment"]["solver"])
+PY
+)"
+
+case "$SOLVER" in
+    gurobi)
+        require_file "$LICENSE_FILE" "gurobi_license_missing_or_empty"
+        export GRB_LICENSE_FILE="$LICENSE_FILE"
+        ;;
+    scip)
+        if ! "$PYTHON_BIN" -c 'import pyscipopt' >/dev/null 2>&1; then
+            printf 'preflight_error=pyscipopt_not_available\n' >&2
+            exit 10
+        fi
+        ;;
+    *)
+        printf 'preflight_error=unsupported_solver value=%s\n' "$SOLVER" >&2
+        exit 12
+        ;;
+esac
+
 export PASCAL_SOURCE_COMMIT="$SOURCE_COMMIT"
 export PASCAL_SOURCE_BRANCH="$SOURCE_BRANCH"
 export PASCAL_SOURCE_TRACKED_CLEAN="$SOURCE_TRACKED_CLEAN"
-
-require_file "$CONFIG_FILE" "configuration_missing_or_empty"
-require_file "$LICENSE_FILE" "gurobi_license_missing_or_empty"
-export GRB_LICENSE_FILE="$LICENSE_FILE"
 
 printf 'host=%s\n' "$(hostname -f)"
 printf 'python=%s\n' "$PYTHON_BIN"
@@ -70,6 +97,7 @@ printf 'source_commit=%s\n' "$SOURCE_COMMIT"
 printf 'source_branch=%s\n' "$SOURCE_BRANCH"
 printf 'source_tracked_clean=%s\n' "$SOURCE_TRACKED_CLEAN"
 printf 'config=%s\n' "$CONFIG_FILE"
+printf 'solver=%s\n' "$SOLVER"
 printf 'partition=%s\n' "${SLURM_JOB_PARTITION:-unknown}"
 
 "$PYTHON_BIN" rodar_yaml.py "$CONFIG_FILE"
