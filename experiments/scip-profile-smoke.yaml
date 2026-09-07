@@ -16,7 +16,7 @@ experiment:
       initial_solution:
         required: true
         files:
-          CFL_hard_instance_20.lp.gz: initial_solutions/scip/CFL_hard_instance_20.sol
+          CFL_hard_instance_20.lp.gz: initial_solutions/scip/CFL_hard_instance_20.sol.gz
 
 environment:
   track_cores: false
