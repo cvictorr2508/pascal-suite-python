@@ -3,12 +3,16 @@
 from __future__ import annotations
 
 import argparse
+import gzip
 import hashlib
 import json
 import platform
+import shutil
+import tempfile
 import time
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
 
 from pyscipopt import Model
 
@@ -19,6 +23,73 @@ def _sha256(path: Path) -> str:
         for chunk in iter(lambda: stream.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def _write_solution_artifact(
+    model: Model,
+    solution: Any,
+    output: Path,
+) -> dict[str, Any]:
+    """Write a plain or deterministic gzip-compressed SCIP solution."""
+
+    if output.suffix.lower() == ".sol":
+        model.writeSol(solution, filename=str(output), write_zeros=False)
+        size_bytes = output.stat().st_size
+        return {
+            "format": "sol",
+            "compression": None,
+            "compression_level": None,
+            "uncompressed_size_bytes": size_bytes,
+            "compression_ratio": 1.0,
+        }
+
+    if not output.name.lower().endswith(".sol.gz"):
+        raise ValueError("The output path must use the .sol or .sol.gz extension")
+
+    with tempfile.NamedTemporaryFile(
+        dir=output.parent,
+        prefix=f".{output.stem}.",
+        suffix=".sol",
+        delete=False,
+    ) as temporary:
+        raw_path = Path(temporary.name)
+    with tempfile.NamedTemporaryFile(
+        dir=output.parent,
+        prefix=f".{output.name}.",
+        suffix=".tmp",
+        delete=False,
+    ) as temporary:
+        compressed_path = Path(temporary.name)
+
+    try:
+        model.writeSol(solution, filename=str(raw_path), write_zeros=False)
+        uncompressed_size_bytes = raw_path.stat().st_size
+        with raw_path.open("rb") as source, compressed_path.open("wb") as target:
+            with gzip.GzipFile(
+                filename="",
+                mode="wb",
+                fileobj=target,
+                compresslevel=1,
+                mtime=0,
+            ) as compressed:
+                shutil.copyfileobj(source, compressed, length=1024 * 1024)
+        compressed_path.replace(output)
+    finally:
+        raw_path.unlink(missing_ok=True)
+        compressed_path.unlink(missing_ok=True)
+
+    compressed_size_bytes = output.stat().st_size
+    return {
+        "format": "sol.gz",
+        "compression": "gzip",
+        "compression_level": 1,
+        "uncompressed_size_bytes": uncompressed_size_bytes,
+        "compression_ratio": (
+            compressed_size_bytes / uncompressed_size_bytes
+            if uncompressed_size_bytes
+            else None
+        ),
+    }
 
 
 def export_warm_start(
@@ -32,8 +103,10 @@ def export_warm_start(
     output = output.expanduser().resolve()
     if not workload.is_file():
         raise FileNotFoundError(f"Workload does not exist: {workload}")
-    if output.suffix.lower() != ".sol":
-        raise ValueError("The output path must use the .sol extension")
+    if output.suffix.lower() != ".sol" and not output.name.lower().endswith(
+        ".sol.gz"
+    ):
+        raise ValueError("The output path must use the .sol or .sol.gz extension")
     output.parent.mkdir(parents=True, exist_ok=True)
 
     model = Model()
@@ -51,11 +124,7 @@ def export_warm_start(
             raise RuntimeError(
                 "SCIP did not find a feasible solution; no warm start was written"
             )
-        model.writeSol(
-            solution,
-            filename=str(output),
-            write_zeros=False,
-        )
+        serialization = _write_solution_artifact(model, solution, output)
         metadata = {
             "schema_version": 1,
             "created_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -67,10 +136,10 @@ def export_warm_start(
             },
             "warm_start": {
                 "path": str(output),
-                "format": "sol",
                 "write_zeros": False,
                 "size_bytes": output.stat().st_size,
                 "sha256": _sha256(output),
+                **serialization,
             },
             "runtime": {
                 "python_version": platform.python_version(),
@@ -102,7 +171,9 @@ def export_warm_start(
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Solve an instance and export a checksummed SCIP .sol file."
+        description=(
+            "Solve an instance and export a checksummed SCIP .sol or .sol.gz file."
+        )
     )
     parser.add_argument("workload", type=Path)
     parser.add_argument("output", type=Path)
