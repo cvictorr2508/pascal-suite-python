@@ -62,7 +62,9 @@ def _metadata_errors(
             if initial_solution.get("applied") is not True:
                 errors.append(f"{path.name}: initial solution was not applied")
             allowed_formats = (
-                {"mst", "sol", "json"} if solver == "gurobi" else {"sol", "json"}
+                {"mst", "sol", "json"}
+                if solver == "gurobi"
+                else {"sol", "sol.gz", "json"}
             )
             if initial_solution.get("format") not in allowed_formats:
                 errors.append(f"{path.name}: unsupported initial-solution format")
