@@ -106,6 +106,30 @@ class ScipProfileTests(unittest.TestCase):
         self.assertTrue(report["initial_solution"]["accepted"])
         self.assertEqual(report["initial_solution"]["format"], "sol")
 
+    def test_gzip_solution_file_is_loaded_and_reported(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            solution = Path(tmp) / "instance.sol.gz"
+            solution.write_bytes(b"compressed-solution-placeholder")
+            model = _Model()
+
+            report = _apply_profile(
+                model,
+                Path("dataset/instance.lp.gz"),
+                {
+                    "id": "warm-start",
+                    "kind": "warm-start",
+                    "initial_solution": {
+                        "files": {"instance.lp.gz": str(solution)},
+                        "required": True,
+                    },
+                },
+            )
+
+        self.assertEqual(model.solution_file, str(solution.resolve()))
+        self.assertTrue(report["initial_solution"]["applied"])
+        self.assertTrue(report["initial_solution"]["accepted"])
+        self.assertEqual(report["initial_solution"]["format"], "sol.gz")
+
     def test_json_solution_assigns_values(self):
         with tempfile.TemporaryDirectory() as tmp:
             solution = Path(tmp) / "instance.json"
