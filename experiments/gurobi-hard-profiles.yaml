@@ -3,7 +3,7 @@ experiment:
   solver: gurobi
   scaling_mode: strong
   resources: [1, 2, 4]
-  repetitions: 5
+  repetitions: 6
   workloads:
     - /home/Projeto_LAMFO_LAPPS/data/facility_location_easy/hard/CFL_hard_instance_5.lp.gz
     - /home/Projeto_LAMFO_LAPPS/data/facility_location_easy/hard/CFL_hard_instance_10.lp.gz
@@ -33,4 +33,3 @@ environment:
 
 output:
   directory: resultados_finais/gurobi_hard_profiles
-
