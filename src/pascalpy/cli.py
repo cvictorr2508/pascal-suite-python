@@ -17,6 +17,7 @@ from pathlib import Path
 import yaml
 
 from pascalpy.adapters.gurobi_adapter import GurobiFileAdapter
+from pascalpy.adapters.scip_adapter import ScipFileAdapter
 from pascalpy.experiment_profiles import (
     ProfileKind,
     SolverName,
@@ -183,10 +184,10 @@ def run_configuration(config_path: Path) -> Path:
 
     experiment = configuration["experiment"]
     solver = SolverName(experiment.get("solver", SolverName.GUROBI.value))
-    if solver != SolverName.GUROBI:
-        raise NotImplementedError(
-            f"Solver {solver.value!r} is reserved for the SCIP sprint"
-        )
+    adapter_class = {
+        SolverName.GUROBI: GurobiFileAdapter,
+        SolverName.SCIP: ScipFileAdapter,
+    }[solver]
 
     profiles, profiles_declared = _load_profiles(experiment)
     output_root = Path(configuration["output"]["directory"])
@@ -211,7 +212,7 @@ def run_configuration(config_path: Path) -> Path:
             experiment_name = experiment["name"]
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        command = GurobiFileAdapter(profile=profile).build_batch_command(
+        command = adapter_class(profile=profile).build_batch_command(
             exp_name=experiment_name,
             cores_list=experiment["resources"],
             workloads_list=workloads,
