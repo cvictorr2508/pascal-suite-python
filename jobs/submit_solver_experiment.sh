@@ -38,11 +38,11 @@ if [[ -n "$TRACKED_STATUS" ]]; then
     exit 22
 fi
 
-printf 'source_commit=%s\n' "$SOURCE_COMMIT"
-printf 'source_branch=%s\n' "${SOURCE_BRANCH:-detached}"
-printf 'source_tracked_clean=true\n'
-printf 'python=%s\n' "$PYTHON_BIN"
-printf 'config=%s\n' "$CONFIG_FILE"
+printf 'source_commit=%s\n' "$SOURCE_COMMIT" >&2
+printf 'source_branch=%s\n' "${SOURCE_BRANCH:-detached}" >&2
+printf 'source_tracked_clean=true\n' >&2
+printf 'python=%s\n' "$PYTHON_BIN" >&2
+printf 'config=%s\n' "$CONFIG_FILE" >&2
 
 sbatch --parsable \
     --export="ALL,PASCAL_PYTHON_BIN=$PYTHON_BIN,PASCAL_EXPERIMENT_CONFIG=$CONFIG_FILE,PASCAL_SOURCE_COMMIT=$SOURCE_COMMIT,PASCAL_SOURCE_BRANCH=${SOURCE_BRANCH:-detached},PASCAL_SOURCE_TRACKED_CLEAN=true" \
