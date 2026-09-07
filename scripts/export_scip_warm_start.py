@@ -54,7 +54,7 @@ def export_warm_start(
         model.writeSol(
             solution,
             filename=str(output),
-            write_zeros=True,
+            write_zeros=False,
         )
         metadata = {
             "schema_version": 1,
@@ -67,6 +67,8 @@ def export_warm_start(
             },
             "warm_start": {
                 "path": str(output),
+                "format": "sol",
+                "write_zeros": False,
                 "size_bytes": output.stat().st_size,
                 "sha256": _sha256(output),
             },
