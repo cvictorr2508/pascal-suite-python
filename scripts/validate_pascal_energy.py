@@ -13,31 +13,31 @@ from pascalpy.validation.pascal_energy import validate_pascal_energy_file  # noq
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
-            "Classifica um JSON nativo do PaScal como pronto para o Viewer ou "
-            "derivavel a partir de regioes e potencia RAPL amostrada."
+            "Classify a native PaScal JSON file as directly usable by the Viewer or "
+            "derivable from region intervals and sampled RAPL power."
         )
     )
-    parser.add_argument("json_path", help="Caminho para o JSON produzido pelo pascalanalyzer")
+    parser.add_argument("json_path", help="Path to the JSON file produced by pascalanalyzer")
     parser.add_argument(
         "--region-id",
         type=int,
         default=1,
-        help="Regiao de interesse (padrao: 1 = model.optimize())",
+        help="Region of interest (default: 1 = model.optimize())",
     )
     parser.add_argument(
         "--accept-sampled",
         action="store_true",
         help=(
-            "Aceita telemetria regional com potencia RAPL amostrada, mesmo que o "
-            "Viewer ainda precise realizar a integracao."
+            "Accept regional telemetry with sampled RAPL power even when the "
+            "Viewer still has to perform the integration."
         ),
     )
     parser.add_argument(
         "--require-nonzero-energy",
         action="store_true",
         help=(
-            "Falha se a regiao existir mas todas as amostras de energia forem zero. "
-            "Nao use esta opcao no workload dummy."
+            "Fail when the region exists but all energy observations are zero. "
+            "Do not use this option with the dummy workload."
         ),
     )
     return parser
