@@ -1,7 +1,15 @@
-# Refatoração 28 — nota do probe PyInstaller
+# Refactoring 28 — PyInstaller probe note
 
-O primeiro probe de inspeção do archive falhou antes de abrir o `pascalanalyzer`: o índice `pip` padrão do ambiente NPAD expôs PyInstaller somente até 4.10, enquanto o Python ativo é 3.13.
+The first archive-inspection probe failed before opening `pascalanalyzer`. The
+default NPAD package index exposed PyInstaller only through version 4.10, while
+the active interpreter was Python 3.13.
 
-O suporte oficial a Python 3.13 foi introduzido no PyInstaller 6.10. Por isso o probe agora exige `pyinstaller>=6.10,<7` e, caso o índice padrão não disponibilize essa faixa, faz uma segunda tentativa explicitamente em `https://pypi.org/simple`, sempre dentro de `.refactor28-pyi-tools/venv`.
+Official Python 3.13 support was introduced in PyInstaller 6.10. The probe
+therefore requires `pyinstaller>=6.10,<7` and, when the default index does not
+provide that range, retries explicitly against `https://pypi.org/simple` inside
+the isolated `.refactor28-pyi-tools/venv` environment.
 
-O objetivo permanece apenas listar recursivamente o CArchive/PYZ embutido no ELF usando `pyi-archive_viewer`; nenhum pacote é instalado no venv de trabalho e nenhum arquivo do PaScal institucional é modificado.
+The probe only lists the CArchive/PYZ embedded in the ELF recursively with
+`pyi-archive_viewer`. It installs nothing in the working research environment
+and modifies no institutional PaScal file.
+

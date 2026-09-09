@@ -1,118 +1,100 @@
-# Refatoração 27 — registro de regiões PaScal para workloads Python
+# Refactoring 27 — PaScal regions for Python workloads
 
-## Objetivo
+## Objective
 
-Resolver o Issue #3: registrar corretamente regiões manuais do PaScal durante a execução de workloads Python/Gurobi, sem fabricar nem pós-processar a telemetria produzida pelo Analyzer.
+Resolve Issue #3 by recording PaScal manual regions during Python/Gurobi
+workloads without fabricating or post-processing Analyzer telemetry.
+`region_energy` remained outside this refactoring and under Issue #4.
 
-`region_energy` não faz parte desta refatoração e permanece tratado separadamente no Issue #4.
+## Diagnosis
 
-## Diagnóstico
+Refactoring 26 corrected the `_pascal_start/_pascal_stop` `ctypes` ABI and
+eliminated the segmentation fault, but the Python process still did not produce
+`data[*].regions["1"]`.
 
-A Refatoração 26 corrigiu a ABI `ctypes` de `_pascal_start/_pascal_stop` e eliminou o `SIGSEGV`, porém o processo Python continuou sem produzir `data[*].regions["1"]`.
+1. NPAD job `2069965` tested baseline, `LD_PRELOAD`, and `RTLD_GLOBAL`. None
+   crashed and none recorded region `1`; library loading time/scope was not the
+   cause.
+2. Job `2070698` showed that a linked native self-test recorded an approximately
+   two-second region, while `exec()` and `fork()+exec()` paths into Python did
+   not. The instrumentation calls had to run in the native process recognized
+   by the Analyzer.
+3. Job `2070730` launched a native ELF supervisor directly under the Analyzer.
+   Python sent `START/STOP` messages over pipes and waited for acknowledgements.
+   Region `1` appeared in the native JSON, with `2.000082016 s` measured for an
+   approximately two-second Python window. Fourteen tests passed at that stage.
 
-A Refatoração 27 isolou a diferença entre o executável C nativo e o processo Python:
-
-1. **Matriz de loader — job NPAD 2069965**
-   - `baseline`, `LD_PRELOAD` e `RTLD_GLOBAL` executaram sem crash;
-   - nenhum modo registrou a região `1`;
-   - conclusão: momento/escopo do carregamento da `.so` não é a causa.
-
-2. **Matriz de alvo linkado — job NPAD 2070698**
-   - `linked_selftest` registrou região nativa com duração aproximada de `1.999993 s`;
-   - `exec()` para Python e `fork()+exec()` para Python não registraram regiões;
-   - conclusão: `_pascal_start/_pascal_stop` precisam ser executados no processo nativo reconhecido pelo Analyzer.
-
-3. **Native region proxy — job NPAD 2070730**
-   - o Analyzer iniciou diretamente um supervisor ELF linkado com `libmpascalops.so`;
-   - o Python enviou `START/STOP` por pipes e aguardou ACK;
-   - a região `1` apareceu no JSON nativo do Analyzer;
-   - duração PaScal: `2.000082016 s` para uma janela Python de aproximadamente `2 s`;
-   - 14 testes passaram naquele estágio.
-
-## Solução de produção
-
-A arquitetura final mantém o Analyzer como soberano da medição:
+## Production architecture
 
 ```text
 pascalanalyzer
     |
     v
-supervisor ELF linkado com libmpascalops
+ELF supervisor linked with libmpascalops
     |
-    +-- inicia gurobi_runner.py
-    |
-    +-- recebe START/STOP por pipes
-    |
-    +-- executa _pascal_start/_pascal_stop no próprio processo
+    +-- starts the solver runner
+    +-- receives START/STOP over pipes
+    +-- executes _pascal_start/_pascal_stop in the native process
 ```
 
-No Python, a API permanece:
+Python keeps the context-manager API:
 
 ```python
 with pascal_region(1):
     model.optimize()
 ```
 
-Quando os descritores do proxy estão presentes, `pascal_region()` usa IPC. O processo Python não carrega `libmpascalops.so` nesse caminho. O fallback `ctypes` é carregado de forma lazy somente quando solicitado fora do proxy.
+When proxy descriptors are available, `pascal_region()` uses IPC and Python
+does not load `libmpascalops.so`. The lazy `ctypes` fallback is reserved for use
+outside the proxy.
 
-## Componentes permanentes
+## Permanent components
 
-- `src/pascalpy/instrumentation/native/pascal_region_proxy.c` — supervisor nativo;
-- `src/pascalpy/instrumentation/proxy_builder.py` — compilação/linkagem determinística do supervisor no diretório de saída;
-- `src/pascalpy/instrumentation/pascalops.py` — seleção de backend proxy/ctypes e protocolo START/STOP;
-- `src/pascalpy/adapters/gurobi_adapter.py` — faz o Analyzer executar diretamente o supervisor ELF;
-- `src/pascalpy/runners/gurobi_runner.py` — mantém `model.optimize()` como única região `1` e registra o backend no metadata.
+- `src/pascalpy/instrumentation/native/pascal_region_proxy.c`: native
+  supervisor.
+- `src/pascalpy/instrumentation/proxy_builder.py`: deterministic compilation and
+  linking in the output directory.
+- `src/pascalpy/instrumentation/pascalops.py`: proxy/ctypes selection and the
+  START/STOP protocol.
+- `src/pascalpy/adapters/gurobi_adapter.py`: makes the Analyzer launch the ELF
+  supervisor directly.
+- `src/pascalpy/runners/gurobi_runner.py`: surrounds `model.optimize()` with the
+  solver region and records the backend in metadata.
 
-## Validação Gurobi
+## Gurobi validation
 
-### Smoke 1 core — job NPAD 2070776
+### One-core smoke — job 2070776
 
-O caminho completo `rodar_yaml.py -> GurobiFileAdapter -> pascalanalyzer -> supervisor -> gurobi_runner.py` terminou `COMPLETED / 0:0`.
+The complete `rodar_yaml.py -> GurobiFileAdapter -> pascalanalyzer -> supervisor
+-> gurobi_runner.py` path completed with status `0:0`. The validator observed a
+proxy backend, matching requested/effective thread count, region `1`, PaScal
+duration `0.060197830 s`, Gurobi runtime `0.059804916 s`, solve wall time
+`0.060487831 s`, and `proxy_smoke_valid=true`.
 
-Resultados registrados pelo validador:
+### Lazy loading
 
-- `backend = proxy`;
-- `threads_requested = 1`;
-- `threads_effective = 1`;
-- região `1` presente;
-- duração da região PaScal: `0.060197830 s`;
-- `Gurobi Runtime`: `0.059804916 s`;
-- solve wall clock: `0.060487831 s`;
-- `proxy_smoke_valid = true`.
+The fallback became lazy to avoid a spurious `Pascal not running` message during
+import and test discovery. The regression verifies that importing `pascalops`
+in a clean subprocess does not touch the native runtime. The final suite passed
+without that message or `Bad file descriptor`.
 
-A região PaScal acompanha a janela de `model.optimize()` com diferença submilissegundo.
+### Structural strong scaling
 
-### Carregamento lazy
+The final gate used `dummy.mps`, resources `[1, 2, 4]`, and one repetition. For
+every configuration it confirmed the region, proxy backend, matching requested
+and effective thread counts, affinity cardinality, Gurobi metrics, and timing
+agreement. Monotonic speedup was not required because the dummy model is a
+structural fixture rather than a performance benchmark.
 
-Após o smoke, o fallback `ctypes` foi tornado lazy para evitar a mensagem espúria `Pascal not running` durante simples import/test discovery. A regressão correspondente verifica que importar `pascalops` em subprocesso limpo não toca no runtime nativo.
+## Acceptance criteria
 
-A suíte final foi executada novamente no NPAD e passou integralmente, sem `Pascal not running` nem `Bad file descriptor`.
+- [x] Python workload produces a manual region.
+- [x] Region timing agrees with the measured window.
+- [x] No `SIGSEGV/-11`.
+- [x] No PaScal JSON post-processing.
+- [x] `model.optimize()` remains the solver region.
+- [x] Structural scaling preserves `cores == Threads`.
+- [x] Package import does not probe the native runtime unexpectedly.
 
-### Strong scaling estrutural [1, 2, 4] x 1
+The lack of Analyzer-provided `region_energy` remained a separate known limit.
 
-O gate final foi executado no NPAD com `dummy.mps`, recursos `[1, 2, 4]` e uma repetição por configuração. O gate passou integralmente.
-
-Foram validadas, para cada configuração:
-
-- região `1` presente no JSON nativo;
-- backend `proxy`;
-- `Threads requested == Threads effective == cores`;
-- afinidade contendo exatamente o número de CPUs da configuração;
-- métricas Gurobi presentes;
-- duração PaScal compatível com `Gurobi Runtime` e solve wall clock.
-
-Não foi exigido speedup monotônico porque `dummy.mps` é um workload estrutural, não um benchmark de desempenho.
-
-## Critérios de aceite do Issue #3
-
-- [x] workload Python produz `data[*].regions["1"]`;
-- [x] tempos da região são compatíveis com a janela medida;
-- [x] nenhum `SIGSEGV/-11`;
-- [x] nenhum pós-processamento do JSON PaScal;
-- [x] `model.optimize()` permanece como única região `1` do runner;
-- [x] strong scaling estrutural preserva `cores == Threads`;
-- [x] import do pacote não provoca probe espúrio do runtime PaScal.
-
-## Limite conhecido
-
-A disponibilidade de `region_energy` na instalação `pascalsuite/2025-07-08` do NPAD não é resolvida aqui. Esse tema permanece no Issue #4 e não bloqueia o registro correto das regiões manuais implementado nesta refatoração.

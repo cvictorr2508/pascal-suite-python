@@ -35,10 +35,10 @@ def _parse_proxy_fd(name: str):
     try:
         fd = int(raw)
     except ValueError:
-        logger.error("%s não contém um descritor numérico válido: %r", name, raw)
+        logger.error("%s does not contain a valid numeric descriptor: %r", name, raw)
         return None
     if fd < 0:
-        logger.error("%s contém descritor negativo: %s", name, fd)
+        logger.error("%s contains a negative descriptor: %s", name, fd)
         return None
     return fd
 
@@ -59,12 +59,12 @@ def _resolve_symbol(library, candidates):
         except AttributeError:
             continue
     raise AttributeError(
-        "Nenhum dos simbolos esperados foi encontrado: " + ", ".join(candidates)
+        "None of the expected symbols was found: " + ", ".join(candidates)
     )
 
 
 def _configure_manual_instrumentation_abi() -> None:
-    """Configura a ABI C declarada em pascalops.h para start/stop manuais."""
+    """Configure the C ABI declared in pascalops.h for manual start/stop."""
     # pascalops.h:
     # void _pascal_start(long id, int start_line, const char *filename);
     # void _pascal_stop(long id, int stop_line, const char *filename);
@@ -75,7 +75,7 @@ def _configure_manual_instrumentation_abi() -> None:
 
 
 def _load_library() -> None:
-    """Carrega libmpascalops.so e valida os símbolos do fallback ctypes."""
+    """Load libmpascalops.so and validate the ctypes fallback symbols."""
     global _lib
     global _pascal_start_fn
     global _pascal_stop_fn
@@ -103,7 +103,7 @@ def _load_library() -> None:
         PASCAL_START_SYMBOL = None
         PASCAL_STOP_SYMBOL = None
         logger.error(
-            "Falha ao carregar a instrumentacao manual do PaScal em %s: %s",
+            "Failed to load PaScal manual instrumentation from %s: %s",
             PASCAL_LIBRARY_PATH,
             exc,
         )
@@ -111,7 +111,7 @@ def _load_library() -> None:
 
     PASCAL_AVAILABLE = True
     logger.info(
-        "libmpascalops carregada: %s (start=%s, stop=%s)",
+        "Loaded libmpascalops: %s (start=%s, stop=%s)",
         PASCAL_LIBRARY_PATH,
         PASCAL_START_SYMBOL,
         PASCAL_STOP_SYMBOL,
@@ -119,7 +119,7 @@ def _load_library() -> None:
 
 
 def _ensure_native_loaded() -> None:
-    """Carrega o fallback ctypes somente quando ele for realmente necessário."""
+    """Load the ctypes fallback only when it is actually needed."""
     if PASCAL_PROXY_AVAILABLE or _native_load_attempted:
         return
 
@@ -129,20 +129,20 @@ def _ensure_native_loaded() -> None:
 
 
 if PASCAL_PROXY_AVAILABLE:
-    # No modo de produção atual o Python não abre libmpascalops.
-    # O supervisor ELF reconhecido pelo Analyzer executa _pascal_start/_pascal_stop.
+    # In the current production mode, Python does not open libmpascalops.
+    # The ELF supervisor recognized by Analyzer runs _pascal_start/_pascal_stop.
     PASCAL_AVAILABLE = True
 
 
 def instrumentation_status() -> dict:
-    """Retorna diagnóstico serializável da instrumentação manual do PaScal."""
+    """Return a serializable PaScal manual-instrumentation diagnostic."""
     if PASCAL_PROXY_AVAILABLE:
         backend = "proxy"
     elif _proxy_env_requested:
         backend = "unavailable"
     else:
-        # Consultar explicitamente o status do fallback continua sendo uma operação
-        # de probe; apenas o import do módulo deixou de carregar libmpascalops.
+        # Explicitly querying fallback status remains a probe operation; simply
+        # importing the module no longer loads libmpascalops.
         _ensure_native_loaded()
         backend = "ctypes" if PASCAL_AVAILABLE else "unavailable"
 
@@ -158,14 +158,14 @@ def instrumentation_status() -> dict:
 
 
 def require_pascal() -> None:
-    """Falha explicitamente quando a instrumentação manual não está disponível."""
+    """Fail explicitly when manual instrumentation is unavailable."""
     if PASCAL_PROXY_AVAILABLE:
         return
 
     if _proxy_env_requested:
         raise PascalInstrumentationError(
-            "Backend proxy PaScal foi solicitado, mas os descritores "
-            f"{_PROXY_COMMAND_FD_ENV}/{_PROXY_ACK_FD_ENV} são inválidos ou incompletos."
+            "The PaScal proxy backend was requested, but descriptors "
+            f"{_PROXY_COMMAND_FD_ENV}/{_PROXY_ACK_FD_ENV} are invalid or incomplete."
         )
 
     _ensure_native_loaded()
@@ -177,9 +177,9 @@ def require_pascal() -> None:
         or _pascal_stop_fn is None
     ):
         raise PascalInstrumentationError(
-            "Instrumentacao manual do PaScal indisponivel. "
-            "Verifique PASCAL_OPS_LIB e os simbolos "
-            f"_pascal_start/pascal_start e _pascal_stop/pascal_stop em {PASCAL_LIBRARY_PATH}."
+            "PaScal manual instrumentation is unavailable. Check PASCAL_OPS_LIB "
+            "and the _pascal_start/pascal_start and _pascal_stop/pascal_stop "
+            f"symbols in {PASCAL_LIBRARY_PATH}."
         )
 
 
@@ -190,11 +190,11 @@ def _write_all(fd: int, payload: bytes) -> None:
             written = os.write(fd, view)
         except OSError as exc:
             raise PascalInstrumentationError(
-                f"Falha ao escrever no supervisor PaScal: {exc}"
+                f"Failed to write to the PaScal supervisor: {exc}"
             ) from exc
         if written <= 0:
             raise PascalInstrumentationError(
-                "Supervisor PaScal encerrou o canal de comando durante a escrita."
+                "The PaScal supervisor closed its command channel during the write."
             )
         view = view[written:]
 
@@ -206,23 +206,25 @@ def _read_ack_line(fd: int) -> str:
             chunk = os.read(fd, 1)
         except OSError as exc:
             raise PascalInstrumentationError(
-                f"Falha ao ler confirmação do supervisor PaScal: {exc}"
+                f"Failed to read the PaScal supervisor acknowledgement: {exc}"
             ) from exc
         if not chunk:
             raise PascalInstrumentationError(
-                "Supervisor PaScal encerrou o canal de confirmação inesperadamente."
+                "The PaScal supervisor closed its acknowledgement channel unexpectedly."
             )
         data.extend(chunk)
         if chunk == b"\n":
             return data.decode("utf-8", errors="replace").rstrip("\r\n")
-    raise PascalInstrumentationError("Confirmação do supervisor PaScal excedeu 512 bytes.")
+    raise PascalInstrumentationError(
+        "The PaScal supervisor acknowledgement exceeded 512 bytes."
+    )
 
 
 def _proxy_roundtrip(command: str, region_id: int, line_no: int, filename: str) -> None:
     if not PASCAL_PROXY_AVAILABLE:
-        raise PascalInstrumentationError("Backend proxy PaScal não está disponível.")
+        raise PascalInstrumentationError("The PaScal proxy backend is unavailable.")
     if any(char in filename for char in ("\t", "\r", "\n")):
-        raise ValueError("filename da região PaScal não pode conter tab ou quebra de linha")
+        raise ValueError("The PaScal region filename cannot contain tabs or line breaks")
 
     payload = f"{command}\t{region_id}\t{line_no}\t{filename}\n".encode("utf-8")
     with _proxy_lock:
@@ -232,7 +234,7 @@ def _proxy_roundtrip(command: str, region_id: int, line_no: int, filename: str) 
     expected = f"OK {command}"
     if ack != expected:
         raise PascalInstrumentationError(
-            f"Supervisor PaScal rejeitou {command} da região {region_id}: {ack}"
+            f"The PaScal supervisor rejected {command} for region {region_id}: {ack}"
         )
 
 
@@ -244,9 +246,9 @@ def pascal_region(
     start_line: int = 0,
     stop_line: int = 0,
 ):
-    """Delimita uma região PaScal via supervisor IPC ou ABI nativa direta."""
+    """Delimit a PaScal region through supervisor IPC or the direct native ABI."""
     if region_id < 0:
-        raise ValueError("region_id deve ser maior ou igual a zero")
+        raise ValueError("region_id must be greater than or equal to zero")
 
     require_pascal()
 
@@ -264,7 +266,7 @@ def pascal_region(
         _pascal_start_fn(region_id, start_line, filename_bytes)
     except Exception as exc:
         raise PascalInstrumentationError(
-            f"Falha ao iniciar a regiao PaScal {region_id}: {exc}"
+            f"Failed to start PaScal region {region_id}: {exc}"
         ) from exc
 
     try:
@@ -274,5 +276,5 @@ def pascal_region(
             _pascal_stop_fn(region_id, stop_line, filename_bytes)
         except Exception as exc:
             raise PascalInstrumentationError(
-                f"Falha ao encerrar a regiao PaScal {region_id}: {exc}"
+                f"Failed to stop PaScal region {region_id}: {exc}"
             ) from exc
