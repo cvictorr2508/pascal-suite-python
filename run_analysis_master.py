@@ -1,70 +1,73 @@
 import json
-import pandas as pd
-from pathlib import Path
-import yaml
 import sys
+from pathlib import Path
+
+import pandas as pd
+import yaml
+
 
 def main():
     yaml_path = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("meu_experimento.yaml")
-    with yaml_path.open("r") as f:
-        config = yaml.safe_load(f)
-        
+    with yaml_path.open("r", encoding="utf-8") as stream:
+        config = yaml.safe_load(stream)
+
     output_dir = Path(config["output"]["directory"])
-    
-    # Encontra o JSON único gerado pelo PaScal Batch
+
+    # Locate the single JSON artifact produced by the PaScal batch.
     pascal_files = list(output_dir.glob("*_batch_pascal.json"))
     if not pascal_files:
-        print("[Erro] Arquivo batch do PaScal não encontrado.")
+        print("[Error] PaScal batch artifact was not found.")
         return
-        
-    with open(pascal_files[0], "r", encoding="utf-8") as f:
-        pascal_data = json.load(f)
-        
-    # Carrega todos os metadados do Gurobi salvos pelo runner
-    meta_files = list(output_dir.glob("meta_*.json"))
-    meta_records = []
-    for mf in meta_files:
-        with open(mf, "r", encoding="utf-8") as f:
-            meta_records.append(json.load(f))
-            
-    df_meta = pd.DataFrame(meta_records)
 
-    # Trava de Segurança
-    if df_meta.empty:
-        print("\n[Erro Crítico] Nenhum metadado do Gurobi foi encontrado.")
-        print("Os runners falharam antes de otimizar a instância. Verifique os logs.")
-        sys.exit(1)
-    
-    # COMO LIGAMOS OS DADOS?
-    # Agrupamos por (Cores, Input) e ordenamos pelo Timestamp.
-    # O Rank natural (1º, 2º, 3º) nos dá o número da Repetição Exata!
-    df_meta['repetition'] = df_meta.groupby(['cores', 'input_idx'])['start_timestamp'].rank(method='first').astype(int)
-    
+    with pascal_files[0].open("r", encoding="utf-8") as stream:
+        pascal_data = json.load(stream)
+
+    # Load every solver metadata record written by the runner.
+    metadata_records = []
+    for metadata_path in output_dir.glob("meta_*.json"):
+        with metadata_path.open("r", encoding="utf-8") as stream:
+            metadata_records.append(json.load(stream))
+
+    metadata = pd.DataFrame(metadata_records)
+    if metadata.empty:
+        print("\n[Critical error] No solver metadata was found.")
+        print("The runners stopped before optimization; inspect the job logs.")
+        raise SystemExit(1)
+
+    # PaScal keys use (cores, input, repetition). Metadata timestamps establish
+    # the natural repetition rank inside each (cores, input) group.
+    metadata["repetition"] = (
+        metadata.groupby(["cores", "input_idx"])["start_timestamp"]
+        .rank(method="first")
+        .astype(int)
+    )
+
     rows = []
-    for _, row in df_meta.iterrows():
-        c = int(row['cores'])
-        i = int(row['input_idx'])
-        r = int(row['repetition'])
-        
-        # Monta a chave exata que o PaScal usou (ex: "4;0;1")
-        p_key = f"{c};{i};{r}"
-        p_run = pascal_data.get("data", {}).get(p_key, {})
-        
-        rows.append({
-            "workload": Path(row["workload"]).name,
-            "cores": c,
-            "input_index": i,
-            "repetition": r,
-            "gurobi_runtime_s": row.get("metrics", {}).get("gurobi_runtime_s"),
-            "solve_wall_clock_s": row.get("metrics", {}).get("solve_wall_clock_s"),
-            "objective": row.get("metrics", {}).get("objective")
-        })
-        
+    for _, row in metadata.iterrows():
+        cores = int(row["cores"])
+        input_index = int(row["input_idx"])
+        repetition = int(row["repetition"])
+
+        rows.append(
+            {
+                "workload": Path(row["workload"]).name,
+                "cores": cores,
+                "input_index": input_index,
+                "repetition": repetition,
+                "gurobi_runtime_s": row.get("metrics", {}).get("gurobi_runtime_s"),
+                "solve_wall_clock_s": row.get("metrics", {}).get(
+                    "solve_wall_clock_s"
+                ),
+                "objective": row.get("metrics", {}).get("objective"),
+            }
+        )
+
     csv_path = output_dir / f"tabela_{config['experiment']['name']}.csv"
     pd.DataFrame(rows).to_csv(csv_path, index=False)
-    
-    print(f"\n[Sucesso] Tabela final gerada em: {csv_path}")
-    print("O arquivo JSON original do PaScal já está pronto para upload no Viewer!")
+
+    print(f"\n[Success] Final table written to: {csv_path}")
+    print("The original PaScal JSON is ready for upload to PaScal Viewer.")
+
 
 if __name__ == "__main__":
     main()
