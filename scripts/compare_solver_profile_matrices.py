@@ -255,6 +255,29 @@ def build_comparison(
             "repetitions": manifest.get("experiment", {}).get("repetitions"),
         }
 
+    allocations = {
+        solver: inputs[solver]["allocation"] for solver in ("gurobi", "scip")
+    }
+    exclusive_allocation_verified = all(
+        allocation["explicit_policy_recorded"]
+        and allocation["requested_mode"] == "exclusive"
+        and allocation["scheduler_oversubscribe"] == "NO"
+        for allocation in allocations.values()
+    )
+    same_partition = (
+        allocations["gurobi"]["partition"] is not None
+        and allocations["gurobi"]["partition"]
+        == allocations["scip"]["partition"]
+    )
+    performance_comparison_eligible = (
+        exclusive_allocation_verified and same_partition
+    )
+    claim_status = (
+        "controlled-comparison"
+        if performance_comparison_eligible
+        else "exploratory-only"
+    )
+
     return {
         "schema_version": 1,
         "comparison_scope": {
@@ -262,6 +285,7 @@ def build_comparison(
             "region_semantics": "solve execution",
             "paired_resources": [1],
             "profiles": list(EXPECTED_PROFILES),
+            "performance_claim_status": claim_status,
         },
         "inputs": inputs,
         "dataset": {
@@ -276,7 +300,10 @@ def build_comparison(
             "profile_contract_matches": True,
             "dataset_fingerprints_match": True,
             "common_one_core_configurations_complete": True,
-            "accepted": True,
+            "exclusive_allocation_verified": exclusive_allocation_verified,
+            "same_partition": same_partition,
+            "performance_comparison_eligible": performance_comparison_eligible,
+            "accepted": performance_comparison_eligible,
         },
     }
 
@@ -342,10 +369,19 @@ def main() -> int:
 
     print(f"paired_configurations={len(report['paired_comparisons'])}")
     print(f"dataset_workloads={len(report['dataset']['workloads'])}")
+    print(
+        "performance_claim_status="
+        f"{report['comparison_scope']['performance_claim_status']}"
+    )
+    print(
+        "exclusive_allocation_verified="
+        f"{report['gate']['exclusive_allocation_verified']}"
+    )
+    print(f"same_partition={report['gate']['same_partition']}")
     print(f"dual_solver_comparison_accepted={report['gate']['accepted']}")
     for name, path in paths.items():
         print(f"{name}={path.resolve()}")
-    return 0
+    return 0 if report["gate"]["accepted"] else 3
 
 
 if __name__ == "__main__":

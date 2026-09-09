@@ -30,7 +30,14 @@ def _run(profile: str, solver: str, duration: float, energy: float) -> dict:
     }
 
 
-def _write_campaign(root: Path, solver: str, *, workload_sha: str) -> None:
+def _write_campaign(
+    root: Path,
+    solver: str,
+    *,
+    workload_sha: str,
+    partition: str = "intel-128",
+    explicit_allocation: bool = True,
+) -> None:
     manifest = {
         "source": {
             "git_commit": ("a" if solver == "gurobi" else "b") * 40,
@@ -51,12 +58,16 @@ def _write_campaign(root: Path, solver: str, *, workload_sha: str) -> None:
             }
         ],
         "slurm": {
-            "SLURM_JOB_PARTITION": "intel-128",
-            "allocation": {
-                "requested_mode": "exclusive",
-                "scheduler_oversubscribe": "NO",
-                "scheduler_exclusive": None,
-            },
+            "SLURM_JOB_PARTITION": partition,
+            "allocation": (
+                {
+                    "requested_mode": "exclusive",
+                    "scheduler_oversubscribe": "NO",
+                    "scheduler_exclusive": None,
+                }
+                if explicit_allocation
+                else None
+            ),
         },
     }
     profiles = {}
@@ -138,6 +149,33 @@ class DualSolverComparisonTests(unittest.TestCase):
                 "workload fingerprints differ",
             ):
                 COMPARISON.build_comparison(gurobi, scip)
+
+    def test_marks_different_or_legacy_allocation_as_exploratory(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            gurobi = base / "gurobi"
+            scip = base / "scip"
+            gurobi.mkdir()
+            scip.mkdir()
+            _write_campaign(
+                gurobi,
+                "gurobi",
+                workload_sha="c" * 64,
+                partition="intel-256",
+                explicit_allocation=False,
+            )
+            _write_campaign(scip, "scip", workload_sha="c" * 64)
+
+            report = COMPARISON.build_comparison(gurobi, scip)
+
+            self.assertFalse(report["gate"]["exclusive_allocation_verified"])
+            self.assertFalse(report["gate"]["same_partition"])
+            self.assertFalse(report["gate"]["performance_comparison_eligible"])
+            self.assertFalse(report["gate"]["accepted"])
+            self.assertEqual(
+                report["comparison_scope"]["performance_claim_status"],
+                "exploratory-only",
+            )
 
     def test_rejects_unaccepted_input_matrix(self):
         with tempfile.TemporaryDirectory() as tmp:
