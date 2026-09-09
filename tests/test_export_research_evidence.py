@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-SCRIPT = Path(__file__).with_name("export_research_evidence.py")
+SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "export_research_evidence.py"
 SPEC = importlib.util.spec_from_file_location("export_research_evidence", SCRIPT)
 MODULE = importlib.util.module_from_spec(SPEC)
 assert SPEC.loader is not None
