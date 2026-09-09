@@ -253,94 +253,119 @@ def summarize_document(
 
     runs: list[dict[str, Any]] = []
     for run_key in valid_run_keys:
-        cores, input_index, repetition = parse_run_key(run_key)
-        run = data[run_key]
-        if not isinstance(run, dict):
-            raise EnergySummaryError(f"run {run_key} must be an object")
+        try:
+            cores, input_index, repetition = parse_run_key(run_key)
+            run = data[run_key]
+            if not isinstance(run, dict):
+                raise EnergySummaryError(f"run {run_key} must be an object")
 
-        start_time = _number(run.get("start_time"), f"run {run_key}.start_time")
-        stop_time = _number(run.get("stop_time"), f"run {run_key}.stop_time")
-        if stop_time <= start_time:
-            raise EnergySummaryError(f"run {run_key} has a non-positive duration")
+            start_time = _number(run.get("start_time"), f"run {run_key}.start_time")
+            stop_time = _number(run.get("stop_time"), f"run {run_key}.stop_time")
+            if stop_time <= start_time:
+                raise EnergySummaryError(f"run {run_key} has a non-positive duration")
 
-        global_energy = _number(
-            run.get(global_domain),
-            f"run {run_key}.{global_domain}",
-        )
-        if global_energy <= 0:
-            raise EnergySummaryError(f"run {run_key} global energy must be positive")
+            global_energy = _number(
+                run.get(global_domain),
+                f"run {run_key}.{global_domain}",
+            )
+            if global_energy <= 0:
+                raise EnergySummaryError(f"run {run_key} global energy must be positive")
 
-        sensors = run.get("sensors")
-        if not isinstance(sensors, dict) or sensor_name not in sensors:
-            raise EnergySummaryError(f"run {run_key} lacks sensor {sensor_name}")
-        samples, sample_period = normalize_power_samples(sensors[sensor_name])
+            sensors = run.get("sensors")
+            if not isinstance(sensors, dict) or sensor_name not in sensors:
+                raise EnergySummaryError(f"run {run_key} lacks sensor {sensor_name}")
+            samples, sample_period = normalize_power_samples(sensors[sensor_name])
 
-        whole_energy, whole_duration = integrate_sampled_power(
-            samples,
-            sample_period,
-            [(start_time, stop_time)],
-        )
-        whole_error = abs(whole_energy - global_energy) / global_energy * 100
-
-        raw_regions = run.get("regions")
-        if not isinstance(raw_regions, dict):
-            raise EnergySummaryError(f"run {run_key} lacks regions")
-
-        region_summaries: dict[str, dict[str, float]] = {}
-        for region_id in REQUIRED_REGION_IDS:
-            if region_id not in raw_regions:
-                raise EnergySummaryError(
-                    f"run {run_key} lacks canonical region {region_id}"
-                )
-            intervals = merge_region_intervals(raw_regions[region_id])
-            energy, duration = integrate_sampled_power(
+            whole_energy, whole_duration = integrate_sampled_power(
                 samples,
                 sample_period,
-                intervals,
+                [(start_time, stop_time)],
             )
-            if energy <= 0:
-                raise EnergySummaryError(
-                    f"run {run_key} region {region_id} energy must be positive"
+            whole_error = abs(whole_energy - global_energy) / global_energy * 100
+
+            raw_regions = run.get("regions")
+            if not isinstance(raw_regions, dict):
+                raise EnergySummaryError(f"run {run_key} lacks regions")
+
+            region_summaries: dict[str, dict[str, float]] = {}
+            for region_id in REQUIRED_REGION_IDS:
+                if region_id not in raw_regions:
+                    raise EnergySummaryError(
+                        f"run {run_key} lacks canonical region {region_id}"
+                    )
+                intervals = merge_region_intervals(raw_regions[region_id])
+                energy, duration = integrate_sampled_power(
+                    samples,
+                    sample_period,
+                    intervals,
                 )
-            region_summaries[region_id] = {
-                "duration_s": duration,
-                "energy_j": energy,
-            }
+                if energy <= 0:
+                    raise EnergySummaryError(
+                        f"run {run_key} region {region_id} energy must be positive"
+                    )
+                region_summaries[region_id] = {
+                    "duration_s": duration,
+                    "energy_j": energy,
+                }
 
-        root_duration = region_summaries["0"]["duration_s"]
-        root_coverage_percent = root_duration / whole_duration * 100
-        children_duration = (
-            region_summaries["0.1"]["duration_s"]
-            + region_summaries["0.2"]["duration_s"]
-        )
+            root_duration = region_summaries["0"]["duration_s"]
+            root_coverage_percent = root_duration / whole_duration * 100
+            children_duration = (
+                region_summaries["0.1"]["duration_s"]
+                + region_summaries["0.2"]["duration_s"]
+            )
 
-        runs.append(
-            {
-                "run": str(run_key),
-                "configuration": {
-                    "cores": cores,
-                    "input_index": input_index,
-                    "repetition": repetition,
-                    "workload": (
-                        workloads[input_index]
-                        if workloads is not None and input_index < len(workloads)
-                        else None
+            runs.append(
+                {
+                    "run": str(run_key),
+                    "configuration": {
+                        "cores": cores,
+                        "input_index": input_index,
+                        "repetition": repetition,
+                        "workload": (
+                            workloads[input_index]
+                            if workloads is not None and input_index < len(workloads)
+                            else None
+                        ),
+                    },
+                    "sample_count": len(samples),
+                    "sample_period_s": sample_period,
+                    "whole_program": {
+                        "duration_s": whole_duration,
+                        "global_energy_j": global_energy,
+                        "sampled_energy_j": whole_energy,
+                        "absolute_error_percent": whole_error,
+                    },
+                    "regions": region_summaries,
+                    "root_coverage_percent": root_coverage_percent,
+                    "root_children_duration_gap_s": abs(
+                        root_duration - children_duration
                     ),
-                },
-                "sample_count": len(samples),
-                "sample_period_s": sample_period,
-                "whole_program": {
-                    "duration_s": whole_duration,
-                    "global_energy_j": global_energy,
-                    "sampled_energy_j": whole_energy,
-                    "absolute_error_percent": whole_error,
-                },
-                "regions": region_summaries,
-                "root_coverage_percent": root_coverage_percent,
-                "root_children_duration_gap_s": abs(
-                    root_duration - children_duration
-                ),
-            }
+                }
+            )
+
+        except EnergySummaryError as exc:
+            cores, input_index, repetition = parse_run_key(run_key)
+            invalid_runs.append(
+                {
+                    "run": str(run_key),
+                    "configuration": {
+                        "cores": cores,
+                        "input_index": input_index,
+                        "repetition": repetition,
+                    },
+                    "reasons": [str(exc)],
+                }
+            )
+
+    if not runs:
+        details = "; ".join(
+            reason
+            for invalid_run in invalid_runs
+            for reason in invalid_run["reasons"]
+        )
+        raise EnergySummaryError(
+            f"JSON contains no integrable energy runs: {details}"
         )
 
     grouped_runs: dict[tuple[int, int], list[dict[str, Any]]] = {}

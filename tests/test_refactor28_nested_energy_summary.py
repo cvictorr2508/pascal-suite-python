@@ -115,6 +115,30 @@ class Refactor28NestedEnergySummaryTests(unittest.TestCase):
                 [(-0.1, 3.0)],
             )
 
+    def test_reports_uncovered_attempt_and_accepts_five_valid_runs(self):
+        data = {
+            f"1;0;{repetition}": _run()
+            for repetition in range(1, 6)
+        }
+        uncovered = _run()
+        uncovered["start_time"] = -2.0
+        data["1;0;6"] = uncovered
+
+        result = SUMMARY.summarize_document(
+            {"data": data},
+            required_configurations=1,
+        )
+
+        self.assertEqual(result["attempted_run_count"], 6)
+        self.assertEqual(result["run_count"], 5)
+        self.assertEqual(result["invalid_run_count"], 1)
+        self.assertEqual(result["invalid_runs"][0]["run"], "1;0;6")
+        self.assertIn(
+            "power samples do not cover an integration interval",
+            result["invalid_runs"][0]["reasons"],
+        )
+        self.assertTrue(result["accuracy"]["accepted"])
+
     def test_accuracy_uses_whole_program_not_partial_root_region(self):
         document = {
             "data": {f"1;0;{repetition}": _run() for repetition in range(1, 6)}
