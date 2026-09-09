@@ -31,86 +31,100 @@ def _energy_summary():
     }
 
 
-class SolverProfileMatrixSummaryTests(unittest.TestCase):
-    def test_hard_campaign_has_six_attempts_and_three_profiles(self):
-        configuration = (
-            PROJECT_ROOT / "experiments" / "gurobi-hard-profiles.yaml"
-        ).read_text(encoding="utf-8")
-
-        self.assertIn("repetitions: 6", configuration)
-        self.assertIn("id: default", configuration)
-        self.assertIn("id: presolve-off", configuration)
-        self.assertIn("id: warm-start", configuration)
-
-    def test_accepts_complete_three_profile_matrix(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            manifest = {
-                "source": {"git_commit": "a" * 40},
-                "experiment": {
-                    "solver": "gurobi",
-                    "resources": [1],
-                    "repetitions": 1,
-                    "profiles": [
-                        {"id": "default", "kind": "default"},
-                        {"id": "presolve-off", "kind": "presolve-off"},
-                        {"id": "warm-start", "kind": "warm-start"},
-                    ],
-                },
-                "workloads": [{"path": "/data/instance.lp.gz"}],
-            }
-            (root / "research_manifest.json").write_text(
-                json.dumps(manifest), encoding="utf-8"
+def _write_matrix(root: Path, solver: str) -> None:
+    manifest = {
+        "source": {"git_commit": "a" * 40},
+        "experiment": {
+            "solver": solver,
+            "resources": [1],
+            "repetitions": 1,
+            "profiles": [
+                {"id": "default", "kind": "default"},
+                {"id": "presolve-off", "kind": "presolve-off"},
+                {"id": "warm-start", "kind": "warm-start"},
+            ],
+        },
+        "workloads": [{"path": "/data/instance.lp.gz"}],
+    }
+    (root / "research_manifest.json").write_text(
+        json.dumps(manifest),
+        encoding="utf-8",
+    )
+    for profile_id, profile_kind in (
+        ("default", "default"),
+        ("presolve-off", "presolve-off"),
+        ("warm-start", "warm-start"),
+    ):
+        directory = root / solver / profile_id
+        directory.mkdir(parents=True)
+        (directory / "telemetry_pascal.json").write_text(
+            "{}",
+            encoding="utf-8",
+        )
+        (directory / "base_config.json").write_text(
+            json.dumps({"profile": {"id": profile_id}}),
+            encoding="utf-8",
+        )
+        effective = {}
+        if profile_kind == "presolve-off":
+            effective = (
+                {"Presolve": 0}
+                if solver == "gurobi"
+                else {"presolve": "off"}
             )
-            for profile_id, profile_kind in (
-                ("default", "default"),
-                ("presolve-off", "presolve-off"),
-                ("warm-start", "warm-start"),
-            ):
-                directory = root / "gurobi" / profile_id
-                directory.mkdir(parents=True)
-                (directory / "telemetry_pascal.json").write_text(
-                    "{}", encoding="utf-8"
-                )
-                (directory / "base_config.json").write_text(
-                    json.dumps({"profile": {"id": profile_id}}),
-                    encoding="utf-8",
-                )
-                metadata = {
-                    "profile": {"id": profile_id},
-                    "parameters": {
-                        "profile_effective": (
-                            {"Presolve": 0}
-                            if profile_kind == "presolve-off"
-                            else {}
-                        )
-                    },
-                    "initial_solution": (
-                        {"applied": True, "format": "mst"}
-                        if profile_kind == "warm-start"
-                        else {"applied": False}
-                    ),
-                }
-                (directory / "meta_1.json").write_text(
-                    json.dumps(metadata), encoding="utf-8"
-                )
+        initial_solution = {"applied": False}
+        if profile_kind == "warm-start":
+            initial_solution = {
+                "applied": True,
+                "accepted": True,
+                "format": "mst" if solver == "gurobi" else "sol.gz",
+            }
+        metadata = {
+            "profile": {"id": profile_id},
+            "parameters": {"profile_effective": effective},
+            "initial_solution": initial_solution,
+        }
+        (directory / "meta_1.json").write_text(
+            json.dumps(metadata),
+            encoding="utf-8",
+        )
 
-            with patch.object(
-                SUMMARY.ENERGY_SUMMARY,
-                "summarize_document",
-                return_value=_energy_summary(),
-            ):
-                result = SUMMARY.summarize_profile_matrix(
-                    root,
-                    required_runs=1,
-                    required_configurations=1,
-                )
 
-        self.assertTrue(result["profile_set_accepted"])
-        self.assertTrue(result["gate"]["accuracy_accepted"])
-        self.assertTrue(result["gate"]["variability_preferred"])
-        self.assertTrue(result["gate"]["accepted"])
-        self.assertEqual(result["expected_attempt_count_per_profile"], 1)
+class SolverProfileMatrixSummaryTests(unittest.TestCase):
+    def test_hard_campaigns_have_redundant_attempts_and_three_profiles(self):
+        for filename in (
+            "gurobi-hard-profiles.yaml",
+            "scip-hard-profiles.yaml",
+        ):
+            with self.subTest(filename=filename):
+                configuration = (
+                    PROJECT_ROOT / "experiments" / filename
+                ).read_text(encoding="utf-8")
+                self.assertIn("repetitions: 6", configuration)
+                self.assertIn("id: default", configuration)
+                self.assertIn("id: presolve-off", configuration)
+                self.assertIn("id: warm-start", configuration)
+
+    def test_accepts_complete_matrix_for_each_solver(self):
+        for solver in ("gurobi", "scip"):
+            with self.subTest(solver=solver), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                _write_matrix(root, solver)
+                with patch.object(
+                    SUMMARY.ENERGY_SUMMARY,
+                    "summarize_document",
+                    return_value=_energy_summary(),
+                ):
+                    result = SUMMARY.summarize_profile_matrix(
+                        root,
+                        required_runs=1,
+                    )
+
+                self.assertTrue(result["profile_set_accepted"])
+                self.assertTrue(result["gate"]["accuracy_accepted"])
+                self.assertTrue(result["gate"]["variability_preferred"])
+                self.assertTrue(result["gate"]["accepted"])
+                self.assertEqual(result["expected_attempt_count_per_profile"], 1)
 
 
 if __name__ == "__main__":

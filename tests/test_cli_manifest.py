@@ -51,6 +51,9 @@ class ResearchManifestTests(unittest.TestCase):
                         "PASCAL_SOURCE_COMMIT": "a" * 40,
                         "PASCAL_SOURCE_BRANCH": "feature/test",
                         "PASCAL_SOURCE_TRACKED_CLEAN": "true",
+                        "PASCAL_SLURM_ALLOCATION_MODE": "shared",
+                        "PASCAL_SLURM_OVERSUBSCRIBE": "YES",
+                        "PASCAL_SLURM_EXCLUSIVE": "",
                     },
                 ),
                 patch("pascalpy.cli._distribution_version", return_value="1.0"),
@@ -78,6 +81,32 @@ class ResearchManifestTests(unittest.TestCase):
         self.assertEqual(
             manifest["experiment"]["profiles"][0]["kind"], "warm-start"
         )
+        self.assertEqual(
+            manifest["slurm"]["allocation"],
+            {
+                "requested_mode": "shared",
+                "scheduler_oversubscribe": "YES",
+                "scheduler_exclusive": None,
+            },
+        )
+
+    def test_submission_policy_defaults_to_exclusive_and_supports_shared(self):
+        launcher = (
+            PROJECT_ROOT / "jobs" / "submit_solver_experiment.sh"
+        ).read_text(encoding="utf-8")
+        slurm_job = (
+            PROJECT_ROOT / "jobs" / "run_solver_experiment.slurm"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn(
+            'ALLOCATION_MODE="${PASCAL_SLURM_ALLOCATION_MODE:-exclusive}"',
+            launcher,
+        )
+        self.assertIn('ALLOCATION_ARGUMENTS=(--exclusive)', launcher)
+        self.assertIn('ALLOCATION_ARGUMENTS=(--oversubscribe)', launcher)
+        self.assertIn("submission_error=invalid_allocation_mode", launcher)
+        self.assertNotIn("#SBATCH --exclusive", slurm_job)
+        self.assertIn("preflight_error=invalid_allocation_mode", slurm_job)
 
 
 if __name__ == "__main__":
