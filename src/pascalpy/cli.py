@@ -128,6 +128,26 @@ def build_research_manifest(
         if tracked_clean_value is not None
         else None
     )
+    slurm = {
+        key: value
+        for key in (
+            "SLURM_JOB_ID",
+            "SLURM_JOB_NAME",
+            "SLURM_JOB_PARTITION",
+            "SLURM_CPUS_PER_TASK",
+            "SLURM_JOB_NODELIST",
+        )
+        if (value := os.environ.get(key)) is not None
+    }
+    slurm["allocation"] = {
+        "requested_mode": os.environ.get("PASCAL_SLURM_ALLOCATION_MODE"),
+        "scheduler_oversubscribe": (
+            os.environ.get("PASCAL_SLURM_OVERSUBSCRIBE") or None
+        ),
+        "scheduler_exclusive": (
+            os.environ.get("PASCAL_SLURM_EXCLUSIVE") or None
+        ),
+    }
     return {
         "schema_version": 1,
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -161,17 +181,7 @@ def build_research_manifest(
         },
         "workloads": [_file_record(workload) for workload in workloads],
         "initial_solutions": _initial_solution_records(profiles, workloads),
-        "slurm": {
-            key: value
-            for key in (
-                "SLURM_JOB_ID",
-                "SLURM_JOB_NAME",
-                "SLURM_JOB_PARTITION",
-                "SLURM_CPUS_PER_TASK",
-                "SLURM_JOB_NODELIST",
-            )
-            if (value := os.environ.get(key)) is not None
-        },
+        "slurm": slurm,
     }
 
 

@@ -1,11 +1,26 @@
 #!/bin/bash
-# Capture source provenance on the submission node before entering Slurm.
+# Capture source provenance and allocation policy before entering Slurm.
 
 set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 CONFIG_FILE="${1:-experiments/gurobi-profile-smoke.yaml}"
+ALLOCATION_MODE="${PASCAL_SLURM_ALLOCATION_MODE:-exclusive}"
+
+case "$ALLOCATION_MODE" in
+    exclusive)
+        ALLOCATION_ARGUMENTS=(--exclusive)
+        ;;
+    shared)
+        ALLOCATION_ARGUMENTS=(--oversubscribe)
+        ;;
+    *)
+        printf 'submission_error=invalid_allocation_mode value=%s expected=exclusive_or_shared\n' \
+            "$ALLOCATION_MODE" >&2
+        exit 23
+        ;;
+esac
 
 cd "$PROJECT_ROOT"
 
@@ -43,7 +58,12 @@ printf 'source_branch=%s\n' "${SOURCE_BRANCH:-detached}" >&2
 printf 'source_tracked_clean=true\n' >&2
 printf 'python=%s\n' "$PYTHON_BIN" >&2
 printf 'config=%s\n' "$CONFIG_FILE" >&2
+printf 'allocation_mode=%s\n' "$ALLOCATION_MODE" >&2
+
+# Prevent inherited SBATCH flag variables from conflicting with the explicit policy.
+unset SBATCH_EXCLUSIVE SBATCH_OVERSUBSCRIBE
 
 sbatch --parsable \
-    --export="ALL,PASCAL_PYTHON_BIN=$PYTHON_BIN,PASCAL_EXPERIMENT_CONFIG=$CONFIG_FILE,PASCAL_SOURCE_COMMIT=$SOURCE_COMMIT,PASCAL_SOURCE_BRANCH=${SOURCE_BRANCH:-detached},PASCAL_SOURCE_TRACKED_CLEAN=true" \
+    "${ALLOCATION_ARGUMENTS[@]}" \
+    --export="ALL,PASCAL_PYTHON_BIN=$PYTHON_BIN,PASCAL_EXPERIMENT_CONFIG=$CONFIG_FILE,PASCAL_SOURCE_COMMIT=$SOURCE_COMMIT,PASCAL_SOURCE_BRANCH=${SOURCE_BRANCH:-detached},PASCAL_SOURCE_TRACKED_CLEAN=true,PASCAL_SLURM_ALLOCATION_MODE=$ALLOCATION_MODE" \
     jobs/run_solver_experiment.slurm

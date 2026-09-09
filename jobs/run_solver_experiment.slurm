@@ -5,7 +5,6 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=64G
 #SBATCH --time=04:00:00
-#SBATCH --exclusive
 #SBATCH --partition=intel-128
 #SBATCH --output=solver_matrix_%j.out
 #SBATCH --error=solver_matrix_%j.err
@@ -26,6 +25,9 @@ PYTHON_BIN="${PASCAL_PYTHON_BIN:-$(command -v python || true)}"
 SOURCE_COMMIT="${PASCAL_SOURCE_COMMIT:-}"
 SOURCE_BRANCH="${PASCAL_SOURCE_BRANCH:-detached}"
 SOURCE_TRACKED_CLEAN="${PASCAL_SOURCE_TRACKED_CLEAN:-}"
+ALLOCATION_MODE="${PASCAL_SLURM_ALLOCATION_MODE:-}"
+SCHEDULER_OVERSUBSCRIBE=""
+SCHEDULER_EXCLUSIVE=""
 
 require_file() {
     local path="$1"
@@ -52,6 +54,11 @@ fi
 if [[ "$SOURCE_TRACKED_CLEAN" != "true" ]]; then
     printf 'preflight_error=tracked_worktree_not_clean value=%s\n' \
         "$SOURCE_TRACKED_CLEAN" >&2
+    exit 12
+fi
+if [[ "$ALLOCATION_MODE" != "exclusive" && "$ALLOCATION_MODE" != "shared" ]]; then
+    printf 'preflight_error=invalid_allocation_mode value=%s\n' \
+        "$ALLOCATION_MODE" >&2
     exit 12
 fi
 
@@ -86,9 +93,31 @@ case "$SOLVER" in
         ;;
 esac
 
+job_field() {
+    local field="$1"
+    printf '%s\n' "$SCHEDULER_JOB_RECORD" |
+        tr ' ' '\n' |
+        awk -F= -v requested="$field" \
+            '$1 == requested { print $2; exit }'
+}
+
+if command -v scontrol >/dev/null 2>&1; then
+    SCHEDULER_JOB_RECORD="$(
+        scontrol show job -o "$SLURM_JOB_ID" 2>/dev/null || true
+    )"
+    SCHEDULER_OVERSUBSCRIBE="$(job_field "OverSubscribe")"
+    if [[ -z "$SCHEDULER_OVERSUBSCRIBE" ]]; then
+        SCHEDULER_OVERSUBSCRIBE="$(job_field "Shared")"
+    fi
+    SCHEDULER_EXCLUSIVE="$(job_field "Exclusive")"
+fi
+
 export PASCAL_SOURCE_COMMIT="$SOURCE_COMMIT"
 export PASCAL_SOURCE_BRANCH="$SOURCE_BRANCH"
 export PASCAL_SOURCE_TRACKED_CLEAN="$SOURCE_TRACKED_CLEAN"
+export PASCAL_SLURM_ALLOCATION_MODE="$ALLOCATION_MODE"
+export PASCAL_SLURM_OVERSUBSCRIBE="$SCHEDULER_OVERSUBSCRIBE"
+export PASCAL_SLURM_EXCLUSIVE="$SCHEDULER_EXCLUSIVE"
 
 printf 'host=%s\n' "$(hostname -f)"
 printf 'python=%s\n' "$PYTHON_BIN"
@@ -99,5 +128,8 @@ printf 'source_tracked_clean=%s\n' "$SOURCE_TRACKED_CLEAN"
 printf 'config=%s\n' "$CONFIG_FILE"
 printf 'solver=%s\n' "$SOLVER"
 printf 'partition=%s\n' "${SLURM_JOB_PARTITION:-unknown}"
+printf 'allocation_mode=%s\n' "$ALLOCATION_MODE"
+printf 'slurm_oversubscribe=%s\n' "${SCHEDULER_OVERSUBSCRIBE:-unknown}"
+printf 'slurm_exclusive=%s\n' "${SCHEDULER_EXCLUSIVE:-unknown}"
 
 "$PYTHON_BIN" rodar_yaml.py "$CONFIG_FILE"
