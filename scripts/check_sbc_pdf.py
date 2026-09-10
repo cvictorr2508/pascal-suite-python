@@ -90,7 +90,11 @@ def main() -> int:
     text = normalized_text(command_output([pdftotext, str(pdf), "-"]))
     missing = [marker for marker in EXPECTED_MARKERS if marker not in text]
     if missing:
-        raise SystemExit(f"PDF text is missing expected markers: {missing}")
+        header_context = text[:2000]
+        raise SystemExit(
+            f"PDF text is missing expected markers: {missing}\\n"
+            f"PDF text context: {header_context}"
+        )
 
     info = command_output([pdfinfo, str(pdf)])
     page_match = re.search(r"^Pages:\s+(\d+)\s*$", info, re.MULTILINE)
