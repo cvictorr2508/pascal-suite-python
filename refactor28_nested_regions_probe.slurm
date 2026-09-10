@@ -79,7 +79,7 @@ with path.open("r", encoding="utf-8") as stream:
 required = {"0", "0.1", "0.2"}
 data = document.get("data") or {}
 if not data:
-    raise SystemExit("JSON sem execuções em data")
+    raise SystemExit("JSON contains no runs under data")
 
 for run_key, run in data.items():
     regions = run.get("regions") or {}
@@ -90,13 +90,13 @@ for run_key, run in data.items():
 
     missing = required - present
     if missing:
-        raise SystemExit(f"regiões ausentes: {sorted(missing)}")
+        raise SystemExit(f"missing regions: {sorted(missing)}")
 
     intervals = {}
     for region_id in sorted(required):
         entries = regions.get(region_id)
         if not isinstance(entries, list) or not entries:
-            raise SystemExit(f"região {region_id} sem intervalo")
+            raise SystemExit(f"region {region_id} has no interval")
         intervals[region_id] = (float(entries[0][0]), float(entries[0][1]))
 
     start0, stop0 = intervals["0"]
@@ -105,7 +105,7 @@ for run_key, run in data.items():
     ordered = start0 <= start1 < stop1 <= start2 < stop2 <= stop0
     print(f"nested_intervals_valid={ordered}")
     if not ordered:
-        raise SystemExit("intervalos não formam a hierarquia esperada")
+        raise SystemExit("intervals do not form the expected hierarchy")
 
     sensors = run.get("sensors") or {}
     sample_count = sum(
@@ -116,7 +116,7 @@ for run_key, run in data.items():
     print(f"rapl_sample_count={sample_count}")
     print(f"global_rapl={run.get('rapl-sysfs')}")
     if sample_count < 2:
-        raise SystemExit("amostras RAPL insuficientes")
+        raise SystemExit("insufficient RAPL samples")
 PY
 }
 

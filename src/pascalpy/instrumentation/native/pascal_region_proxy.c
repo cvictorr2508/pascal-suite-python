@@ -64,14 +64,14 @@ static int supervise_child(int command_fd, int ack_fd, pid_t child_pid) {
         int line_no = 0;
 
         if (!parse_command(line, command, &region_id, &line_no, filename)) {
-            fprintf(stderr, "proxy: comando inválido: %s", line);
+            fprintf(stderr, "proxy: invalid command: %s", line);
             write_all(ack_fd, "ERR invalid-command\n");
             continue;
         }
 
         if (strcmp(command, "START") == 0) {
             if (open_region_count >= MAX_OPEN_REGIONS) {
-                fprintf(stderr, "proxy: limite de regiões aninhadas excedido\n");
+                fprintf(stderr, "proxy: nested-region limit exceeded\n");
                 write_all(ack_fd, "ERR region-stack-full\n");
                 continue;
             }
@@ -100,7 +100,7 @@ static int supervise_child(int command_fd, int ack_fd, pid_t child_pid) {
             ) {
                 fprintf(
                     stderr,
-                    "proxy: STOP inconsistente para região %ld\n",
+                    "proxy: inconsistent STOP for region %ld\n",
                     region_id
                 );
                 write_all(ack_fd, "ERR region-not-open\n");
@@ -123,7 +123,7 @@ static int supervise_child(int command_fd, int ack_fd, pid_t child_pid) {
             continue;
         }
 
-        fprintf(stderr, "proxy: comando desconhecido: %s\n", command);
+        fprintf(stderr, "proxy: unknown command: %s\n", command);
         write_all(ack_fd, "ERR unknown-command\n");
     }
 
@@ -139,7 +139,7 @@ static int supervise_child(int command_fd, int ack_fd, pid_t child_pid) {
     if (open_region_count > 0) {
         fprintf(
             stderr,
-            "proxy: child terminou com %zu região(ões) ainda aberta(s); topo=%ld\n",
+            "proxy: child exited with %zu region(s) still open; top=%ld\n",
             open_region_count,
             open_region_ids[open_region_count - 1]
         );
@@ -150,7 +150,7 @@ static int supervise_child(int command_fd, int ack_fd, pid_t child_pid) {
         return WEXITSTATUS(status);
     }
     if (WIFSIGNALED(status)) {
-        fprintf(stderr, "proxy: child terminou por sinal %d\n", WTERMSIG(status));
+        fprintf(stderr, "proxy: child terminated by signal %d\n", WTERMSIG(status));
         return 128 + WTERMSIG(status);
     }
     return 43;
@@ -162,13 +162,13 @@ int main(int argc, char **argv) {
     const char *base_config = getenv("PASCAL_PROXY_BASE_CONFIG");
 
     if (argc < 2) {
-        fprintf(stderr, "proxy: workload não foi fornecido pelo pascalanalyzer -i\n");
+        fprintf(stderr, "proxy: workload was not provided by pascalanalyzer -i\n");
         return 20;
     }
     if (python == NULL || runner == NULL || base_config == NULL) {
         fprintf(
             stderr,
-            "proxy: PASCAL_PROXY_PYTHON_BIN, PASCAL_PROXY_RUNNER e PASCAL_PROXY_BASE_CONFIG são obrigatórios\n"
+            "proxy: PASCAL_PROXY_PYTHON_BIN, PASCAL_PROXY_RUNNER, and PASCAL_PROXY_BASE_CONFIG are required\n"
         );
         return 21;
     }

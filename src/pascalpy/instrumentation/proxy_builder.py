@@ -9,7 +9,7 @@ DEFAULT_PASCAL_OPS_LIB = Path(
 
 
 def resolve_pascal_ops_library() -> Path:
-    """Resolve a biblioteca nativa usada pelo supervisor de regiões."""
+    """Resolve the native library used by the region supervisor."""
     return Path(os.environ.get("PASCAL_OPS_LIB", str(DEFAULT_PASCAL_OPS_LIB))).expanduser()
 
 
@@ -18,12 +18,12 @@ def region_proxy_source() -> Path:
 
 
 def region_proxy_build_command(binary_path: Path) -> list[str]:
-    """Monta o comando determinístico de compilação do supervisor nativo."""
+    """Build the deterministic compilation command for the native supervisor."""
     library_path = resolve_pascal_ops_library()
     pascal_root = library_path.parent.parent
     compiler = shlex.split(os.environ.get("CC", "gcc"))
     if not compiler:
-        raise RuntimeError("CC não define um compilador válido")
+        raise RuntimeError("CC does not specify a valid compiler")
 
     return [
         *compiler,
@@ -40,7 +40,7 @@ def region_proxy_build_command(binary_path: Path) -> list[str]:
 
 
 def build_region_proxy(output_dir: Path, *, name: str) -> Path:
-    """Compila o ELF que deve ser o alvo direto do pascalanalyzer -t man."""
+    """Compile the ELF executable targeted directly by pascalanalyzer -t man."""
     output_dir = Path(output_dir).resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
     binary_path = output_dir / name
@@ -55,19 +55,19 @@ def build_region_proxy(output_dir: Path, *, name: str) -> Path:
         )
     except FileNotFoundError as exc:
         raise RuntimeError(
-            f"Compilador não encontrado ao construir supervisor PaScal: {command[0]}"
+            f"Compiler not found while building the PaScal supervisor: {command[0]}"
         ) from exc
     except subprocess.CalledProcessError as exc:
         raise RuntimeError(
-            "Falha ao compilar supervisor PaScal.\n"
-            f"Comando: {' '.join(command)}\n"
+            "Failed to compile the PaScal supervisor.\n"
+            f"Command: {' '.join(command)}\n"
             f"stdout:\n{exc.stdout}\n"
             f"stderr:\n{exc.stderr}"
         ) from exc
 
     if not binary_path.is_file():
         raise RuntimeError(
-            "Compilação do supervisor PaScal terminou sem produzir o binário esperado: "
+            "PaScal supervisor compilation completed without producing the expected binary: "
             f"{binary_path}\nstdout:\n{completed.stdout}\nstderr:\n{completed.stderr}"
         )
 

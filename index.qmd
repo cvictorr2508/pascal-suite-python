@@ -1,0 +1,331 @@
+---
+title: "Reproducible Regional Energy Telemetry for Mathematical Optimization Solvers on HPC Systems"
+author:
+  - name: "Victor Rafael R. Celestino"
+    institute: 1
+  - name: "Kayo Gonçalves e Silva"
+    institute: 2
+  - name: "Samuel Xavier Souza"
+    institute: 2
+sbc-affiliations:
+  - lines:
+      - "Laboratory of Machine Learning in Finance and Organizations (LAMFO)"
+      - "University of Brasília (UnB)"
+      - "Campus Darcy Ribeiro -- 70910-900 -- Brasília, DF, Brazil"
+    email: "vrcelestino@unb.br"
+  - lines:
+      - "Laboratory of Parallel Architectures and Signal Processing (LAPPS)"
+      - "Federal University of Rio Grande do Norte (UFRN)"
+      - "Natal, RN, Brazil"
+    email: "kayo@imd.ufrn.br, samuel@dca.ufrn.br"
+abstract: |
+  Energy-aware evaluation of mathematical optimization software requires
+  measurements that remain attributable to solver phases, comparable across
+  configurations, and auditable after execution. This paper presents a
+  solver-neutral Python workflow that couples Gurobi and SCIP to PaScal
+  Analyzer on an HPC system. Declarative experiment matrices define five hard
+  capacitated facility-location instances, three solver profiles, controlled
+  core treatments, six attempts per configuration, and hierarchical regions
+  for model loading and solve execution. Sampled RAPL power is integrated only
+  after fail-closed validity checks and compared with an independent global
+  RAPL energy measurement. All controlled Gurobi and SCIP profile matrices met
+  the predefined median error threshold of 5% and the preferred
+  coefficient-of-variation threshold of 10%. In 15 matched one-core
+  configurations, the observed median SCIP-to-Gurobi ratios ranged from 9.78
+  to 43.12 for solve duration and from 10.19 to 43.88 for regional energy,
+  depending on profile. These descriptive results demonstrate a bounded,
+  reproducible research MVP in the evaluated environment; they do not
+  establish general solver superiority.
+resumo: |
+  Este artigo apresenta um fluxo Python agnóstico ao solver para medir tempo e
+  energia de Gurobi e SCIP com o PaScal Analyzer em um sistema HPC. Matrizes
+  declarativas definem cinco instâncias difíceis de localização capacitada,
+  três perfis, tratamentos de núcleos, seis tentativas por configuração e
+  regiões hierárquicas para leitura do modelo e solução. A potência RAPL
+  amostrada é integrada apenas após validações restritivas e comparada com uma
+  medição global independente. Todas as matrizes controladas atenderam ao
+  limite de erro mediano de 5% e ao coeficiente de variação preferencial de
+  10%. Os resultados são descritivos e limitados ao ambiente, às instâncias e
+  às versões registradas; não constituem uma classificação universal dos
+  solvers.
+keywords:
+  - energy telemetry
+  - mathematical optimization
+  - reproducible experiments
+  - HPC
+  - RAPL
+bibliography: references.bib
+---
+
+# Introduction
+
+Mathematical optimization experiments commonly emphasize solve time, optimality
+gap, and solution quality. Energy is increasingly relevant, but it is harder to
+interpret because a single process may include model loading, solver
+initialization, optimization, and output handling. A credible energy study must
+therefore bind measurements to explicit execution regions, record the
+experimental context, and reject malformed telemetry instead of silently
+repairing it.
+
+Intel Running Average Power Limit (RAPL) interfaces expose model-based energy
+information for processor domains and are widely used as an accessible basis
+for software energy studies [@rotem2012rapl]. PaScal Analyzer can execute
+applications across configurations while collecting execution time, sampled
+power, and other performance data [@pascal2026]. The challenge addressed here
+is to connect Python solver APIs to PaScal's native manual-region mechanism
+without making either the wrapper or the resulting dataset specific to one
+solver.
+
+We present PaScal Suite Python, a research prototype that executes Gurobi and
+SCIP through a common experiment contract. The work targets four bounded
+research questions:
+
+1. **RQ1:** Can both solvers use the same declarative experiment and regional
+   telemetry contract while retaining native solver semantics?
+2. **RQ2:** Does integrated sampled RAPL energy agree with an independent global
+   RAPL measurement within a median absolute-error threshold of 5%?
+3. **RQ3:** Do accepted configurations remain within a preferred 10%
+   coefficient-of-variation threshold after invalid attempts are disclosed and
+   rejected?
+4. **RQ4:** Under matched dataset, profile, partition, allocation, and one-core
+   conditions, what descriptive time-and-energy differences are observed?
+
+The contribution is the complete measurement and evidence pipeline rather than
+a new optimization algorithm. The artifact includes solver adapters, native
+region instrumentation, validity gates, provenance manifests, comparison
+tables, and a publication workflow. This manuscript consumes previously
+generated, checksummed evidence and performs no HPC experiment in continuous
+integration.
+
+# Background and Related Work
+
+## Energy telemetry
+
+RAPL was introduced with Intel's Sandy Bridge power-management architecture and
+provides energy information for processor domains [@rotem2012rapl]. RAPL values
+do not represent complete facility energy, and the domains exposed by a machine
+depend on its processor and operating-system interfaces. Consequently, this
+study uses RAPL only for the declared PaScal domain and makes no claim about
+whole-system energy or carbon emissions.
+
+PaScal Suite combines an Analyzer that executes and measures applications with a
+Viewer that explores the resulting data [@pascal2026]. The evaluated Analyzer
+supports a global RAPL energy value and a sampled RAPL power series. These two
+paths enable an internal consistency check: numerical integration of valid
+samples can be compared with the independently reported global energy.
+
+## Solvers and benchmark instances
+
+Gurobi is a commercial mathematical optimization system accessed here through
+its Python API [@gurobi2026manual]. SCIP is an open-source optimization suite
+centered on constraint integer programming and is accessed through PySCIPOpt
+[@bolusani2024scip]. Profile names in this study align experimental intent, not
+internal algorithms: defaults, presolve implementations, and warm-start
+acceptance remain solver specific.
+
+The workload subset comes from MILPBench, a large benchmark suite for
+mixed-integer linear programming [@ye2025milpbench]. We use five hard
+capacitated facility-location instances with identifiers 5, 10, 15, 20, and
+25. This purposeful subset exercises the complete pipeline but is not a random
+sample of MILPBench or of mixed-integer programs in general.
+
+# System Design
+
+The workflow has four layers. First, a YAML document declares the solver,
+workloads, resources, repetitions, profiles, telemetry policy, and output
+directory. Second, a solver-neutral adapter creates a PaScal Analyzer batch
+whose application is a native ELF proxy. Third, a solver-specific Python runner
+loads the model, applies a profile, optimizes it, and records metadata. Fourth,
+validation tools consolidate the runs, reject invalid telemetry, compare
+accepted matrices, and export portable evidence.
+
+The native proxy is necessary because the PaScal build evaluated in the target
+environment records manual regions when instrumentation calls originate in the
+native process launched by the Analyzer. A guarded inter-process protocol lets
+the Python runner request region boundaries without rewriting Analyzer output.
+The Analyzer JSON remains the telemetry authority.
+
+Three hierarchical regions are shared by both solvers:
+
+| Region | Operational meaning |
+|---|---|
+| 0 | Complete runner pipeline |
+| 0.1 | Model read/build phase |
+| 0.2 | Solve execution |
+
+The solver profile contract also has three levels:
+
+| Profile | Matched intent |
+|---|---|
+| default | Solver defaults plus controlled resources and seed |
+| presolve-off | Explicitly disable presolve and record the effective setting |
+| warm-start | Require a solver-native initial solution and record acceptance |
+
+Gurobi accepts its supported start representations, including MST files. SCIP
+uses SOL files, optionally gzip-compressed. The workflow checks file identity
+and profile association but does not assume that the two native start
+mechanisms are algorithmically equivalent.
+
+# Experimental Method
+
+## Design and controls
+
+The experimental unit is one attempt for a workload, solver profile, and
+solver-core treatment. Each configuration has six attempts; acceptance requires
+at least five valid attempts. Gurobi was evaluated with one, two, and four
+solver cores, whereas the controlled cross-solver comparison uses the one-core
+treatment common to Gurobi and SCIP.
+
+Both final campaigns ran on the NPAD `intel-128` partition with exclusive
+allocation requested and Slurm reporting `OverSubscribe=NO`. The Gurobi
+campaign used source commit `915bd7974edf2a03a279d24a0e3a69dc5f54082f`;
+the SCIP campaign used
+`b03b6f298db70834192fb499f8fd248e91de22e9`. Manifests record clean tracked
+worktrees, Python and package versions, scheduler metadata, configuration
+hashes, workload hashes, and initial-solution hashes.
+
+The evaluated environment used Gurobi 13.0.2 and SCIP 10.0 through PySCIPOpt
+6.2.1. Version statements here describe the captured campaigns, not the latest
+available releases.
+
+## Telemetry validation
+
+For each attempt, validation requires finite, non-negative sampled power,
+strictly increasing timestamps, and enough samples to cover at least one
+integration interval. Global energy must be finite and positive. Invalid
+attempts are preserved in the summary with explicit reasons and are excluded
+without correction or imputation.
+
+The sampled whole-program energy is obtained by trapezoidal integration over
+the valid power series. Its absolute relative difference from the global PaScal
+RAPL value is the energy-consistency error. A profile passes the mandatory
+accuracy gate when its median error is at most 5%. Regional energy is integrated
+over the union of the region intervals only after the run-level checks pass.
+The preferred repeatability gate requires the maximum configuration-level
+coefficient of variation to be at most 10%.
+
+For RQ4, duration and energy refer to region 0.2. Energy-delay product (EDP) is
+the product of regional energy and regional duration. Ratios are computed as
+SCIP divided by Gurobi for matched one-core workload/profile configurations.
+The analysis is descriptive: no confidence interval or null-hypothesis test is
+reported.
+
+# Results
+
+## Matrix validity
+
+All controlled profile matrices passed the predefined gates.
+
+| Solver | Profile | Valid / attempted | Median energy error (%) | Maximum CV (%) |
+|---|---|---:|---:|---:|
+| Gurobi | default | 88 / 90 | 0.201043 | 1.450886 |
+| Gurobi | presolve-off | 89 / 90 | 0.290858 | 1.877484 |
+| Gurobi | warm-start | 90 / 90 | 0.268701 | 1.124702 |
+| SCIP | default | 29 / 30 | 0.296794 | 1.654691 |
+| SCIP | presolve-off | 30 / 30 | 0.286874 | 0.671986 |
+| SCIP | warm-start | 28 / 30 | 0.290148 | 0.746351 |
+
+The observed median consistency errors are below 0.31%, substantially within
+the 5% acceptance threshold. The largest observed CV is 1.88%, also within the
+preferred 10% threshold. Seven of 360 attempts were invalid: three in Gurobi
+and four in SCIP. The invalid-attempt mechanism therefore retained the required
+five valid repetitions for every configuration without imputing telemetry.
+
+## Controlled one-core comparison
+
+Fifteen matched configurations combine five workloads and three profiles. The
+comparison gate verified matching dataset fingerprints, profile contracts,
+partition, explicit exclusive allocation, clean source worktrees, and accepted
+input matrices.
+
+| Profile | Median duration ratio | Median energy ratio | Median EDP ratio |
+|---|---:|---:|---:|
+| default | 26.314715 | 26.794993 | 707.638806 |
+| presolve-off | 43.115530 | 43.876481 | 1893.048508 |
+| warm-start | 9.775579 | 10.186012 | 99.737732 |
+
+A ratio above one means that the SCIP observation exceeded its matched Gurobi
+observation. In this bounded experiment, SCIP therefore had higher median solve
+duration, regional energy, and EDP for all three profiles. The magnitude varied
+considerably by profile, with the smallest ratios under warm start. These
+values answer RQ4 only for the declared instances, versions, profiles, node
+class, and campaign controls.
+
+# Discussion
+
+RQ1 is supported operationally: both solvers completed the same declarative
+profile and region contract, and their outputs passed a common validator. This
+is interface parity, not equivalence of solver algorithms.
+
+RQ2 and RQ3 are supported within the measurement design. The two RAPL paths
+agreed closely at the profile level, and variability remained below the
+preferred bound after transparent run rejection. The fail-closed policy is
+important because isolated negative or insufficiently covered sensor series
+were observed even in completed scheduler jobs.
+
+For RQ4, the controlled comparison makes the observed ratios eligible for a
+bounded performance statement. It does not isolate every causal mechanism.
+Different solver implementations, native defaults, start-file semantics, and
+campaign times may contribute to the results. The profile-dependent ratios show
+why a single aggregate solver ranking would be misleading.
+
+From a technology-readiness perspective, the artifact demonstrates a complete
+research workflow in a relevant HPC environment. This supports a TRL 5
+prototype and a bounded TRL 6 demonstration of the validated configuration.
+It does not establish production readiness.
+
+# Threats to Validity
+
+**External validity.** The evidence covers one benchmark family, five
+instances, one cluster, one CPU partition, and recorded solver versions. It
+must not be generalized to other MILP classes, hardware, energy domains, or
+software versions without replication.
+
+**Internal validity.** Matching the partition and requesting exclusive
+allocation reduce interference, while hashes and manifests constrain
+configuration drift. The solver campaigns nevertheless ran as separate jobs,
+so node-level and temporal effects may remain.
+
+**Construct validity.** RAPL represents processor-domain energy rather than
+facility energy. Region boundaries represent the wrapper's operational phases
+and may include solver/API overhead. EDP is defined only for the declared solve
+region.
+
+**Statistical conclusion validity.** Six attempts per configuration provide
+redundancy for invalid measurements but limited inferential power. Medians,
+ratios, and coefficients of variation are descriptive; no population
+probability statement is made.
+
+**Treatment equivalence.** The profiles match intent, but Gurobi and SCIP
+implement defaults, presolve, and warm starts differently. In particular,
+solver-native start files need not provide equivalent information.
+
+# Reproducibility and Availability
+
+The repository contains experiment contracts, launchers, validation tools,
+tests, and the manuscript source. Raw telemetry, licensed material, benchmark
+archives, and large solver-start files are excluded from Git. The evidence
+exporter verifies upstream hashes, removes cluster-local absolute paths, and
+writes a checksummed portable manifest. The repository is connected to Zenodo for automatic archival of tagged GitHub
+releases. The first software release is planned as `v0.1.0`; its
+version-specific and concept DOIs will be reported only after Zenodo mints
+them. This software archive does not include raw HPC telemetry, restricted
+solver material, benchmark archives, or large solver-start files. Checksummed
+portable evidence is the shareable archival unit for the validated campaigns.
+
+The manuscript is built with Quarto's manuscript project type
+[@quarto2026]. Pull requests render HTML and SBC-styled PDF artifacts, run a
+structural PDF regression, and never execute the HPC campaigns. Publication to
+GitHub Pages occurs only after merge into `main`.
+
+Software source: <https://github.com/cvictorr2508/pascal-suite-python>.
+
+# Conclusion
+
+PaScal Suite Python demonstrates that Gurobi and SCIP experiments can share a
+declarative, region-aware, fail-closed energy telemetry pipeline on HPC
+infrastructure. The controlled campaigns met the predefined accuracy,
+replication, and repeatability gates, and yielded 15 matched one-core
+comparisons. The results establish an auditable research MVP for the evaluated
+environment. Broader claims require additional instance families, systems,
+versions, randomized campaign scheduling, and inferential analysis.

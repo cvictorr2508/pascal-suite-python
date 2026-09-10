@@ -8,7 +8,7 @@ from typing import Any
 
 @dataclass(frozen=True)
 class PascalEnergyValidationReport:
-    """Resultado da validacao estrutural da telemetria energetica regional."""
+    """Structural validation result for regional energy telemetry."""
 
     source: str
     required_region_id: int | str
@@ -36,7 +36,7 @@ class PascalEnergyValidationReport:
 
     @property
     def viewer_energy_ready(self) -> bool:
-        """Indica se o JSON ja possui mapas RAPL consumiveis pelo Viewer atual."""
+        """Return whether the JSON contains RAPL maps consumable by the current Viewer."""
         return (
             self.structurally_valid
             and self.has_extras
@@ -49,7 +49,7 @@ class PascalEnergyValidationReport:
 
     @property
     def legacy_region_energy_ready(self) -> bool:
-        """Indica se o contrato historico ``values: [region_energy]`` esta pronto."""
+        """Return whether the legacy ``values: [region_energy]`` contract is ready."""
         return (
             self.viewer_energy_ready
             and self.legacy_required_region_energy_samples > 0
@@ -57,7 +57,7 @@ class PascalEnergyValidationReport:
 
     @property
     def sampled_energy_derivable(self) -> bool:
-        """Indica se regioes e potencia amostrada permitem derivacao no Viewer."""
+        """Return whether regions and sampled power permit derivation in the Viewer."""
         return (
             self.structurally_valid
             and self.has_regions_descriptor
@@ -83,7 +83,7 @@ class PascalEnergyValidationReport:
 
 
 def _viewer_energy_domains(extras: Any) -> tuple[str, ...]:
-    """Replica a selecao do Viewer: toda chave de extras iniciada por ``rapl``."""
+    """Match the Viewer selection: every extras key beginning with ``rapl``."""
     if not isinstance(extras, dict):
         return ()
 
@@ -180,11 +180,11 @@ def validate_pascal_energy_document(
     source: str = "<memory>",
     required_region_id: int | str = 1,
 ) -> PascalEnergyValidationReport:
-    """Valida o contrato observado nos JSONs PaScal aceitos pelo Viewer.
+    """Validate the contract observed in PaScal JSON files accepted by the Viewer.
 
-    O validador nao assume nomes fixos como ``raplpackage-0``. Ele separa o mapa
-    RAPL ja consumivel pelo Viewer, o contrato historico ``region_energy`` e a
-    telemetria amostrada que ainda precisa ser integrada no proprio Viewer.
+    The validator does not assume fixed names such as ``raplpackage-0``. It
+    distinguishes RAPL maps already consumable by the Viewer, the legacy
+    ``region_energy`` contract, and sampled telemetry requiring Viewer integration.
     """
     errors: list[str] = []
     warnings: list[str] = []
@@ -208,31 +208,31 @@ def validate_pascal_energy_document(
             required_region_energy_samples=0,
             legacy_required_region_energy_samples=0,
             nonzero_required_region_energy_samples=0,
-            errors=("O JSON raiz deve ser um objeto.",),
+            errors=("The JSON root must be an object.",),
         )
 
     config = document.get("config")
     if not isinstance(config, dict):
         config = {}
-        errors.append("Campo config ausente ou invalido.")
+        errors.append("The config field is missing or invalid.")
 
     descriptor = config.get("data_descriptor")
     has_data_descriptor = isinstance(descriptor, dict)
     if not has_data_descriptor:
         descriptor = {}
-        errors.append("config.data_descriptor ausente ou invalido.")
+        errors.append("config.data_descriptor is missing or invalid.")
 
     extras = descriptor.get("extras") if isinstance(descriptor, dict) else None
     has_extras = isinstance(extras, dict)
     if not has_extras:
         extras = {}
-        errors.append("config.data_descriptor.extras ausente.")
+        errors.append("config.data_descriptor.extras is missing.")
 
     has_regions_descriptor = (
         isinstance(extras, dict) and isinstance(extras.get("regions"), dict)
     )
     if not has_regions_descriptor:
-        errors.append("Descriptor extras.regions ausente.")
+        errors.append("The extras.regions descriptor is missing.")
 
     rapl_domains = _viewer_energy_domains(extras)
     legacy_region_energy_domains = _legacy_energy_domains(extras)
@@ -240,7 +240,7 @@ def validate_pascal_energy_document(
     data = document.get("data")
     if not isinstance(data, dict):
         data = {}
-        errors.append("Campo data ausente ou invalido.")
+        errors.append("The data field is missing or invalid.")
 
     required_region_key = str(required_region_id)
     runs_with_regions = 0
@@ -255,7 +255,7 @@ def validate_pascal_energy_document(
 
     for run_key, run_data in data.items():
         if not isinstance(run_data, dict):
-            warnings.append(f"Rodada {run_key} nao e um objeto e foi ignorada.")
+            warnings.append(f"Run {run_key} is not an object and was ignored.")
             continue
 
         regions = run_data.get("regions")
@@ -277,8 +277,8 @@ def validate_pascal_energy_document(
             value = _coerce_number(domain_data[required_region_key])
             if value is None:
                 warnings.append(
-                    f"Rodada {run_key}, dominio {domain}: energia da regiao "
-                    f"{required_region_key} nao numerica."
+                    f"Run {run_key}, domain {domain}: energy for region "
+                    f"{required_region_key} is not numeric."
                 )
                 continue
 
@@ -317,32 +317,32 @@ def validate_pascal_energy_document(
 
     if data and runs_with_required_region == 0:
         errors.append(
-            f"Nenhuma rodada contem a regiao obrigatoria {required_region_key}."
+            f"No run contains the required region {required_region_key}."
         )
 
     if data and rapl_domains and runs_with_rapl_data == 0:
         warnings.append(
-            "Os dominios RAPL foram declarados, mas nao aparecem como mapas nas rodadas."
+            "RAPL domains were declared but do not appear as maps in the runs."
         )
 
     if data and rapl_domains and required_region_energy_samples == 0:
         warnings.append(
-            f"Nao ha amostras de energia para a regiao {required_region_key}."
+            f"No energy observations are available for region {required_region_key}."
         )
 
     if data and not rapl_domains and not sampled_rapl_sensors:
-        warnings.append("Nenhum mapa RAPL ou sensor RAPL amostrado foi encontrado.")
+        warnings.append("No RAPL map or sampled RAPL sensor was found.")
 
     if runs_with_derivable_sampled_energy and not required_region_energy_samples:
         warnings.append(
-            "A energia regional pode ser derivada das amostras RAPL, mas o Viewer "
-            "ainda precisa integrar a potencia sobre os intervalos das regioes."
+            "Regional energy can be derived from the RAPL samples, but the Viewer "
+            "still has to integrate power over the region intervals."
         )
 
     if required_region_energy_samples and not nonzero_required_region_energy_samples:
         warnings.append(
-            f"A regiao {required_region_key} existe, mas todas as amostras de energia "
-            "sao zero. Isso pode ser esperado para workloads muito curtos, como dummy."
+            f"Region {required_region_key} exists, but all energy observations "
+            "are zero. This may be expected for very short workloads such as dummy."
         )
 
     return PascalEnergyValidationReport(
@@ -398,7 +398,7 @@ def validate_pascal_energy_file(
             required_region_energy_samples=0,
             legacy_required_region_energy_samples=0,
             nonzero_required_region_energy_samples=0,
-            errors=(f"Falha ao ler JSON: {exc}",),
+            errors=(f"Failed to read JSON: {exc}",),
         )
 
     return validate_pascal_energy_document(
