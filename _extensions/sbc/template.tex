@@ -51,7 +51,8 @@ $endif$
 $endif$
 
 $if(sbc-affiliations)$
-\address{$for(sbc-affiliations)$$sbc-affiliations.text$$if(sbc-affiliations.email)$\email{$sbc-affiliations.email$}$endif$$sep$
+\address{$for(sbc-affiliations)$for(sbc-affiliations.lines)$sbc-affiliations.lines$sep$\\
+$endfor$if(sbc-affiliations.email)$\email{$sbc-affiliations.email$}$endif$sep$
 \nextinstitute
 $endfor$}
 $else$

@@ -8,9 +8,15 @@ author:
   - name: "Samuel Xavier Souza"
     institute: 2
 sbc-affiliations:
-  - text: 'Laboratory of Machine Learning in Finance and Organizations (LAMFO)\\University of Brasília (UnB)\\Campus Darcy Ribeiro -- 70910-900 -- Brasília, DF, Brazil'
+  - lines:
+      - "Laboratory of Machine Learning in Finance and Organizations (LAMFO)"
+      - "University of Brasília (UnB)"
+      - "Campus Darcy Ribeiro -- 70910-900 -- Brasília, DF, Brazil"
     email: "vrcelestino@unb.br"
-  - text: 'Laboratory of Parallel Architectures and Signal Processing (LAPPS)\\Federal University of Rio Grande do Norte (UFRN)\\Natal, RN, Brazil'
+  - lines:
+      - "Laboratory of Parallel Architectures and Signal Processing (LAPPS)"
+      - "Federal University of Rio Grande do Norte (UFRN)"
+      - "Natal, RN, Brazil"
     email: "kayo@imd.ufrn.br, samuel@dca.ufrn.br"
 abstract: |
   Energy-aware evaluation of mathematical optimization software requires
