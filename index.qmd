@@ -306,12 +306,15 @@ The repository contains experiment contracts, launchers, validation tools,
 tests, and the manuscript source. Raw telemetry, licensed material, benchmark
 archives, and large solver-start files are excluded from Git. The evidence
 exporter verifies upstream hashes, removes cluster-local absolute paths, and
-writes a checksummed portable manifest. The repository is connected to Zenodo for automatic archival of tagged GitHub
-releases. The first software release is planned as `v0.1.0`; its
-version-specific and concept DOIs will be reported only after Zenodo mints
-them. This software archive does not include raw HPC telemetry, restricted
-solver material, benchmark archives, or large solver-start files. Checksummed
-portable evidence is the shareable archival unit for the validated campaigns.
+writes a checksummed portable manifest. The `v0.1.0` software release is
+archived on Zenodo under the version-specific DOI
+[10.5281/zenodo.22695374](https://doi.org/10.5281/zenodo.22695374). The concept
+DOI [10.5281/zenodo.22695373](https://doi.org/10.5281/zenodo.22695373) resolves
+to the software collection across versions. Repository source and associated
+documentation are distributed under the MIT License. The software archive does
+not include raw HPC telemetry, restricted solver material, benchmark archives,
+or large solver-start files. Checksummed portable evidence is the shareable
+archival unit for the validated campaigns.
 
 The manuscript is built with Quarto's manuscript project type
 [@quarto2026]. Pull requests render HTML and SBC-styled PDF artifacts, run a
@@ -319,6 +322,8 @@ structural PDF regression, and never execute the HPC campaigns. Publication to
 GitHub Pages occurs only after merge into `main`.
 
 Software source: <https://github.com/cvictorr2508/pascal-suite-python>.
+Permanent software archive:
+<https://doi.org/10.5281/zenodo.22695373>.
 
 # Conclusion
 
