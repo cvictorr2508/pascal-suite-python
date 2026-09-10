@@ -1,6 +1,8 @@
 project:
   type: manuscript
   output-dir: _manuscript
+  render:
+    - index.qmd
 
 manuscript:
   article: index.qmd
