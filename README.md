@@ -290,3 +290,25 @@ python -m pytest -q
 
 Generated results, licenses, virtual environments, build products, and solver
 warm starts must not be committed.
+
+## Research manuscript
+
+The publication source is a Quarto Manuscript with HTML and an SBC-styled PDF.
+It is rendered in pull requests without executing the HPC campaigns; the
+article consumes frozen, checksummed results described in
+[the research MVP record](docs/research-mvp.md).
+
+After installing Quarto, TinyTeX, and Poppler, validate it with:
+
+```bash
+quarto check
+quarto render
+python scripts/check_sbc_pdf.py
+```
+
+Merges to `main` publish the HTML manuscript through GitHub Pages at
+<https://cvictorr2508.github.io/pascal-suite-python/>. GitHub Pages must be
+configured to use **GitHub Actions** as its source. The manuscript retains
+provisional anonymous metadata until the author list and affiliations are
+confirmed; no citable release should be created before that metadata and the
+external evidence archive are finalized.

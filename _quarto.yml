@@ -1,0 +1,17 @@
+project:
+  type: manuscript
+  output-dir: _manuscript
+
+manuscript:
+  article: index.qmd
+  manuscript-url: https://cvictorr2508.github.io/pascal-suite-python/
+  code-links: repo
+
+execute:
+  freeze: true
+
+format:
+  html:
+    toc: true
+    number-sections: true
+  sbc-pdf: default

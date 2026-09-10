@@ -33,3 +33,8 @@ secret/
 slurm_out/
 *.old
 
+# Quarto build and manuscript-review artifacts
+/.quarto/
+/_manuscript/
+/_freeze/
+/artifacts/
