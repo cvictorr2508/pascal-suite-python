@@ -17,7 +17,11 @@ ARTIFACT_DIR = ROOT / "artifacts"
 EXPECTED_MARKERS = (
     "Reproducible Regional Energy Telemetry for Mathematical Optimization "
     "Solvers on HPC Systems",
-    "Anonymous Author(s)",
+    "Victor Rafael R. Celestino",
+    "Kayo Gonçalves e Silva",
+    "Samuel Xavier Souza",
+    "University of Brasília (UnB)",
+    "Federal University of Rio Grande do Norte (UFRN)",
     "Abstract.",
     "Resumo.",
     "Introduction",

@@ -1,10 +1,17 @@
 ---
 title: "Reproducible Regional Energy Telemetry for Mathematical Optimization Solvers on HPC Systems"
 author:
-  - name: "Anonymous Author(s)"
+  - name: "Victor Rafael R. Celestino"
     institute: 1
+  - name: "Kayo Gonçalves e Silva"
+    institute: 2
+  - name: "Samuel Xavier Souza"
+    institute: 2
 sbc-affiliations:
-  - text: "Affiliation withheld pending author confirmation"
+  - text: 'Laboratory of Machine Learning in Finance and Organizations (LAMFO)\\University of Brasília (UnB)\\Campus Darcy Ribeiro -- 70910-900 -- Brasília, DF, Brazil'
+    email: "vrcelestino@unb.br"
+  - text: 'Laboratory of Parallel Architectures and Signal Processing (LAPPS)\\Federal University of Rio Grande do Norte (UFRN)\\Natal, RN, Brazil'
+    email: "kayo@imd.ufrn.br, samuel@dca.ufrn.br"
 abstract: |
   Energy-aware evaluation of mathematical optimization software requires
   measurements that remain attributable to solver phases, comparable across
@@ -293,8 +300,8 @@ The repository contains experiment contracts, launchers, validation tools,
 tests, and the manuscript source. Raw telemetry, licensed material, benchmark
 archives, and large solver-start files are excluded from Git. The evidence
 exporter verifies upstream hashes, removes cluster-local absolute paths, and
-writes a checksummed portable manifest. A permanent external archive and final
-author metadata remain prerequisites for a citable release of this manuscript.
+writes a checksummed portable manifest. A permanent external archive remains a prerequisite for a citable release
+of this manuscript.
 
 The manuscript is built with Quarto's manuscript project type
 [@quarto2026]. Pull requests render HTML and SBC-styled PDF artifacts, run a

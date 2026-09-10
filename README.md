@@ -308,7 +308,6 @@ python scripts/check_sbc_pdf.py
 
 Merges to `main` publish the HTML manuscript through GitHub Pages at
 <https://cvictorr2508.github.io/pascal-suite-python/>. GitHub Pages must be
-configured to use **GitHub Actions** as its source. The manuscript retains
-provisional anonymous metadata until the author list and affiliations are
-confirmed; no citable release should be created before that metadata and the
-external evidence archive are finalized.
+configured to use **GitHub Actions** as its source. The manuscript records the confirmed author list, affiliations, and contact
+emails. No citable release should be created before the external evidence
+archive and its persistent location are finalized.
