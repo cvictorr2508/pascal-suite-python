@@ -1,5 +1,8 @@
 # PaScal Suite Python
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22695373.svg)](https://doi.org/10.5281/zenodo.22695373)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 PaScal Suite Python is a research-oriented wrapper for reproducible experiments
 with mathematical optimization solvers and the
 [PaScal Analyzer](https://pascalsuite.imd.ufrn.br/analyzer/) on HPC systems. It
@@ -308,9 +311,21 @@ python scripts/check_sbc_pdf.py
 
 Merges to `main` publish the HTML manuscript through GitHub Pages at
 <https://cvictorr2508.github.io/pascal-suite-python/>. GitHub Pages must be
-configured to use **GitHub Actions** as its source. The repository is connected to Zenodo for automatic archival of tagged GitHub
-releases. The first release is planned as `v0.1.0`; its version DOI and concept
-DOI will be recorded only after Zenodo mints them. This source archive is
-distinct from raw HPC telemetry, restricted solver material, and benchmark
-archives, which remain outside Git. Checksummed portable evidence is the
-shareable archival unit for the validated campaigns.
+configured to use **GitHub Actions** as its source.
+
+Release `v0.1.0` is archived on Zenodo under the version DOI
+[10.5281/zenodo.22695374](https://doi.org/10.5281/zenodo.22695374). Cite the
+concept DOI [10.5281/zenodo.22695373](https://doi.org/10.5281/zenodo.22695373)
+when referring to the software across versions. This source archive is distinct
+from raw HPC telemetry, restricted solver material, and benchmark archives,
+which remain outside Git. Checksummed portable evidence is the shareable
+archival unit for the validated campaigns.
+
+## License
+
+PaScal Suite Python is distributed under the [MIT License](LICENSE). The
+license permits use, modification, redistribution, sublicensing, and commercial
+use, provided that the copyright and permission notices are retained. The
+software is provided without warranty. Before merging this licensing change,
+the listed copyright holders should confirm that the repository may be released
+under these terms.
