@@ -321,6 +321,26 @@ from raw HPC telemetry, restricted solver material, and benchmark archives,
 which remain outside Git. Checksummed portable evidence is the shareable
 archival unit for the validated campaigns.
 
+## Bibliography provenance
+
+References used by the Quarto manuscript are curated in the Zotero collection
+**PaScal Suite Python — Manuscript**. The collection is an iterative research
+queue; membership alone does not authorize citation. The reviewed mapping from
+Zotero item keys to stable Quarto citation keys and intended manuscript sections
+is recorded in
+[the bibliography provenance manifest](bibliography/zotero-manuscript.json).
+
+Raw Zotero exports must not be committed because they can contain attachment
+paths, abstracts, personal tags, and other nonessential metadata. Validate the
+sanitized bibliography and every manuscript citation with:
+
+```bash
+python scripts/check_bibliography_provenance.py
+```
+
+The complete review states and iterative screening procedure are documented in
+[Bibliography provenance and review policy](docs/BIBLIOGRAPHY_PROVENANCE.md).
+
 ## License
 
 PaScal Suite Python is distributed under the [MIT License](LICENSE). The

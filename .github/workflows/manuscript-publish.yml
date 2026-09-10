@@ -8,8 +8,10 @@ on:
       - "_quarto.yml"
       - "index.qmd"
       - "references.bib"
+      - "bibliography/**"
       - "_extensions/**"
       - "scripts/check_sbc_pdf.py"
+      - "scripts/check_bibliography_provenance.py"
       - ".github/workflows/manuscript-publish.yml"
   workflow_dispatch:
 
@@ -41,6 +43,7 @@ jobs:
 
       - name: Render and validate manuscript
         run: |
+          python3 scripts/check_bibliography_provenance.py
           quarto check
           quarto render
           python3 scripts/check_sbc_pdf.py
