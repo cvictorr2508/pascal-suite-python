@@ -6,6 +6,7 @@ on:
       - "_quarto.yml"
       - "index.qmd"
       - "references.bib"
+      - "CITATION.cff"
       - "_extensions/**"
       - "scripts/check_sbc_pdf.py"
       - ".github/workflows/manuscript-render.yml"
@@ -20,6 +21,11 @@ jobs:
     steps:
       - name: Check out source
         uses: actions/checkout@v4
+
+      - name: Validate citation metadata
+        uses: citation-file-format/cffconvert-github-action@2.0.0
+        with:
+          args: "--validate"
 
       - name: Set up Quarto and TinyTeX
         uses: quarto-dev/quarto-actions/setup@v2
