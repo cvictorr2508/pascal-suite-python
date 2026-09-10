@@ -1,0 +1,30 @@
+cff-version: 1.2.0
+message: "If you use PaScal Suite Python in your research, please cite this software."
+title: "PaScal Suite Python: Reproducible Regional Energy Telemetry for Mathematical Optimization Solvers on HPC Systems"
+type: software
+abstract: >-
+  PaScal Suite Python is a research-oriented wrapper for reproducible,
+  region-aware time and energy experiments with Gurobi and SCIP through
+  PaScal Analyzer on HPC systems.
+authors:
+  - family-names: "Celestino"
+    given-names: "Victor Rafael R."
+    affiliation: "Laboratory of Machine Learning in Finance and Organizations (LAMFO), University of Brasilia (UnB)"
+    email: "vrcelestino@unb.br"
+  - family-names: "Gonçalves e Silva"
+    given-names: "Kayo"
+    affiliation: "Laboratory of Parallel Architectures and Signal Processing (LAPPS), Federal University of Rio Grande do Norte (UFRN)"
+    email: "kayo@imd.ufrn.br"
+  - family-names: "Souza"
+    given-names: "Samuel Xavier"
+    affiliation: "Laboratory of Parallel Architectures and Signal Processing (LAPPS), Federal University of Rio Grande do Norte (UFRN)"
+    email: "samuel@dca.ufrn.br"
+version: 0.1.0
+repository-code: "https://github.com/cvictorr2508/pascal-suite-python"
+url: "https://cvictorr2508.github.io/pascal-suite-python/"
+keywords:
+  - energy telemetry
+  - high-performance computing
+  - mathematical optimization
+  - reproducible research
+  - RAPL
