@@ -308,6 +308,9 @@ python scripts/check_sbc_pdf.py
 
 Merges to `main` publish the HTML manuscript through GitHub Pages at
 <https://cvictorr2508.github.io/pascal-suite-python/>. GitHub Pages must be
-configured to use **GitHub Actions** as its source. The manuscript records the confirmed author list, affiliations, and contact
-emails. No citable release should be created before the external evidence
-archive and its persistent location are finalized.
+configured to use **GitHub Actions** as its source. The repository is connected to Zenodo for automatic archival of tagged GitHub
+releases. The first release is planned as `v0.1.0`; its version DOI and concept
+DOI will be recorded only after Zenodo mints them. This source archive is
+distinct from raw HPC telemetry, restricted solver material, and benchmark
+archives, which remain outside Git. Checksummed portable evidence is the
+shareable archival unit for the validated campaigns.
