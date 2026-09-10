@@ -326,6 +326,4 @@ archival unit for the validated campaigns.
 PaScal Suite Python is distributed under the [MIT License](LICENSE). The
 license permits use, modification, redistribution, sublicensing, and commercial
 use, provided that the copyright and permission notices are retained. The
-software is provided without warranty. Before merging this licensing change,
-the listed copyright holders should confirm that the repository may be released
-under these terms.
+software is provided without warranty.
