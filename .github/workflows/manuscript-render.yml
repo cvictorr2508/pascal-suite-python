@@ -7,6 +7,8 @@ on:
       - "index.qmd"
       - "references.bib"
       - "bibliography/**"
+      - "manuscript/**"
+      - "publication/**"
       - "CITATION.cff"
       - "_extensions/**"
       - "scripts/check_sbc_pdf.py"

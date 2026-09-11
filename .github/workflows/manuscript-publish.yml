@@ -9,6 +9,8 @@ on:
       - "index.qmd"
       - "references.bib"
       - "bibliography/**"
+      - "manuscript/**"
+      - "publication/**"
       - "_extensions/**"
       - "scripts/check_sbc_pdf.py"
       - "scripts/check_bibliography_provenance.py"

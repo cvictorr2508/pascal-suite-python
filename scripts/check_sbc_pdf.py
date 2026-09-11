@@ -102,6 +102,32 @@ def main() -> int:
         raise SystemExit("could not confirm a positive PDF page count")
     page_count = int(page_match.group(1))
 
+    references_start_page = None
+    for page_number in range(1, page_count + 1):
+        page_text = normalized_text(
+            command_output(
+                [
+                    pdftotext,
+                    "-f",
+                    str(page_number),
+                    "-l",
+                    str(page_number),
+                    str(pdf),
+                    "-",
+                ]
+            )
+        )
+        if re.search(r"\bReferences\b", page_text):
+            references_start_page = page_number
+            break
+    if references_start_page is None:
+        raise SystemExit("could not locate the References section in the PDF")
+    if references_start_page > 9:
+        raise SystemExit(
+            "WPADS permits at most eight text pages before references; "
+            f"References starts on page {references_start_page}"
+        )
+
     ARTIFACT_DIR.mkdir(exist_ok=True)
     first_page_stem = ARTIFACT_DIR / "sbc-first-page"
     subprocess.run(
@@ -127,6 +153,8 @@ def main() -> int:
         "pdf": pdf.relative_to(ROOT).as_posix(),
         "pdf_sha256": hashlib.sha256(pdf.read_bytes()).hexdigest(),
         "pages": page_count,
+        "references_start_page": references_start_page,
+        "wpads_text_page_limit": 8,
         "markers": list(EXPECTED_MARKERS),
         "first_page": first_page.relative_to(ROOT).as_posix(),
     }
@@ -136,7 +164,11 @@ def main() -> int:
         encoding="utf-8",
         newline="\n",
     )
-    print(f"pdf_regression=accepted pages={page_count}")
+    print(
+        "pdf_regression=accepted "
+        f"pages={page_count} references_start_page={references_start_page} "
+        "wpads_text_page_limit=8"
+    )
     print(f"report={report_path}")
     return 0
 
