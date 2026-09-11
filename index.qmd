@@ -327,3 +327,6 @@ research data. This bounded MVP addresses measurement and observability for
 sustainable HPC. Broader claims require additional problem families, systems,
 versions, randomized campaign scheduling, and inferential analysis.
 
+# Declaration of generative AI and AI-assisted technologies in the manuscript preparation process {.unnumbered}
+
+During the preparation of this work, the authors used ChatGPT Codex with models 5.6 Sol and 6.0 Astra to assist with the codebase implementation and to support the preparation, structuring, language refinement, and data visualization of this manuscript. After using these tools/services, the authors reviewed and edited the content as needed and took full responsibility for the content of the published article.
