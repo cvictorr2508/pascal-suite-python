@@ -117,7 +117,7 @@ def main() -> int:
                 ]
             )
         )
-        if re.search(r"\\bReferences\\b", page_text):
+        if re.search(r"\bReferences\b", page_text):
             references_start_page = page_number
             break
     if references_start_page is None:
