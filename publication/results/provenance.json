@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "generated_from": "validated controlled campaign summaries",
+  "dataset": {
+    "family": "MILPBench capacitated facility location hard",
+    "instance_ids": [5, 10, 15, 20, 25]
+  },
+  "campaigns": {
+    "gurobi": {
+      "source_commit": "915bd7974edf2a03a279d24a0e3a69dc5f54082f",
+      "slurm_job_id": "2084725",
+      "partition": "intel-128",
+      "requested_allocation": "exclusive",
+      "scheduler_oversubscribe": "NO",
+      "solver_version": "13.0.2",
+      "resources": [1, 2, 4],
+      "repetitions": 6
+    },
+    "scip": {
+      "source_commit": "b03b6f298db70834192fb499f8fd248e91de22e9",
+      "slurm_job_id": "2084503",
+      "partition": "intel-128",
+      "requested_allocation": "exclusive",
+      "scheduler_oversubscribe": "NO",
+      "solver_version": "10.0",
+      "pyscipopt_version": "6.2.1",
+      "resources": [1],
+      "repetitions": 6
+    }
+  },
+  "comparison_gate": {
+    "accepted": true,
+    "performance_claim_status": "controlled-comparison",
+    "paired_configurations": 15,
+    "same_partition": true,
+    "exclusive_allocation_verified": true,
+    "dataset_fingerprints_match": true,
+    "profile_contract_matches": true,
+    "source_worktrees_clean": true
+  },
+  "files": [
+    "profile-matrix-validity.csv",
+    "controlled-one-core-comparison.csv"
+  ],
+  "limitations": [
+    "These are processed aggregate results, not raw per-run telemetry.",
+    "Benchmark instances, proprietary solver material, and large start files are excluded.",
+    "The values support only the bounded configuration described in the manuscript."
+  ]
+}
+
