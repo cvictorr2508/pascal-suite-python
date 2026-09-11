@@ -321,6 +321,13 @@ from raw HPC telemetry, restricted solver material, and benchmark archives,
 which remain outside Git. Checksummed portable evidence is the shareable
 archival unit for the validated campaigns.
 
+Machine-readable processed results reported by the manuscript are published in
+[the publication data directory](publication/README.md). They include matrix
+validity, controlled one-core comparisons, and campaign provenance. Because the
+v0.1.0 archive predates these files, they will first appear on Zenodo in the
+next reviewed software release; a separate evidence dataset will preserve the
+sanitized per-run package.
+
 ## Bibliography provenance
 
 References used by the Quarto manuscript are curated in the Zotero collection
