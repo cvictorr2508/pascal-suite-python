@@ -1,0 +1,5 @@
+profile,paired_configurations,median_scip_to_gurobi_duration_ratio,median_scip_to_gurobi_energy_ratio,median_scip_to_gurobi_edp_ratio
+default,5,26.314715,26.794993,707.638806
+presolve-off,5,43.115530,43.876481,1893.048508
+warm-start,5,9.775579,10.186012,99.737732
+
