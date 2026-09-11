@@ -23,12 +23,13 @@ abstract: |
   remain attributable to program phases, comparable across configurations, and
   auditable after execution. This paper presents a solver-neutral Python
   workflow that couples Gurobi and SCIP to PaScal Analyzer on an HPC system.
-  Declarative experiment matrices define five hard capacitated
+  Declarative experiment matrices define five capacitated
   facility-location instances, three solver profiles, controlled core
   treatments, six attempts per configuration, and hierarchical regions for
   model loading and solve execution. Sampled RAPL power is integrated only
-  after fail-closed validity checks and compared with an independent global
-  RAPL energy measurement. A companion adaptation of PaScal Viewer derives and
+  after fail-closed validity checks and compared with a separately acquired
+  global RAPL reading, assessing internal consistency rather than absolute
+  sensor accuracy. A companion adaptation of PaScal Viewer derives and
   visualizes regional energy from the validated samples. All controlled Gurobi
   and SCIP profile matrices met the predefined 5% median-error threshold and
   the preferred 10% coefficient-of-variation threshold. In 15 matched
@@ -43,7 +44,8 @@ resumo: |
   capacitada, três perfis, tratamentos de núcleos, seis tentativas por
   configuração e regiões hierárquicas para leitura do modelo e solução. A
   potência RAPL amostrada é integrada apenas após validações restritivas e
-  comparada com uma medição global independente. Todas as matrizes controladas
+  comparada com uma leitura global RAPL adquirida separadamente, avaliando
+  consistência interna, não exatidão absoluta. Todas as matrizes controladas
   atenderam ao limite de erro mediano de 5% e ao coeficiente de variação
   preferencial de 10%. Os resultados são descritivos e limitados ao ambiente,
   às instâncias e às versões registradas; não constituem uma classificação
@@ -81,8 +83,8 @@ SCIP through a common experiment contract. The study asks:
 
 1. **RQ1:** Can both solvers use the same declarative experiment and regional
    telemetry contract while retaining native solver semantics?
-2. **RQ2:** Does integrated sampled RAPL energy agree with an independent global
-   RAPL measurement within a median absolute-error threshold of 5%?
+2. **RQ2:** Does integrated sampled RAPL energy agree with a separately acquired
+   global RAPL reading within a median absolute relative difference of 5%?
 3. **RQ3:** Do accepted configurations remain within a preferred 10%
    coefficient-of-variation threshold after invalid attempts are disclosed and
    rejected?
@@ -130,11 +132,11 @@ makes the validated regional energy inspectable.
 
 Gurobi is accessed through its Python API [@gurobi2026manual]. SCIP is accessed
 through PySCIPOpt and retains its native constraint-integer-programming
-semantics [@bolusani2024scip]. Profile names align experimental intent, not
+semantics [@hojny2025scip]. Profile names align experimental intent, not
 algorithms: defaults, presolve, and warm-start acceptance remain solver
 specific.
 
-The workload subset comes from MILPBench [@ye2025milpbench]: five hard
+The workload subset comes from the MILPBench hard split [@ye2025milpbench]: five
 capacitated facility-location instances numbered 5, 10, 15, 20, and 25.
 Facility-location MILP research also includes robust formulations, uncertainty
 sets, and Benders decomposition [@haq2025facilitylocation]. Those variants are
@@ -169,6 +171,10 @@ The common profiles are `default`, `presolve-off`, and `warm-start`. Gurobi uses
 supported start representations including MST files; SCIP uses SOL files,
 optionally gzip-compressed. The workflow verifies identity and association but
 does not assume algorithmic equivalence between native starts.
+Region 0.1 covers model loading through the native API, not algebraic model
+generation. Profile configuration and start-file loading occur inside region 0
+but outside regions 0.1 and 0.2. A Gurobi start recorded as applied establishes
+loading, not acceptance as an incumbent; SCIP records the return of `addSol`.
 
 ## Viewer adaptation
 
@@ -179,7 +185,8 @@ regional-energy maps and hierarchical identifiers, rejects a complete sampled
 series when power or timestamps violate the validity contract, falls back to
 valid samples when a global scalar is non-positive, and does not mutate the
 Analyzer JSON. The implementation and nine focused parser tests are identified
-by Viewer commit `e78e96ff` and GitLab MR !15.
+by Viewer commit `e78e96ff` and GitLab MR !15.^[Viewer repository:
+<https://gitlab.com/lappsufrn/pascalsuite-viewer>.]
 
 ![PaScal Viewer rendering of the `rapl-sysfs` energy maps for the model
 read/build and solve subregions of a Gurobi validation artifact. The Viewer
@@ -197,14 +204,19 @@ partition with exclusive allocation requested and Slurm reporting
 scheduler metadata, and hashes for configurations, workloads, and starts.
 Gurobi 13.0.2 and SCIP 10.0 through PySCIPOpt 6.2.1 were evaluated.
 
-Validation requires finite non-negative power, strictly increasing timestamps,
-at least one integration interval, and finite positive global energy. Invalid
+The Python validator requires finite non-negative power, sorts timestamps,
+retains the last sample at duplicate timestamps, and rejects gaps exceeding
+three median sampling periods. It requires at least two distinct samples and
+finite positive global energy. Boundary extrapolation uses constant endpoint
+power for at most one median period; insufficient coverage is rejected. Invalid
 attempts are retained with reasons and excluded without correction or
 imputation. Whole-program sampled energy is trapezoidally integrated and
 compared with global PaScal RAPL energy. A profile passes when median absolute
 relative error is at most 5%; the preferred repeatability gate requires maximum
 configuration-level coefficient of variation (CV) at most 10%. Regional energy
-is integrated only after run-level checks. For RQ4, time, energy, and
+is integrated only after run-level checks. The reported CV concerns region 0
+energy, not region 0.2 alone; the consistency difference concerns the whole
+program. For RQ4, time, energy, and
 energy-delay product (EDP) refer to region 0.2, with ratios computed as SCIP
 divided by Gurobi. The analysis is descriptive; no hypothesis test is reported.
 
@@ -231,6 +243,11 @@ five valid repetitions without imputation.
 Fifteen matched configurations combine five workloads and three profiles. The
 comparison gate verified dataset fingerprints, profile contracts, partition,
 exclusive allocation, clean source worktrees, and accepted input matrices.
+These telemetry gates do not establish equivalent terminal solution quality.
+The status and objective of each included run require a separate audit, with
+native gaps and stopping tolerances reported where recorded. Missing gaps must
+not be inferred as zero, and the hard-split label does not establish difficulty
+for either solver.
 
 | Profile | Duration ratio | Energy ratio | EDP ratio |
 |---|---:|---:|---:|
@@ -286,6 +303,10 @@ node effects.
 energy. Region boundaries include wrapper/API overhead; EDP is defined only
 for the solve region. Viewer visualization validates interpretability, not
 sensor accuracy independently of Analyzer data.
+Both acquisition paths share RAPL; agreement therefore establishes internal
+consistency, not external-meter accuracy or independently validated regional
+attribution. RAPL update timing and non-atomic reads can affect measurements
+[@khan2018rapl].
 
 **Statistical validity.** Six attempts provide redundancy for invalid
 telemetry but limited inferential power. Medians, ratios, and CVs are
@@ -299,23 +320,26 @@ manuscript source, the publication figure, and machine-readable processed
 results. The processed tables reproduce every aggregate reported here and
 record campaign commits, scheduler jobs, partition, allocation policy, and
 software versions. Raw HPC telemetry, licensed material, benchmark archives,
-and large solver-start files remain outside Git; the evidence exporter removes
-cluster-local paths and emits checksummed portable packages.
+and large solver-start files remain outside Git. The original evidence exporter
+produces a portable manifest and checksums, not a complete telemetry archive.
+A separate data-deposit preparation step retains accepted and rejected
+measurements, sanitizes administrative fields, and inventories original and
+distributed checksums. Dataset publication requires file, authorship, privacy,
+and historical-hardware review.
 
 The `v0.1.0` Zenodo software record currently archives source code but predates
 the publication data. The next archival version will include the processed
 tables and link a separate checksummed evidence dataset when the manuscript is
-final. Software remains MIT-licensed; any separate data record will declare its
-own data license and exclude benchmark or solver material without redistribution
-permission.
+final. The software and separate data record use the MIT License; the data
+record excludes benchmark or solver material without redistribution permission.
 
 The manuscript uses Quarto [@quarto2026]. Pull requests render HTML, SBC PDF,
 and retained LaTeX, then run citation and PDF checks. GitHub Pages is published
 only from reviewed `main`.
 
-Software: <https://github.com/cvictorr2508/pascal-suite-python>.  
-Software DOI: <https://doi.org/10.5281/zenodo.22695373>.  
-Viewer adaptation: <https://gitlab.com/lappsufrn/pascalsuite-viewer/-/merge_requests/15>.
+Software: GitHub.^[<https://github.com/cvictorr2508/pascal-suite-python>]
+Software DOI: Zenodo.^[<https://doi.org/10.5281/zenodo.22695373>] Viewer
+adaptation: GitLab.^[<https://gitlab.com/lappsufrn/pascalsuite-viewer/-/merge_requests/15>]
 
 # Conclusion
 
