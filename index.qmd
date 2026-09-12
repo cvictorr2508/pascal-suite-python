@@ -5,7 +5,7 @@ author:
     institute: 1
   - name: "Kayo Gonçalves e Silva"
     institute: 2
-  - name: "Samuel Xavier Souza"
+  - name: "Samuel Xavier-de-Souza"
     institute: 2
 sbc-affiliations:
   - lines:
