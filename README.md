@@ -1,5 +1,8 @@
 # PaScal Suite Python
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22695373.svg)](https://doi.org/10.5281/zenodo.22695373)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 PaScal Suite Python is a research-oriented wrapper for reproducible experiments
 with mathematical optimization solvers and the
 [PaScal Analyzer](https://pascalsuite.imd.ufrn.br/analyzer/) on HPC systems. It
@@ -290,3 +293,64 @@ python -m pytest -q
 
 Generated results, licenses, virtual environments, build products, and solver
 warm starts must not be committed.
+
+## Research manuscript
+
+The publication source is a Quarto Manuscript with HTML and an SBC-styled PDF.
+It is rendered in pull requests without executing the HPC campaigns; the
+article consumes frozen, checksummed results described in
+[the research MVP record](docs/research-mvp.md).
+
+After installing Quarto, TinyTeX, and Poppler, validate it with:
+
+```bash
+quarto check
+quarto render
+python scripts/check_sbc_pdf.py
+```
+
+Merges to `main` publish the HTML manuscript through GitHub Pages at
+<https://cvictorr2508.github.io/pascal-suite-python/>. GitHub Pages must be
+configured to use **GitHub Actions** as its source.
+
+Release `v0.1.0` is archived on Zenodo under the version DOI
+[10.5281/zenodo.22695374](https://doi.org/10.5281/zenodo.22695374). Cite the
+concept DOI [10.5281/zenodo.22695373](https://doi.org/10.5281/zenodo.22695373)
+when referring to the software across versions. This source archive is distinct
+from raw HPC telemetry, restricted solver material, and benchmark archives,
+which remain outside Git. Checksummed portable evidence is the shareable
+archival unit for the validated campaigns.
+
+Machine-readable processed results reported by the manuscript are published in
+[the publication data directory](publication/README.md). They include matrix
+validity, controlled one-core comparisons, and campaign provenance. Because the
+v0.1.0 archive predates these files, they will first appear on Zenodo in the
+next reviewed software release; a separate evidence dataset will preserve the
+sanitized per-run package.
+
+## Bibliography provenance
+
+References used by the Quarto manuscript are curated in the Zotero collection
+**PaScal Suite Python — Manuscript**. The collection is an iterative research
+queue; membership alone does not authorize citation. The reviewed mapping from
+Zotero item keys to stable Quarto citation keys and intended manuscript sections
+is recorded in
+[the bibliography provenance manifest](bibliography/zotero-manuscript.json).
+
+Raw Zotero exports must not be committed because they can contain attachment
+paths, abstracts, personal tags, and other nonessential metadata. Validate the
+sanitized bibliography and every manuscript citation with:
+
+```bash
+python scripts/check_bibliography_provenance.py
+```
+
+The complete review states and iterative screening procedure are documented in
+[Bibliography provenance and review policy](docs/BIBLIOGRAPHY_PROVENANCE.md).
+
+## License
+
+PaScal Suite Python is distributed under the [MIT License](LICENSE). The
+license permits use, modification, redistribution, sublicensing, and commercial
+use, provided that the copyright and permission notices are retained. The
+software is provided without warranty.

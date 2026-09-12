@@ -1,0 +1,229 @@
+{
+  "schema_version": 1,
+  "collection": {
+    "name": "PaScal Suite Python — Manuscript",
+    "library_scope": "Zotero personal library",
+    "zotero_collection_key": "3ZZTJ2M2",
+    "audited_on": "2026-09-11",
+    "top_level_item_count": 14
+  },
+  "review_policy": {
+    "candidate": "Present in the research queue but not approved for the manuscript bibliography.",
+    "approved": "Scientifically reviewed and retained in references.bib, but not necessarily cited yet.",
+    "cited": "Scientifically reviewed, retained in references.bib, and cited in index.qmd.",
+    "excluded": "Reviewed and intentionally excluded from references.bib and the manuscript."
+  },
+  "records": [
+    {
+      "cite_key": "rotem2012rapl",
+      "zotero_item_key": "V8NAH3XB",
+      "title": "Power-Management Architecture of the Intel Microarchitecture Code-Named Sandy Bridge",
+      "year": 2012,
+      "locator": {
+        "type": "doi",
+        "value": "10.1109/MM.2012.12"
+      },
+      "review_status": "cited",
+      "intended_sections": [
+        "background-and-related-work",
+        "experimental-method"
+      ]
+    },
+    {
+      "cite_key": "silva2022analytical",
+      "zotero_item_key": "GW8AST4B",
+      "title": "Analytical Energy Model Parametrized by Workload, Clock Frequency and Number of Active Cores for Share-Memory High-Performance Computing Applications",
+      "year": 2022,
+      "locator": {
+        "type": "doi",
+        "value": "10.3390/en15031213"
+      },
+      "review_status": "cited",
+      "intended_sections": [
+        "background-and-related-work",
+        "results-discussion"
+      ]
+    },
+    {
+      "cite_key": "springborg2023slurm",
+      "zotero_item_key": "ZNLKT969",
+      "title": "Automatic Energy-Efficient Job Scheduling in HPC: A Novel SLURM Plugin Approach",
+      "year": 2023,
+      "locator": {
+        "type": "doi",
+        "value": "10.1145/3624062.3624265"
+      },
+      "review_status": "cited",
+      "intended_sections": [
+        "background-and-related-work",
+        "results-discussion"
+      ]
+    },
+    {
+      "cite_key": "bree2025softwaredesign",
+      "zotero_item_key": "YP2TW9D8",
+      "title": "How Software Design Affects Energy Performance: A Systematic Literature Review",
+      "year": 2025,
+      "locator": {
+        "type": "doi",
+        "value": "10.1002/smr.70014"
+      },
+      "review_status": "cited",
+      "intended_sections": [
+        "background-and-related-work",
+        "results-discussion"
+      ]
+    },
+    {
+      "cite_key": "ye2025milpbench",
+      "zotero_item_key": "LJYRIH6T",
+      "title": "MILPBench: A Large-scale Benchmark Test Suite for Mixed Integer Linear Programming Problems",
+      "year": 2025,
+      "locator": {
+        "type": "doi",
+        "value": "10.1145/3712256.3726324"
+      },
+      "review_status": "cited",
+      "intended_sections": [
+        "background-and-related-work",
+        "experimental-method"
+      ]
+    },
+    {
+      "cite_key": "haq2025facilitylocation",
+      "zotero_item_key": "9HJ5RIFT",
+      "title": "Systematic Literature Review for Robust Mixed-Integer Linear Programming Models Using Benders Decomposition in Facility Location Problems",
+      "year": 2025,
+      "locator": {
+        "type": "doi",
+        "value": "10.18860/cauchy.v10i1.31539"
+      },
+      "review_status": "cited",
+      "intended_sections": [
+        "background-and-related-work",
+        "threats-to-validity"
+      ]
+    },
+    {
+      "cite_key": "bolusani2024scip",
+      "zotero_item_key": "ZSQ2XXUQ",
+      "title": "The SCIP Optimization Suite 9.0",
+      "year": 2024,
+      "locator": {
+        "type": "url",
+        "value": "https://arxiv.org/abs/2402.17702"
+      },
+      "review_status": "excluded",
+      "intended_sections": [
+        "background-and-related-work",
+        "system-design"
+      ]
+    },
+    {
+      "cite_key": "gurobi2026manual",
+      "zotero_item_key": "7R3T72H3",
+      "title": "Gurobi Optimizer Reference Manual",
+      "year": 2026,
+      "locator": {
+        "type": "url",
+        "value": "https://docs.gurobi.com/projects/optimizer/en/current/"
+      },
+      "review_status": "cited",
+      "intended_sections": [
+        "background-and-related-work",
+        "system-design"
+      ]
+    },
+    {
+      "cite_key": "pascal2026",
+      "zotero_item_key": "TPFGWEV9",
+      "title": "PaScal Analyzer Documentation",
+      "year": 2026,
+      "locator": {
+        "type": "url",
+        "value": "https://pascalsuite.imd.ufrn.br/analyzer/"
+      },
+      "review_status": "cited",
+      "intended_sections": [
+        "background-and-related-work",
+        "system-design"
+      ]
+    },
+    {
+      "cite_key": "quarto2026",
+      "zotero_item_key": "7Y7NQHUT",
+      "title": "Quarto Manuscripts",
+      "year": 2026,
+      "locator": {
+        "type": "url",
+        "value": "https://quarto.org/docs/manuscripts/"
+      },
+      "review_status": "cited",
+      "intended_sections": [
+        "reproducibility-and-availability"
+      ]
+    },
+    {
+      "cite_key": "silva2025pascalsuite",
+      "zotero_item_key": "6ZSAY874",
+      "title": "PaScal Suite: A Toolset for Evaluating and Profiling Parallel Scalability in Shared-Memory Programs",
+      "year": 2025,
+      "locator": {
+        "type": "doi",
+        "value": "10.1109/ACCESS.2025.3639388"
+      },
+      "review_status": "cited",
+      "intended_sections": [
+        "background-and-related-work",
+        "system-design",
+        "results-discussion"
+      ]
+    },
+    {
+      "cite_key": "silva2019pascalviewer",
+      "zotero_item_key": "6TCEWEMM",
+      "title": "PaScal Viewer: A Tool for the Visualization of Parallel Scalability Trends",
+      "year": 2019,
+      "locator": {
+        "type": "doi",
+        "value": "10.1007/978-3-030-17872-7_15"
+      },
+      "review_status": "cited",
+      "intended_sections": [
+        "background-and-related-work",
+        "system-design",
+        "results-discussion"
+      ]
+    },
+    {
+      "cite_key": "hojny2025scip",
+      "zotero_item_key": "583D64JC",
+      "title": "The SCIP Optimization Suite 10.0",
+      "year": 2025,
+      "locator": {
+        "type": "doi",
+        "value": "10.48550/arXiv.2511.18580"
+      },
+      "review_status": "cited",
+      "intended_sections": [
+        "background-and-related-work",
+        "system-design"
+      ]
+    },
+    {
+      "cite_key": "khan2018rapl",
+      "zotero_item_key": "KSBJEDBZ",
+      "title": "RAPL in Action: Experiences in Using RAPL for Power Measurements",
+      "year": 2018,
+      "locator": {
+        "type": "doi",
+        "value": "10.1145/3177754"
+      },
+      "review_status": "cited",
+      "intended_sections": [
+        "threats-to-validity"
+      ]
+    }
+  ]
+}
+
