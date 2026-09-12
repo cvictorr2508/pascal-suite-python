@@ -19,7 +19,7 @@ EXPECTED_MARKERS = (
     "Solvers on HPC Systems",
     "Victor Rafael R. Celestino",
     "Kayo Gonçalves e Silva",
-    "Samuel Xavier Souza",
+    "Samuel Xavier-de-Souza",
     "University of Brasília (UnB)",
     "LAPPS",
     "UFRN",
