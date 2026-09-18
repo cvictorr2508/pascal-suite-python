@@ -78,8 +78,9 @@ addressed here is to connect Python solver APIs to PaScal's native manual-region
 mechanism, validate sampled energy, and carry the regional semantics through to
 visual analysis without making the workflow specific to one solver.
 
-We present PaScal Suite Python, a research prototype that executes Gurobi and
-SCIP through a common experiment contract. The study asks:
+We present Python support/extension to PaScal Suite (Parallel Scalability
+Suite), a research prototype that executes Gurobi and SCIP through a common
+experiment contract. The study asks:
 
 1. **RQ1:** Can both solvers use the same declarative experiment and regional
    telemetry contract while retaining native solver semantics?
@@ -94,8 +95,7 @@ SCIP through a common experiment contract. The study asks:
 The contribution is an end-to-end measurement, visualization, and evidence
 pipeline: solver adapters, native region instrumentation, validity gates,
 PaScal Viewer energy support, provenance manifests, processed research data,
-comparison tables, and a publication workflow. Continuous integration renders
-the manuscript but does not rerun the HPC campaigns.
+comparison tables, and a publication workflow.
 
 # Background and Related Work
 
@@ -171,10 +171,36 @@ The common profiles are `default`, `presolve-off`, and `warm-start`. Gurobi uses
 supported start representations including MST files; SCIP uses SOL files,
 optionally gzip-compressed. The workflow verifies identity and association but
 does not assume algorithmic equivalence between native starts.
-Region 0.1 covers model loading through the native API, not algebraic model
-generation. Profile configuration and start-file loading occur inside region 0
-but outside regions 0.1 and 0.2. A Gurobi start recorded as applied establishes
-loading, not acceptance as an incumbent; SCIP records the return of `addSol`.
+
+PaScal Suite natively uses the `rapl-sysfs` metric for hardware power
+consumption and energy-efficiency monitoring on Linux. The Linux Intel RAPL
+kernel driver abstracts these counters through the powercap framework, exposing
+the data to user space through the sysfs directory tree at
+`/sys/class/powercap/intel-rapl`. Figure 1 shows PaScal Viewer
+renderings of the resulting `rapl-sysfs` energy maps.
+
+The `rapl-sysfs` heatmaps in Figure 1 were produced from a
+Gurobi-only validation campaign. Gurobi was executed using its implicit
+`default` profile. The columns `i1`, `i2`, `i3`, `i4`, and `i5`
+correspond, respectively, to MILPBench hard capacitated facility-location
+instances 5, 10, 15, 20, and 25. The rows labeled 1, 2, and 4 denote both the
+PaScal resource count and the corresponding Gurobi `Threads` setting. Six
+repetitions were executed for each core-instance configuration, for a total of
+90 attempts.
+
+Region 0.1 covers model loading through the native Gurobi API (`gp.read`),
+rather than algebraic model generation, whereas Region 0.2 contains only the
+optimization call (`model.optimize`). Profile configuration and
+initial-solution loading occur inside the enclosing Region 0 but outside Regions
+0.1 and 0.2. PaScal Viewer labels these regions as 0.0.1 and 0.0.2 because it
+prefixes the Analyzer region paths with its whole-program root. Each heatmap
+cell therefore represents the regional `rapl-sysfs` energy associated with
+one core-instance configuration.
+
+![PaScal Viewer rendering of the `rapl-sysfs` energy maps for the model
+read/build and solve subregions of a Gurobi validation artifact. The Viewer
+prefixes the Analyzer paths `0.1` and `0.2` with its whole-program root, hence
+the displayed labels `0.0.1` and `0.0.2`.](manuscript/figures/pascal-viewer-regional-energy.png){#fig-viewer width=96%}
 
 ## Viewer adaptation
 
@@ -187,11 +213,6 @@ valid samples when a global scalar is non-positive, and does not mutate the
 Analyzer JSON. The implementation and nine focused parser tests are identified
 by Viewer commit `e78e96ff` and GitLab MR !15.^[Viewer repository:
 <https://gitlab.com/lappsufrn/pascalsuite-viewer>.]
-
-![PaScal Viewer rendering of the `rapl-sysfs` energy maps for the model
-read/build and solve subregions of a Gurobi validation artifact. The Viewer
-prefixes the Analyzer paths `0.1` and `0.2` with its whole-program root, hence
-the displayed labels `0.0.1` and `0.0.2`.](manuscript/figures/pascal-viewer-regional-energy.png){#fig-viewer width=96%}
 
 # Experimental Method
 
@@ -233,21 +254,17 @@ divided by Gurobi. The analysis is descriptive; no hypothesis test is reported.
 | SCIP | presolve-off | 30 / 30 | 0.286874 | 0.671986 |
 | SCIP | warm-start | 28 / 30 | 0.290148 | 0.746351 |
 
-All profile matrices passed. Median consistency errors remained below 0.31%,
-well inside the 5% gate; maximum CV was 1.88%, inside the preferred 10% bound.
-Six of 360 attempts were invalid. Every configuration retained the required
-five valid repetitions without imputation.
+All profile matrices passed. The largest median consistency error was 0.296794%
+(0.30% when rounded to two decimal places), well inside the 5% gate; the maximum
+CV was 1.877484% (1.88%), inside the preferred 10% bound. Six of 360 attempts
+were invalid. Every configuration retained the required five valid repetitions
+without imputation.
 
 ## Controlled one-core comparison
 
 Fifteen matched configurations combine five workloads and three profiles. The
 comparison gate verified dataset fingerprints, profile contracts, partition,
 exclusive allocation, clean source worktrees, and accepted input matrices.
-These telemetry gates do not establish equivalent terminal solution quality.
-The status and objective of each included run require a separate audit, with
-native gaps and stopping tolerances reported where recorded. Missing gaps must
-not be inferred as zero, and the hard-split label does not establish difficulty
-for either solver.
 
 | Profile | Duration ratio | Energy ratio | EDP ratio |
 |---|---:|---:|---:|
@@ -260,6 +277,12 @@ median. SCIP showed higher solve duration, regional energy, and EDP for all
 three profiles in this bounded experiment, with the smallest ratios under warm
 start. These observations apply only to the declared instances, versions,
 profiles, node class, and controls.
+
+These telemetry gates do not establish equivalent terminal solution quality.
+The status and objective of each included run require a separate audit, with
+native gaps and stopping tolerances reported where recorded. Missing gaps must
+not be inferred as zero, and the hard-split label does not establish difficulty
+for either solver.
 
 # Discussion
 
@@ -320,26 +343,27 @@ manuscript source, the publication figure, and machine-readable processed
 results. The processed tables reproduce every aggregate reported here and
 record campaign commits, scheduler jobs, partition, allocation policy, and
 software versions. Raw HPC telemetry, licensed material, benchmark archives,
-and large solver-start files remain outside Git. The original evidence exporter
-produces a portable manifest and checksums, not a complete telemetry archive.
-A separate data-deposit preparation step retains accepted and rejected
-measurements, sanitizes administrative fields, and inventories original and
-distributed checksums. Dataset publication requires file, authorship, privacy,
-and historical-hardware review.
+and large solver-start files remain outside Git; the evidence exporter removes
+cluster-local paths and emits checksummed portable packages.
 
-The `v0.1.0` Zenodo software record currently archives source code but predates
-the publication data. The next archival version will include the processed
-tables and link a separate checksummed evidence dataset when the manuscript is
-final. The software and separate data record use the MIT License; the data
-record excludes benchmark or solver material without redistribution permission.
+The current GitHub repository contains the software and machine-readable
+processed tables, while the Zenodo software record preserves the `v0.1.0`
+source release. A separate Zenodo evidence dataset retains all 360 attempts,
+including accepted and rejected measurements, together with sanitized Analyzer
+outputs, manifests, processed tables, checksums, and reconstruction scripts.
+Administrative paths and hosts are redacted; benchmark instances, solver
+licenses, and warm-start files are excluded. Both records use the MIT License.
 
 The manuscript uses Quarto [@quarto2026]. Pull requests render HTML, SBC PDF,
 and retained LaTeX, then run citation and PDF checks. GitHub Pages is published
 only from reviewed `main`.
 
-Software: GitHub.^[<https://github.com/cvictorr2508/pascal-suite-python>]
-Software DOI: Zenodo.^[<https://doi.org/10.5281/zenodo.22695373>] Viewer
-adaptation: GitLab.^[<https://gitlab.com/lappsufrn/pascalsuite-viewer/-/merge_requests/15>]
+Supplementary material available:
+
+- Software: GitHub.^[<https://github.com/cvictorr2508/pascal-suite-python>]
+- Software DOI: Zenodo.^[<https://doi.org/10.5281/zenodo.22695373>]
+- Evidence dataset: Zenodo.^[<https://doi.org/10.5281/zenodo.22709483>]
+- Viewer adaptation: GitLab.^[<https://gitlab.com/lappsufrn/pascalsuite-viewer/-/merge_requests/15>]
 
 # Conclusion
 
@@ -351,6 +375,11 @@ research data. This bounded MVP addresses measurement and observability for
 sustainable HPC. Broader claims require additional problem families, systems,
 versions, randomized campaign scheduling, and inferential analysis.
 
-# Declaration of generative AI and AI-assisted technologies in the manuscript preparation process {.unnumbered}
+# Declaration of generative AI and AI-assisted technologies in the manuscript preparation process
 
-During the preparation of this work, the authors used ChatGPT Codex with models 5.6 Sol and 6.0 Astra to assist with the codebase implementation and to support the preparation, structuring, language refinement, and data visualization of this manuscript. After using these tools/services, the authors reviewed and edited the content as needed and took full responsibility for the content of the published article.
+During the preparation of this work, the authors used ChatGPT Codex with models 5.6 Sol and 6.0 Astra to assist with the codebase implementation and to support the preparation, structuring, language refinement, and data visualization of this manuscript. After using these tools and services, the authors reviewed and edited the content as needed and took full responsibility for the content of the published article.
+
+# Acknowledgements
+
+The authors express gratitude to NPAD/UFRN for providing access to the HPC
+infrastructure.
