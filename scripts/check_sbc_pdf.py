@@ -29,6 +29,9 @@ EXPECTED_MARKERS = (
     "Experimental Method",
     "Results",
     "Threats to Validity",
+    "0.296794",
+    "Evidence dataset",
+    "Acknowledgements",
     "References",
 )
 
