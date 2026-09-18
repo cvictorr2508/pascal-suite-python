@@ -176,10 +176,10 @@ PaScal Suite natively uses the `rapl-sysfs` metric for hardware power
 consumption and energy-efficiency monitoring on Linux. The Linux Intel RAPL
 kernel driver abstracts these counters through the powercap framework, exposing
 the data to user space through the sysfs directory tree at
-`/sys/class/powercap/intel-rapl`. Figure @fig-viewer shows PaScal Viewer
+`/sys/class/powercap/intel-rapl`. Figure 1 shows PaScal Viewer
 renderings of the resulting `rapl-sysfs` energy maps.
 
-The `rapl-sysfs` heatmaps in Figure @fig-viewer were produced from a
+The `rapl-sysfs` heatmaps in Figure 1 were produced from a
 Gurobi-only validation campaign. Gurobi was executed using its implicit
 `default` profile. The columns `i1`, `i2`, `i3`, `i4`, and `i5`
 correspond, respectively, to MILPBench hard capacitated facility-location
