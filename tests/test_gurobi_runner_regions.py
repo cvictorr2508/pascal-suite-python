@@ -29,6 +29,7 @@ class _FakeEnvironment:
 class _FakeParameters:
     Threads = 0
     Seed = 0
+    TimeLimit = float("inf")
 
 
 class _FakeModel:
@@ -40,6 +41,13 @@ class _FakeModel:
         self.NodeCount = 0.0
         self.SolCount = 1
         self.ObjVal = 42.0
+        self.ObjBound = 41.0
+        self.MIPGap = 1.0 / 42.0
+        self.IsMIP = True
+        self.NumVars = 12
+        self.NumConstrs = 7
+        self.NumBinVars = 5
+        self.NumIntVars = 2
 
     def setParam(self, name, value):
         setattr(self.Params, name, value)
@@ -113,6 +121,10 @@ class GurobiRunnerRegionTests(unittest.TestCase):
                     return_value=status,
                 ),
                 patch.object(gurobi_runner, "_current_affinity", return_value=None),
+                patch.dict(
+                    gurobi_runner.os.environ,
+                    {"PASCAL_GLOBAL_INPUT_INDEX": "4"},
+                ),
                 patch.object(sys, "argv", argv),
             ):
                 gurobi_runner.main()
@@ -136,8 +148,15 @@ class GurobiRunnerRegionTests(unittest.TestCase):
             set(metadata["pascal_instrumentation"]["region_schema"]["regions"]),
             {"0", "0.1", "0.2"},
         )
+        self.assertEqual(metadata["input_idx"], 4)
+        self.assertEqual(metadata["local_input_idx"], 0)
+        self.assertEqual(metadata["parameters"]["seed_requested"], 10004)
         self.assertIn("read_wall_clock_s", metadata["metrics"])
         self.assertIn("solve_wall_clock_s", metadata["metrics"])
+        self.assertEqual(metadata["metrics"]["status_name"], "OPTIMAL")
+        self.assertEqual(metadata["metrics"]["best_bound"], 41.0)
+        self.assertAlmostEqual(metadata["metrics"]["mip_gap"], 1.0 / 42.0)
+        self.assertEqual(metadata["metrics"]["num_binary_variables"], 5)
 
 
 if __name__ == "__main__":
