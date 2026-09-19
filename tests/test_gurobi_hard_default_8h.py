@@ -27,6 +27,106 @@ class GurobiHardDefaultEightHourTests(unittest.TestCase):
         )
         self.configuration = load_configuration(self.config_path)
 
+    def _write_complete_campaign(self, campaign_root: Path) -> None:
+        for shard in campaign_shards(self.configuration):
+            shard_root = campaign_root / "shards" / shard.identifier
+            profile_root = shard_root / "gurobi" / "default"
+            profile_root.mkdir(parents=True)
+            workload_sha256 = f"{shard.input_index + 1:064x}"
+            manifest = {
+                "source": {
+                    "git_commit": "a" * 40,
+                    "tracked_worktree_clean": True,
+                },
+                "experiment": {
+                    "resources": [shard.cores],
+                    "profiles": [
+                        {
+                            "id": "default",
+                            "kind": "default",
+                            "parameters": {"TimeLimit": 28800},
+                        }
+                    ],
+                },
+                "workloads": [
+                    {
+                        "path": str(shard.workload),
+                        "size_bytes": 100 + shard.input_index,
+                        "sha256": workload_sha256,
+                    }
+                ],
+                "slurm": {
+                    "allocation": {
+                        "requested_mode": "exclusive",
+                        "scheduler_oversubscribe": "NO",
+                    }
+                },
+            }
+            (shard_root / "research_manifest.json").write_text(
+                json.dumps(manifest), encoding="utf-8"
+            )
+            data = {}
+            for repetition in range(1, 7):
+                data[f"{shard.cores};0;{repetition}"] = {
+                    "start_time": 0,
+                    "stop_time": 10,
+                    "rapl-sysfs": 100,
+                    "regions": {
+                        "0": [[0, 10, 1, 2, 0, "runner.py"]],
+                        "0.1": [[0, 4, 3, 4, 0, "runner.py"]],
+                        "0.2": [[4, 10, 5, 6, 0, "runner.py"]],
+                    },
+                    "sensors": {
+                        "rapl_sample-sysfs": [[10, 0], [10, 5], [10, 10]]
+                    },
+                }
+                seed = 10000 + shard.input_index
+                metadata = {
+                    "cores": shard.cores,
+                    "input_idx": shard.input_index,
+                    "parameters": {
+                        "threads_requested": shard.cores,
+                        "threads_effective": shard.cores,
+                        "seed_requested": seed,
+                        "seed_effective": seed,
+                        "profile_requested": {"TimeLimit": 28800},
+                        "profile_effective": {"TimeLimit": 28800.0},
+                    },
+                    "metrics": {
+                        "status_name": "OPTIMAL",
+                        "gurobi_runtime_s": 9.5,
+                        "mip_gap": 0.0,
+                    },
+                }
+                (profile_root / f"meta_{repetition}.json").write_text(
+                    json.dumps(metadata), encoding="utf-8"
+                )
+            telemetry = {
+                "config": {
+                    "data_descriptor": {
+                        "values": ["start_time", "stop_time", "rapl-sysfs"],
+                        "extras": {
+                            "regions": {
+                                "values": [
+                                    "start_time",
+                                    "stop_time",
+                                    "start_line",
+                                    "stop_line",
+                                    "thread_id",
+                                    "filename",
+                                ]
+                            },
+                            "sensors": {"values": ["info", "time"]},
+                        },
+                        "keys": ["cores", "input", "repetitions"],
+                    }
+                },
+                "data": data,
+            }
+            (profile_root / "exp_pascal.json").write_text(
+                json.dumps(telemetry), encoding="utf-8"
+            )
+
     def test_matrix_maps_fifteen_array_tasks_deterministically(self):
         shards = campaign_shards(self.configuration)
 
@@ -120,91 +220,7 @@ class GurobiHardDefaultEightHourTests(unittest.TestCase):
     def test_complete_shard_set_builds_compact_viewer_artifact(self):
         with tempfile.TemporaryDirectory() as tmp:
             campaign_root = Path(tmp)
-            for shard in campaign_shards(self.configuration):
-                shard_root = campaign_root / "shards" / shard.identifier
-                profile_root = shard_root / "gurobi" / "default"
-                profile_root.mkdir(parents=True)
-                manifest = {
-                    "source": {
-                        "git_commit": "a" * 40,
-                        "tracked_worktree_clean": True,
-                    },
-                    "experiment": {
-                        "resources": [shard.cores],
-                        "profiles": [
-                            {
-                                "id": "default",
-                                "kind": "default",
-                                "parameters": {"TimeLimit": 28800},
-                            }
-                        ],
-                    },
-                    "slurm": {
-                        "allocation": {
-                            "requested_mode": "exclusive",
-                            "scheduler_oversubscribe": "NO",
-                        }
-                    },
-                }
-                (shard_root / "research_manifest.json").write_text(
-                    json.dumps(manifest), encoding="utf-8"
-                )
-                data = {}
-                for repetition in range(1, 7):
-                    data[f"{shard.cores};0;{repetition}"] = {
-                        "start_time": 0,
-                        "stop_time": 10,
-                        "rapl-sysfs": 100,
-                        "regions": {
-                            "0": [[0, 10, 1, 2, 0, "runner.py"]],
-                            "0.1": [[0, 4, 3, 4, 0, "runner.py"]],
-                            "0.2": [[4, 10, 5, 6, 0, "runner.py"]],
-                        },
-                        "sensors": {
-                            "rapl_sample-sysfs": [[10, 0], [10, 5], [10, 10]]
-                        },
-                    }
-                    metadata = {
-                        "cores": shard.cores,
-                        "input_idx": shard.input_index,
-                        "parameters": {
-                            "threads_effective": shard.cores,
-                            "profile_effective": {"TimeLimit": 28800.0},
-                        },
-                        "metrics": {
-                            "status_name": "OPTIMAL",
-                            "gurobi_runtime_s": 9.5,
-                            "mip_gap": 0.0,
-                        },
-                    }
-                    (profile_root / f"meta_{repetition}.json").write_text(
-                        json.dumps(metadata), encoding="utf-8"
-                    )
-                telemetry = {
-                    "config": {
-                        "data_descriptor": {
-                            "values": ["start_time", "stop_time", "rapl-sysfs"],
-                            "extras": {
-                                "regions": {
-                                    "values": [
-                                        "start_time",
-                                        "stop_time",
-                                        "start_line",
-                                        "stop_line",
-                                        "thread_id",
-                                        "filename",
-                                    ]
-                                },
-                                "sensors": {"values": ["info", "time"]},
-                            },
-                            "keys": ["cores", "input", "repetitions"],
-                        }
-                    },
-                    "data": data,
-                }
-                (profile_root / "exp_pascal.json").write_text(
-                    json.dumps(telemetry), encoding="utf-8"
-                )
+            self._write_complete_campaign(campaign_root)
 
             report = summarize_campaign(
                 config_path=self.config_path,
@@ -226,6 +242,62 @@ class GurobiHardDefaultEightHourTests(unittest.TestCase):
             viewer["data"]["1;0;1"]["rapl-sysfs"],
             {"0": 100.0, "0.1": 40.0, "0.2": 60.0},
         )
+
+    def test_missing_attempt_is_rejected_instead_of_reporting_ninety(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            campaign_root = Path(tmp)
+            self._write_complete_campaign(campaign_root)
+            telemetry_path = (
+                campaign_root
+                / "shards/c1_i0/gurobi/default/exp_pascal.json"
+            )
+            telemetry = json.loads(telemetry_path.read_text(encoding="utf-8"))
+            telemetry["data"].pop("1;0;6")
+            telemetry_path.write_text(json.dumps(telemetry), encoding="utf-8")
+
+            with self.assertRaisesRegex(
+                ValueError, "expected six attempted runs in c1_i0, found 5"
+            ):
+                summarize_campaign(
+                    config_path=self.config_path,
+                    campaign_root=campaign_root,
+                )
+
+    def test_effective_seed_mismatch_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            campaign_root = Path(tmp)
+            self._write_complete_campaign(campaign_root)
+            metadata_path = (
+                campaign_root / "shards/c2_i3/gurobi/default/meta_1.json"
+            )
+            metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+            metadata["parameters"]["seed_effective"] = 999
+            metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
+
+            with self.assertRaisesRegex(
+                ValueError, "effective Seed mismatch in c2_i3"
+            ):
+                summarize_campaign(
+                    config_path=self.config_path,
+                    campaign_root=campaign_root,
+                )
+
+    def test_workload_fingerprint_mismatch_across_cores_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            campaign_root = Path(tmp)
+            self._write_complete_campaign(campaign_root)
+            manifest_path = campaign_root / "shards/c2_i0/research_manifest.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["workloads"][0]["sha256"] = "f" * 64
+            manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+            with self.assertRaisesRegex(
+                ValueError, "workload fingerprint mismatch across cores for input 0"
+            ):
+                summarize_campaign(
+                    config_path=self.config_path,
+                    campaign_root=campaign_root,
+                )
 
 
 if __name__ == "__main__":

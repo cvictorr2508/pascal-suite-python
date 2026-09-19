@@ -94,6 +94,8 @@ def summarize_campaign(
     configuration_records = []
     first_config = None
     source_commits = set()
+    workload_fingerprints: dict[int, tuple[str, int]] = {}
+    attempted_runs = 0
 
     for shard in shards:
         shard_root = campaign_root / "shards" / shard.identifier
@@ -115,6 +117,39 @@ def summarize_campaign(
         experiment = manifest.get("experiment", {})
         if experiment.get("resources") != [shard.cores]:
             raise CampaignSummaryError(f"resource mismatch in {shard.identifier}")
+        manifest_workloads = manifest.get("workloads")
+        if not isinstance(manifest_workloads, list) or len(manifest_workloads) != 1:
+            raise CampaignSummaryError(
+                f"workload provenance mismatch in {shard.identifier}"
+            )
+        workload_record = manifest_workloads[0]
+        workload_path = Path(str(workload_record.get("path", ""))).resolve()
+        workload_sha256 = workload_record.get("sha256")
+        workload_size = workload_record.get("size_bytes")
+        if workload_path != shard.workload:
+            raise CampaignSummaryError(
+                f"workload path mismatch in {shard.identifier}: {workload_path}"
+            )
+        if (
+            not isinstance(workload_sha256, str)
+            or len(workload_sha256) != 64
+            or any(character not in "0123456789abcdef" for character in workload_sha256)
+            or not isinstance(workload_size, int)
+            or isinstance(workload_size, bool)
+            or workload_size <= 0
+        ):
+            raise CampaignSummaryError(
+                f"invalid workload fingerprint in {shard.identifier}"
+            )
+        fingerprint = (workload_sha256, workload_size)
+        previous_fingerprint = workload_fingerprints.setdefault(
+            shard.input_index, fingerprint
+        )
+        if previous_fingerprint != fingerprint:
+            raise CampaignSummaryError(
+                f"workload fingerprint mismatch across cores for input "
+                f"{shard.input_index}"
+            )
         profiles = experiment.get("profiles") or []
         if len(profiles) != 1:
             raise CampaignSummaryError(f"profile mismatch in {shard.identifier}")
@@ -155,9 +190,27 @@ def summarize_campaign(
                     f"metadata input mismatch in {shard.identifier}"
                 )
             parameters_record = record.get("parameters", {})
+            expected_seed = 10000 + shard.input_index
+            if parameters_record.get("threads_requested") != shard.cores:
+                raise CampaignSummaryError(
+                    f"requested Threads mismatch in {shard.identifier}"
+                )
             if parameters_record.get("threads_effective") != shard.cores:
                 raise CampaignSummaryError(
                     f"effective Threads mismatch in {shard.identifier}"
+                )
+            if parameters_record.get("seed_requested") != expected_seed:
+                raise CampaignSummaryError(
+                    f"requested Seed mismatch in {shard.identifier}"
+                )
+            if parameters_record.get("seed_effective") != expected_seed:
+                raise CampaignSummaryError(
+                    f"effective Seed mismatch in {shard.identifier}"
+                )
+            requested = parameters_record.get("profile_requested", {})
+            if requested != {"TimeLimit": 28800}:
+                raise CampaignSummaryError(
+                    f"requested TimeLimit mismatch in {shard.identifier}"
                 )
             effective = parameters_record.get("profile_effective", {})
             if float(effective.get("TimeLimit", -1)) != 28800:
@@ -171,6 +224,13 @@ def summarize_campaign(
             required_configurations=1,
             workloads=[str(shard.workload)],
         )
+        shard_attempted_runs = energy["attempted_run_count"]
+        if shard_attempted_runs != 6:
+            raise CampaignSummaryError(
+                f"expected six attempted runs in {shard.identifier}, "
+                f"found {shard_attempted_runs}"
+            )
+        attempted_runs += shard_attempted_runs
         local_data = telemetry.get("data", {})
         for run in energy["runs"]:
             local_key = run["run"]
@@ -283,10 +343,19 @@ def summarize_campaign(
         },
         "resources": [1, 2, 4],
         "repetitions": 6,
-        "attempted_runs": 90,
+        "attempted_runs": attempted_runs,
         "valid_energy_runs": len(all_valid_runs),
         "invalid_energy_runs": all_invalid_runs,
         "configuration_count": len(configuration_records),
+        "dataset": [
+            {
+                "input_index": input_index,
+                "workload": workloads[input_index],
+                "sha256": workload_fingerprints[input_index][0],
+                "size_bytes": workload_fingerprints[input_index][1],
+            }
+            for input_index in range(len(workloads))
+        ],
         "configurations": configuration_records,
         "energy_gate": {
             "median_absolute_error_percent": statistics.median(errors),
