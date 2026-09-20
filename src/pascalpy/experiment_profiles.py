@@ -2,23 +2,22 @@
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
-from typing import TypeAlias
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-ParameterValue: TypeAlias = bool | int | float | str
+type ParameterValue = bool | int | float | str
 
 
-class SolverName(str, Enum):
+class SolverName(StrEnum):
     """Optimization solvers supported by the experiment contract."""
 
     GUROBI = "gurobi"
     SCIP = "scip"
 
 
-class ProfileKind(str, Enum):
+class ProfileKind(StrEnum):
     """Solver-independent experimental treatments."""
 
     DEFAULT = "default"
@@ -26,7 +25,7 @@ class ProfileKind(str, Enum):
     WARM_START = "warm-start"
 
 
-class ObjectiveSense(str, Enum):
+class ObjectiveSense(StrEnum):
     """Objective direction applied after loading a solver-native model file."""
 
     PRESERVE = "preserve"
@@ -64,7 +63,7 @@ class SolverProfile(BaseModel):
     initial_solution: InitialSolutionSpec | None = None
 
     @model_validator(mode="after")
-    def validate_profile(self) -> "SolverProfile":
+    def validate_profile(self) -> SolverProfile:
         reserved = {name.lower() for name in self.parameters} & {"threads", "seed"}
         if reserved:
             raise ValueError(

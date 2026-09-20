@@ -25,7 +25,7 @@ from pascalpy.instrumentation.solver_regions import (  # noqa: E402
 )
 
 try:
-    from pyscipopt import Model, SCIP_PARAMSETTING
+    from pyscipopt import SCIP_PARAMSETTING, Model
 except ImportError:
     Model = None
     SCIP_PARAMSETTING = None

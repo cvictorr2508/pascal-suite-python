@@ -147,7 +147,9 @@ def _load_variable_starts(model, solution_path: Path) -> int:
     return assigned
 
 
-def _resolve_initial_solution(profile: dict, workload: Path) -> tuple[Path | None, bool]:
+def _resolve_initial_solution(
+    profile: dict, workload: Path
+) -> tuple[Path | None, bool]:
     specification = profile.get("initial_solution")
     if not isinstance(specification, dict):
         return None, False
@@ -428,6 +430,5 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 
 

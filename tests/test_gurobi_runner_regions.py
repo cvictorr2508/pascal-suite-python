@@ -9,7 +9,7 @@ from unittest.mock import patch
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
-from pascalpy.runners import gurobi_runner
+from pascalpy.runners import gurobi_runner  # noqa: E402
 
 
 class _FakeEnvironment:
@@ -182,5 +182,4 @@ class GurobiRunnerRegionTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
 
