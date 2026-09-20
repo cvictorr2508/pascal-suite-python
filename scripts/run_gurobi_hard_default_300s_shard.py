@@ -1,8 +1,3 @@
-InvalidOperation: 
-Line |
-   2 |  [Console]::OutputEncoding=[System.Text.UTF8Encoding]::new($false); Ge .
-     |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-     | Cannot create type. Only core types are supported in this language mode.
 #!/usr/bin/env python3
 """Run one instance/thread shard of the bounded Gurobi validation campaign."""
 

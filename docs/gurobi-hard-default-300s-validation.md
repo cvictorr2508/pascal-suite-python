@@ -1,8 +1,3 @@
-InvalidOperation: 
-Line |
-   2 |  [Console]::OutputEncoding=[System.Text.UTF8Encoding]::new($false); Ge .
-     |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-     | Cannot create type. Only core types are supported in this language mode.
 # Gurobi hard-instance default-profile revalidation
 
 This campaign measures the five selected MILPBench capacitated facility-location

@@ -1,8 +1,3 @@
-InvalidOperation: 
-Line |
-   2 |  [Console]::OutputEncoding=[System.Text.UTF8Encoding]::new($false); Ge .
-     |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-     | Cannot create type. Only core types are supported in this language mode.
 #!/bin/bash
 # Submit the configuration-sharded 300-second Gurobi validation campaign.
 
