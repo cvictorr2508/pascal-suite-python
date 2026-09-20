@@ -1,5 +1,10 @@
+InvalidOperation: 
+Line |
+   2 |  [Console]::OutputEncoding=[System.Text.UTF8Encoding]::new($false); Ge .
+     |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | Cannot create type. Only core types are supported in this language mode.
 experiment:
-  name: gurobi_hard_default_8h
+  name: gurobi_hard_default_300s
   solver: gurobi
   scaling_mode: strong
   resources: [1, 2, 4]
@@ -15,7 +20,7 @@ experiment:
       kind: default
       objective_sense: minimize
       parameters:
-        TimeLimit: 28800
+        TimeLimit: 300
 
 environment:
   track_cores: false
@@ -23,5 +28,5 @@ environment:
   idle_time_seconds: 0
 
 output:
-  directory: resultados_finais/gurobi_hard_default_8h
+  directory: resultados_finais/gurobi_hard_default_300s
 

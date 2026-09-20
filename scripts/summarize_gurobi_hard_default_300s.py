@@ -1,3 +1,8 @@
+InvalidOperation: 
+Line |
+   2 |  [Console]::OutputEncoding=[System.Text.UTF8Encoding]::new($false); Ge .
+     |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | Cannot create type. Only core types are supported in this language mode.
 #!/usr/bin/env python3
 """Validate all shards and build a compact PaScal Viewer energy artifact."""
 
@@ -24,7 +29,7 @@ assert ENERGY_SPEC.loader is not None
 ENERGY_SPEC.loader.exec_module(ENERGY)
 
 sys.path.insert(0, str(SCRIPT_DIR))
-from run_gurobi_hard_default_8h_shard import (  # noqa: E402
+from run_gurobi_hard_default_300s_shard import (  # noqa: E402
     campaign_shards,
     load_configuration,
 )
@@ -158,7 +163,7 @@ def summarize_campaign(
                 f"minimization objective not recorded in {shard.identifier}"
             )
         parameters = profiles[0].get("parameters") or {}
-        if parameters != {"TimeLimit": 28800}:
+        if parameters != {"TimeLimit": 300}:
             raise CampaignSummaryError(
                 f"TimeLimit mismatch in {shard.identifier}: {parameters}"
             )
@@ -229,12 +234,12 @@ def summarize_campaign(
                     f"effective Seed mismatch in {shard.identifier}"
                 )
             requested = parameters_record.get("profile_requested", {})
-            if requested != {"TimeLimit": 28800}:
+            if requested != {"TimeLimit": 300}:
                 raise CampaignSummaryError(
                     f"requested TimeLimit mismatch in {shard.identifier}"
                 )
             effective = parameters_record.get("profile_effective", {})
-            if float(effective.get("TimeLimit", -1)) != 28800:
+            if float(effective.get("TimeLimit", -1)) != 300:
                 raise CampaignSummaryError(
                     f"effective TimeLimit mismatch in {shard.identifier}"
                 )
@@ -340,7 +345,7 @@ def summarize_campaign(
         "config": _compact_config(first_config, workloads),
         "data": dict(sorted(compact_data.items())),
     }
-    viewer_path = campaign_root / "gurobi_hard_default_8h_viewer.json"
+    viewer_path = campaign_root / "gurobi_hard_default_300s_viewer.json"
     viewer_path.write_text(
         json.dumps(viewer_document, separators=(",", ":"), ensure_ascii=False)
         + "\n",
@@ -351,17 +356,17 @@ def summarize_campaign(
     errors = [run["whole_program"]["absolute_error_percent"] for run in all_valid_runs]
     report = {
         "schema_version": 1,
-        "campaign": "gurobi_hard_default_8h",
+        "campaign": "gurobi_hard_default_300s",
         "source_commit": next(iter(source_commits)),
         "profile": {
             "id": "default",
             "kind": "default",
             "objective_sense": "minimize",
-            "gurobi_time_limit_seconds": 28800,
+            "gurobi_time_limit_seconds": 300,
             "statement": (
                 "Gurobi default profile with explicit minimization, "
                 "runner-controlled Threads, deterministic "
-                "Seed=10000+input_index, and TimeLimit=28800"
+                "Seed=10000+input_index, and TimeLimit=300"
             ),
         },
         "resources": [1, 2, 4],
@@ -419,7 +424,7 @@ def main() -> int:
     parser.add_argument(
         "--config",
         type=Path,
-        default=SCRIPT_DIR.parent / "experiments" / "gurobi-hard-default-8h.yaml",
+        default=SCRIPT_DIR.parent / "experiments" / "gurobi-hard-default-300s.yaml",
     )
     parser.add_argument("--require-runs", type=int, default=5)
     arguments = parser.parse_args()

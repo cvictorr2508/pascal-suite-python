@@ -1,3 +1,8 @@
+InvalidOperation: 
+Line |
+   2 |  [Console]::OutputEncoding=[System.Text.UTF8Encoding]::new($false); Ge .
+     |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | Cannot create type. Only core types are supported in this language mode.
 import copy
 import json
 import sys
@@ -8,13 +13,13 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
 
-from run_gurobi_hard_default_8h_shard import (  # noqa: E402
+from run_gurobi_hard_default_300s_shard import (  # noqa: E402
     ShardConfigurationError,
     build_shard_configuration,
     campaign_shards,
     load_configuration,
 )
-from summarize_gurobi_hard_default_8h import (  # noqa: E402
+from summarize_gurobi_hard_default_300s import (  # noqa: E402
     _compact_config,
     summarize_campaign,
 )
@@ -23,7 +28,7 @@ from summarize_gurobi_hard_default_8h import (  # noqa: E402
 class GurobiHardDefaultEightHourTests(unittest.TestCase):
     def setUp(self):
         self.config_path = (
-            PROJECT_ROOT / "experiments" / "gurobi-hard-default-8h.yaml"
+            PROJECT_ROOT / "experiments" / "gurobi-hard-default-300s.yaml"
         )
         self.configuration = load_configuration(self.config_path)
 
@@ -45,7 +50,7 @@ class GurobiHardDefaultEightHourTests(unittest.TestCase):
                             "id": "default",
                             "kind": "default",
                             "objective_sense": "minimize",
-                            "parameters": {"TimeLimit": 28800},
+                            "parameters": {"TimeLimit": 300},
                         }
                     ],
                 },
@@ -100,8 +105,8 @@ class GurobiHardDefaultEightHourTests(unittest.TestCase):
                         "threads_effective": shard.cores,
                         "seed_requested": seed,
                         "seed_effective": seed,
-                        "profile_requested": {"TimeLimit": 28800},
-                        "profile_effective": {"TimeLimit": 28800.0},
+                        "profile_requested": {"TimeLimit": 300},
+                        "profile_effective": {"TimeLimit": 300.0},
                     },
                     "metrics": {
                         "status_name": "OPTIMAL",
@@ -162,7 +167,7 @@ class GurobiHardDefaultEightHourTests(unittest.TestCase):
         self.assertEqual(profile["id"], "default")
         self.assertEqual(profile["kind"], "default")
         self.assertEqual(profile["objective_sense"], "minimize")
-        self.assertEqual(profile["parameters"], {"TimeLimit": 28800})
+        self.assertEqual(profile["parameters"], {"TimeLimit": 300})
         self.assertTrue(all(shard.cores in {1, 2, 4} for shard in shards))
 
     def test_non_default_parameter_is_rejected(self):
@@ -225,8 +230,8 @@ class GurobiHardDefaultEightHourTests(unittest.TestCase):
         self.assertEqual(descriptor["keys"], ["cores", "input", "repetitions"])
 
     def test_slurm_and_launchers_use_lf_and_bounded_array(self):
-        submit = PROJECT_ROOT / "jobs" / "submit_gurobi_hard_default_8h.sh"
-        slurm = PROJECT_ROOT / "jobs" / "run_gurobi_hard_default_8h.slurm"
+        submit = PROJECT_ROOT / "jobs" / "submit_gurobi_hard_default_300s.sh"
+        slurm = PROJECT_ROOT / "jobs" / "run_gurobi_hard_default_300s.slurm"
         submit_text = submit.read_text(encoding="utf-8")
         slurm_text = slurm.read_text(encoding="utf-8")
 
@@ -248,7 +253,7 @@ class GurobiHardDefaultEightHourTests(unittest.TestCase):
                 campaign_root=campaign_root,
             )
             viewer = json.loads(
-                (campaign_root / "gurobi_hard_default_8h_viewer.json").read_text(
+                (campaign_root / "gurobi_hard_default_300s_viewer.json").read_text(
                     encoding="utf-8"
                 )
             )

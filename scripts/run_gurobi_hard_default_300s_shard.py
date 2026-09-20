@@ -1,3 +1,8 @@
+InvalidOperation: 
+Line |
+   2 |  [Console]::OutputEncoding=[System.Text.UTF8Encoding]::new($false); Ge .
+     |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | Cannot create type. Only core types are supported in this language mode.
 #!/usr/bin/env python3
 """Run one instance/thread shard of the bounded Gurobi validation campaign."""
 
@@ -84,9 +89,9 @@ def campaign_shards(configuration: dict[str, Any]) -> list[CampaignShard]:
             "Campaign must explicitly force objective_sense=minimize"
         )
     parameters = profile.get("parameters")
-    if parameters != {"TimeLimit": 28800}:
+    if parameters != {"TimeLimit": 300}:
         raise ShardConfigurationError(
-            "Default campaign may set only Gurobi TimeLimit=28800"
+            "Default campaign may set only Gurobi TimeLimit=300"
         )
 
     shards = []
@@ -126,7 +131,7 @@ def main() -> int:
     parser.add_argument(
         "--config",
         type=Path,
-        default=ROOT / "experiments" / "gurobi-hard-default-8h.yaml",
+        default=ROOT / "experiments" / "gurobi-hard-default-300s.yaml",
     )
     parser.add_argument("--array-index", type=int)
     parser.add_argument("--campaign-root", type=Path)
@@ -205,7 +210,7 @@ def main() -> int:
     print(f"input_index={shard.input_index}")
     print(f"workload={shard.workload}")
     print("repetitions=6")
-    print("gurobi_time_limit_seconds=28800")
+    print("gurobi_time_limit_seconds=300")
     sys.path.insert(0, str(ROOT / "src"))
     from pascalpy.cli import run_configuration
 
