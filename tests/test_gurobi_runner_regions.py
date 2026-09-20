@@ -32,6 +32,11 @@ class _FakeParameters:
     TimeLimit = float("inf")
 
 
+class _FakeConstants:
+    MINIMIZE = 1
+    MAXIMIZE = -1
+
+
 class _FakeModel:
     def __init__(self):
         self.Params = _FakeParameters()
@@ -48,6 +53,8 @@ class _FakeModel:
         self.NumConstrs = 7
         self.NumBinVars = 5
         self.NumIntVars = 2
+        self.ModelSense = -1
+        self.Fingerprint = 12345
 
     def setParam(self, name, value):
         setattr(self.Params, name, value)
@@ -55,12 +62,16 @@ class _FakeModel:
     def optimize(self):
         pass
 
+    def update(self):
+        self.Fingerprint = 54321
+
     def dispose(self):
         pass
 
 
 class _FakeGurobi:
     Env = _FakeEnvironment
+    GRB = _FakeConstants
 
     @staticmethod
     def read(_workload, env=None):
@@ -91,6 +102,11 @@ class GurobiRunnerRegionTests(unittest.TestCase):
                     {
                         "output_dir": str(tmp_path),
                         "workloads_list": [str(workload.resolve())],
+                        "profile": {
+                            "id": "default",
+                            "kind": "default",
+                            "objective_sense": "minimize",
+                        },
                     }
                 ),
                 encoding="utf-8",
@@ -157,8 +173,14 @@ class GurobiRunnerRegionTests(unittest.TestCase):
         self.assertEqual(metadata["metrics"]["best_bound"], 41.0)
         self.assertAlmostEqual(metadata["metrics"]["mip_gap"], 1.0 / 42.0)
         self.assertEqual(metadata["metrics"]["num_binary_variables"], 5)
+        self.assertEqual(metadata["objective_sense"]["source_name"], "maximize")
+        self.assertEqual(metadata["objective_sense"]["effective_name"], "minimize")
+        self.assertTrue(metadata["objective_sense"]["overridden"])
+        self.assertEqual(metadata["objective_sense"]["fingerprint_before"], 12345)
+        self.assertEqual(metadata["objective_sense"]["fingerprint_after"], 54321)
 
 
 if __name__ == "__main__":
     unittest.main()
+
 

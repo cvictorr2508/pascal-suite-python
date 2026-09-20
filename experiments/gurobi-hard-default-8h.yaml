@@ -13,6 +13,7 @@ experiment:
   profiles:
     - id: default
       kind: default
+      objective_sense: minimize
       parameters:
         TimeLimit: 28800
 
@@ -23,3 +24,4 @@ environment:
 
 output:
   directory: resultados_finais/gurobi_hard_default_8h
+

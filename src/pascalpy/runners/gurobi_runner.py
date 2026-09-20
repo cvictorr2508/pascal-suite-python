@@ -52,6 +52,11 @@ GUROBI_STATUS_NAMES = {
     17: "MEM_LIMIT",
 }
 
+GUROBI_OBJECTIVE_SENSE_NAMES = {
+    1: "minimize",
+    -1: "maximize",
+}
+
 
 def _finite_float(value):
     """Return a finite float for solver metrics, otherwise ``None``."""
@@ -69,6 +74,49 @@ def _current_affinity():
         return sorted(os.sched_getaffinity(0))
     except OSError:
         return None
+
+
+def _apply_objective_sense(model, profile: dict) -> dict:
+    """Apply and verify the objective direction declared by the profile."""
+
+    requested = str(profile.get("objective_sense", "preserve"))
+    original = int(model.ModelSense)
+    fingerprint_before = safe_get(model, "Fingerprint")
+    targets = {
+        "minimize": gp.GRB.MINIMIZE,
+        "maximize": gp.GRB.MAXIMIZE,
+    }
+
+    if requested == "preserve":
+        expected = original
+    elif requested in targets:
+        expected = int(targets[requested])
+        model.ModelSense = expected
+        model.update()
+    else:
+        raise ValueError(f"Unsupported objective sense: {requested}")
+
+    effective = int(model.ModelSense)
+    if effective != expected:
+        raise RuntimeError(
+            "Effective Gurobi objective sense differs from the requested sense: "
+            f"requested={requested}, original={original}, effective={effective}"
+        )
+
+    return {
+        "requested": requested,
+        "source_value": original,
+        "source_name": GUROBI_OBJECTIVE_SENSE_NAMES.get(
+            original, f"unknown-{original}"
+        ),
+        "effective_value": effective,
+        "effective_name": GUROBI_OBJECTIVE_SENSE_NAMES.get(
+            effective, f"unknown-{effective}"
+        ),
+        "overridden": effective != original,
+        "fingerprint_before": fingerprint_before,
+        "fingerprint_after": safe_get(model, "Fingerprint"),
+    }
 
 
 def _load_variable_starts(model, solution_path: Path) -> int:
@@ -243,7 +291,9 @@ def main():
         "profile": {
             "id": str(profile.get("id", "default")),
             "kind": str(profile.get("kind", "default")),
+            "objective_sense": str(profile.get("objective_sense", "preserve")),
         },
+        "objective_sense": {},
         "pascal_instrumentation": {
             "requested": True,
             "available": pascal_status["available"],
@@ -296,6 +346,7 @@ def main():
 
             model.setParam("Threads", cores)
             model.setParam("Seed", 10000 + input_idx)
+            metadata["objective_sense"] = _apply_objective_sense(model, profile)
             applied_profile = _apply_profile(model, workload, profile)
 
             metadata["parameters"].update(
@@ -377,5 +428,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 

@@ -221,6 +221,12 @@ def main() -> None:
     affinity_effective = _current_affinity()
     pascal_status = instrumentation_status()
     profile = dict(base_config.get("profile") or {})
+    objective_sense = str(profile.get("objective_sense", "preserve"))
+    if objective_sense != "preserve":
+        raise ValueError(
+            "Explicit objective-sense overrides are not implemented for SCIP; "
+            "refusing to ignore objective_sense=" + objective_sense
+        )
     seed = 10000 + input_idx
 
     metadata = {
@@ -334,3 +340,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

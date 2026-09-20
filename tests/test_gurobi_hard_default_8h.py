@@ -44,6 +44,7 @@ class GurobiHardDefaultEightHourTests(unittest.TestCase):
                         {
                             "id": "default",
                             "kind": "default",
+                            "objective_sense": "minimize",
                             "parameters": {"TimeLimit": 28800},
                         }
                     ],
@@ -84,6 +85,16 @@ class GurobiHardDefaultEightHourTests(unittest.TestCase):
                 metadata = {
                     "cores": shard.cores,
                     "input_idx": shard.input_index,
+                    "objective_sense": {
+                        "requested": "minimize",
+                        "source_value": -1,
+                        "source_name": "maximize",
+                        "effective_value": 1,
+                        "effective_name": "minimize",
+                        "overridden": True,
+                        "fingerprint_before": 1000 + shard.input_index,
+                        "fingerprint_after": 2000 + shard.input_index,
+                    },
                     "parameters": {
                         "threads_requested": shard.cores,
                         "threads_effective": shard.cores,
@@ -150,6 +161,7 @@ class GurobiHardDefaultEightHourTests(unittest.TestCase):
 
         self.assertEqual(profile["id"], "default")
         self.assertEqual(profile["kind"], "default")
+        self.assertEqual(profile["objective_sense"], "minimize")
         self.assertEqual(profile["parameters"], {"TimeLimit": 28800})
         self.assertTrue(all(shard.cores in {1, 2, 4} for shard in shards))
 
@@ -159,6 +171,15 @@ class GurobiHardDefaultEightHourTests(unittest.TestCase):
 
         with self.assertRaisesRegex(
             ShardConfigurationError, "only Gurobi TimeLimit"
+        ):
+            campaign_shards(invalid)
+
+    def test_non_minimization_objective_is_rejected(self):
+        invalid = copy.deepcopy(self.configuration)
+        invalid["experiment"]["profiles"][0]["objective_sense"] = "preserve"
+
+        with self.assertRaisesRegex(
+            ShardConfigurationError, "objective_sense=minimize"
         ):
             campaign_shards(invalid)
 
@@ -282,6 +303,26 @@ class GurobiHardDefaultEightHourTests(unittest.TestCase):
                     campaign_root=campaign_root,
                 )
 
+    def test_effective_objective_sense_mismatch_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            campaign_root = Path(tmp)
+            self._write_complete_campaign(campaign_root)
+            metadata_path = (
+                campaign_root / "shards/c1_i0/gurobi/default/meta_1.json"
+            )
+            metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+            metadata["objective_sense"]["effective_value"] = -1
+            metadata["objective_sense"]["effective_name"] = "maximize"
+            metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
+
+            with self.assertRaisesRegex(
+                ValueError, "effective objective sense mismatch in c1_i0"
+            ):
+                summarize_campaign(
+                    config_path=self.config_path,
+                    campaign_root=campaign_root,
+                )
+
     def test_workload_fingerprint_mismatch_across_cores_is_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
             campaign_root = Path(tmp)
@@ -302,3 +343,4 @@ class GurobiHardDefaultEightHourTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

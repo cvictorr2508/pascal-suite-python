@@ -26,6 +26,14 @@ class ProfileKind(str, Enum):
     WARM_START = "warm-start"
 
 
+class ObjectiveSense(str, Enum):
+    """Objective direction applied after loading a solver-native model file."""
+
+    PRESERVE = "preserve"
+    MINIMIZE = "minimize"
+    MAXIMIZE = "maximize"
+
+
 class InitialSolutionSpec(BaseModel):
     """Map workloads to solver-readable or variable-value solution files."""
 
@@ -51,6 +59,7 @@ class SolverProfile(BaseModel):
 
     id: str = Field(pattern=r"^[a-z0-9][a-z0-9-]*$")
     kind: ProfileKind
+    objective_sense: ObjectiveSense = ObjectiveSense.PRESERVE
     parameters: dict[str, ParameterValue] = Field(default_factory=dict)
     initial_solution: InitialSolutionSpec | None = None
 
@@ -76,3 +85,4 @@ def default_solver_profile() -> SolverProfile:
     """Return a new default profile for backward-compatible configurations."""
 
     return SolverProfile(id="default", kind=ProfileKind.DEFAULT)
+

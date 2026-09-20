@@ -79,6 +79,10 @@ def campaign_shards(configuration: dict[str, Any]) -> list[CampaignShard]:
     profile = profiles[0]
     if profile.get("id") != "default" or profile.get("kind") != "default":
         raise ShardConfigurationError("Campaign profile must be default/default")
+    if profile.get("objective_sense") != "minimize":
+        raise ShardConfigurationError(
+            "Campaign must explicitly force objective_sense=minimize"
+        )
     parameters = profile.get("parameters")
     if parameters != {"TimeLimit": 28800}:
         raise ShardConfigurationError(
@@ -212,3 +216,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

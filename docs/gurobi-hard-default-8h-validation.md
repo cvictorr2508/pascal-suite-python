@@ -10,6 +10,7 @@ energy, and provenance.
 ## Fixed contract
 
 - solver: Gurobi;
+- objective direction: explicitly forced to minimization after `gp.read()`;
 - algorithmic profile: defaults apart from the existing runner-controlled
   `Threads` and deterministic `Seed=10000+input_index` settings;
 - sole profile parameter: `TimeLimit=28800` seconds;
@@ -27,11 +28,29 @@ exclusive nodes by default. Override concurrency only after reviewing cluster
 policy and availability.
 
 The label `default` means the same default profile used by the published
-pipeline, subject to its explicit thread count, deterministic seed, and the new
-eight-hour termination budget. The resulting campaign must not be described as
-having an unlimited or completely untouched Gurobi-default run. `TimeLimit` is
-a maximum budget, not a minimum execution duration: a proof of optimality may
-still terminate in seconds and must be interpreted using status, bound, and gap.
+pipeline, subject to its explicit minimization direction, thread count,
+deterministic seed, and the new eight-hour termination budget. The resulting
+campaign must not be described as having an unlimited or completely untouched
+Gurobi-default run. `TimeLimit` is a maximum budget, not a minimum execution
+duration: a proof of optimality may still terminate early and must be interpreted
+using status, bound, and gap.
+
+## Objective-sense validity correction
+
+The supplied LP files declare a maximization objective, while the capacitated
+facility-location experiment is a minimization problem. Preserving the file
+direction makes the instances trivial: Gurobi accepts a heuristic solution and
+proves it optimal at the root without simplex or branch-and-bound iterations.
+Those maximization runs, including campaign `2107909`, are retained only as
+invalidated audit evidence and must not be used in scientific results.
+
+The corrected profile declares `objective_sense: minimize`. After `gp.read()`,
+the runner records the source direction and model fingerprint, assigns
+`model.ModelSense = GRB.MINIMIZE`, updates the model, and records the effective
+direction and fingerprint before entering region 0.2. The campaign summarizer
+fails closed unless every attempt proves that minimization was requested and
+effective. This explicit transformation is part of the experimental treatment,
+not a Gurobi algorithmic parameter.
 
 ## Why the campaign is sharded
 
@@ -60,3 +79,4 @@ creates:
 The compact file contains only attempts that pass the fail-closed energy checks.
 Rejected attempts and reasons remain in `campaign_summary.json`; raw evidence is
 never deleted or overwritten by the summarizer.
+

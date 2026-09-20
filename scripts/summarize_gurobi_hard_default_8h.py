@@ -153,6 +153,10 @@ def summarize_campaign(
         profiles = experiment.get("profiles") or []
         if len(profiles) != 1:
             raise CampaignSummaryError(f"profile mismatch in {shard.identifier}")
+        if profiles[0].get("objective_sense") != "minimize":
+            raise CampaignSummaryError(
+                f"minimization objective not recorded in {shard.identifier}"
+            )
         parameters = profiles[0].get("parameters") or {}
         if parameters != {"TimeLimit": 28800}:
             raise CampaignSummaryError(
@@ -188,6 +192,23 @@ def summarize_campaign(
             if record.get("input_idx") != shard.input_index:
                 raise CampaignSummaryError(
                     f"metadata input mismatch in {shard.identifier}"
+                )
+            objective_sense = record.get("objective_sense", {})
+            if objective_sense.get("requested") != "minimize":
+                raise CampaignSummaryError(
+                    f"requested objective sense mismatch in {shard.identifier}"
+                )
+            if objective_sense.get("effective_value") != 1:
+                raise CampaignSummaryError(
+                    f"effective objective sense mismatch in {shard.identifier}"
+                )
+            if objective_sense.get("effective_name") != "minimize":
+                raise CampaignSummaryError(
+                    f"effective minimization not recorded in {shard.identifier}"
+                )
+            if objective_sense.get("fingerprint_after") is None:
+                raise CampaignSummaryError(
+                    f"effective model fingerprint missing in {shard.identifier}"
                 )
             parameters_record = record.get("parameters", {})
             expected_seed = 10000 + shard.input_index
@@ -335,10 +356,12 @@ def summarize_campaign(
         "profile": {
             "id": "default",
             "kind": "default",
+            "objective_sense": "minimize",
             "gurobi_time_limit_seconds": 28800,
             "statement": (
-                "Gurobi default profile with runner-controlled Threads, "
-                "deterministic Seed=10000+input_index, and TimeLimit=28800"
+                "Gurobi default profile with explicit minimization, "
+                "runner-controlled Threads, deterministic "
+                "Seed=10000+input_index, and TimeLimit=28800"
             ),
         },
         "resources": [1, 2, 4],
@@ -441,3 +464,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
