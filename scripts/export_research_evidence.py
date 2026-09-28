@@ -294,7 +294,10 @@ def build_portable_manifest(
     return manifest
 
 
-def write_portable_evidence(manifest: dict[str, Any], output_dir: Path) -> dict[str, Path]:
+def write_portable_evidence(
+    manifest: dict[str, Any],
+    output_dir: Path,
+) -> dict[str, Path]:
     if output_dir.exists() and any(output_dir.iterdir()):
         raise EvidenceError(f"Output directory is not empty: {output_dir}")
     output_dir.mkdir(parents=True, exist_ok=True)
