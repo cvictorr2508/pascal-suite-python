@@ -20,4 +20,3 @@ environment:
 
 output:
   directory: resultados_finais/gurobi_hard_minimize_smoke
-
