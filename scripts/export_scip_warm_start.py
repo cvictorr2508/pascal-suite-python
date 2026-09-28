@@ -11,7 +11,7 @@ import platform
 import shutil
 import tempfile
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -143,7 +143,7 @@ def export_warm_start(
         serialization = _write_solution_artifact(model, solution, output)
         metadata = {
             "schema_version": 1,
-            "created_at_utc": datetime.now(timezone.utc).isoformat(),
+            "created_at_utc": datetime.now(UTC).isoformat(),
             "purpose": "unmeasured-warm-start-preparation",
             "workload": {
                 "path": str(workload),
