@@ -75,4 +75,3 @@ printf '%s\n' 'gurobi_time_limit_seconds=300'
     --config "$CONFIG_FILE" \
     --campaign-root "$CAMPAIGN_ROOT" \
     --array-index "$SLURM_ARRAY_TASK_ID"
-
