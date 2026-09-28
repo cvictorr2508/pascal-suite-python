@@ -88,4 +88,3 @@ mkdir -p "$CAMPAIGN_ROOT"
 } >"$CAMPAIGN_ROOT/submission.txt"
 printf 'submission_receipt=%s\n' "$CAMPAIGN_ROOT/submission.txt" >&2
 printf '%s\n' "$submit_result"
-
