@@ -2,28 +2,35 @@
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
-from typing import TypeAlias
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-ParameterValue: TypeAlias = bool | int | float | str
+type ParameterValue = bool | int | float | str
 
 
-class SolverName(str, Enum):
+class SolverName(StrEnum):
     """Optimization solvers supported by the experiment contract."""
 
     GUROBI = "gurobi"
     SCIP = "scip"
 
 
-class ProfileKind(str, Enum):
+class ProfileKind(StrEnum):
     """Solver-independent experimental treatments."""
 
     DEFAULT = "default"
     PRESOLVE_OFF = "presolve-off"
     WARM_START = "warm-start"
+
+
+class ObjectiveSense(StrEnum):
+    """Objective direction applied after loading a solver-native model file."""
+
+    PRESERVE = "preserve"
+    MINIMIZE = "minimize"
+    MAXIMIZE = "maximize"
 
 
 class InitialSolutionSpec(BaseModel):
@@ -51,11 +58,12 @@ class SolverProfile(BaseModel):
 
     id: str = Field(pattern=r"^[a-z0-9][a-z0-9-]*$")
     kind: ProfileKind
+    objective_sense: ObjectiveSense = ObjectiveSense.PRESERVE
     parameters: dict[str, ParameterValue] = Field(default_factory=dict)
     initial_solution: InitialSolutionSpec | None = None
 
     @model_validator(mode="after")
-    def validate_profile(self) -> "SolverProfile":
+    def validate_profile(self) -> SolverProfile:
         reserved = {name.lower() for name in self.parameters} & {"threads", "seed"}
         if reserved:
             raise ValueError(
@@ -76,3 +84,4 @@ def default_solver_profile() -> SolverProfile:
     """Return a new default profile for backward-compatible configurations."""
 
     return SolverProfile(id="default", kind=ProfileKind.DEFAULT)
+
