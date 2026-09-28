@@ -1,0 +1,23 @@
+experiment:
+  name: gurobi_hard_minimize_smoke
+  solver: gurobi
+  scaling_mode: strong
+  resources: [1]
+  repetitions: 1
+  workloads:
+    - /home/Projeto_LAMFO_LAPPS/data/facility_location_easy/hard/CFL_hard_instance_20.lp.gz
+  profiles:
+    - id: default
+      kind: default
+      objective_sense: minimize
+      parameters:
+        TimeLimit: 300
+
+environment:
+  track_cores: false
+  track_energy_rapl: sysfs
+  idle_time_seconds: 0
+
+output:
+  directory: resultados_finais/gurobi_hard_minimize_smoke
+
