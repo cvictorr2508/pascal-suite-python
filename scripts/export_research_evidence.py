@@ -89,6 +89,7 @@ def _profile_record(profile_id: str, result: dict[str, Any]) -> dict[str, Any]:
     energy = result.get("energy", {})
     accuracy = energy.get("accuracy", {})
     variability = energy.get("variability", {})
+    solver_metadata = result.get("solver_metadata", {})
     return {
         "id": profile_id,
         "kind": result.get("profile_kind"),
@@ -105,6 +106,15 @@ def _profile_record(profile_id: str, result: dict[str, Any]) -> dict[str, Any]:
             "maximum_group_region_0_cv_percent"
         ),
         "variability_preferred": variability.get("preferred"),
+        "objective_sense_effective": solver_metadata.get(
+            "objective_sense_effective"
+        ),
+        "time_limit_s": solver_metadata.get("time_limit_s"),
+        "status_counts": solver_metadata.get("status_counts", {}),
+        "median_objective": solver_metadata.get("median_objective"),
+        "median_best_bound": solver_metadata.get("median_best_bound"),
+        "median_gap": solver_metadata.get("median_gap"),
+        "maximum_gap": solver_metadata.get("maximum_gap"),
     }
 
 
