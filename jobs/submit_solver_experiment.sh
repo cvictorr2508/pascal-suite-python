@@ -7,6 +7,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 CONFIG_FILE="${1:-experiments/gurobi-profile-smoke.yaml}"
 ALLOCATION_MODE="${PASCAL_SLURM_ALLOCATION_MODE:-exclusive}"
+SLURM_TIME="${PASCAL_SLURM_TIME:-04:00:00}"
 
 case "$ALLOCATION_MODE" in
     exclusive)
@@ -59,11 +60,13 @@ printf 'source_tracked_clean=true\n' >&2
 printf 'python=%s\n' "$PYTHON_BIN" >&2
 printf 'config=%s\n' "$CONFIG_FILE" >&2
 printf 'allocation_mode=%s\n' "$ALLOCATION_MODE" >&2
+printf 'slurm_time=%s\n' "$SLURM_TIME" >&2
 
 # Prevent inherited SBATCH flag variables from conflicting with the explicit policy.
 unset SBATCH_EXCLUSIVE SBATCH_OVERSUBSCRIBE
 
 sbatch --parsable \
     "${ALLOCATION_ARGUMENTS[@]}" \
+    --time="$SLURM_TIME" \
     --export="ALL,PASCAL_PYTHON_BIN=$PYTHON_BIN,PASCAL_EXPERIMENT_CONFIG=$CONFIG_FILE,PASCAL_SOURCE_COMMIT=$SOURCE_COMMIT,PASCAL_SOURCE_BRANCH=${SOURCE_BRANCH:-detached},PASCAL_SOURCE_TRACKED_CLEAN=true,PASCAL_SLURM_ALLOCATION_MODE=$ALLOCATION_MODE" \
     jobs/run_solver_experiment.slurm
