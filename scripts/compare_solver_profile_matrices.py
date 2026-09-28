@@ -157,7 +157,11 @@ def _measurement_rows(campaign: dict[str, Any]) -> list[dict[str, Any]]:
             workload = Path(str(configuration.get("workload", ""))).name
             cores = configuration.get("cores")
             region = run.get("regions", {}).get(REGION_ID)
-            if not workload or not isinstance(cores, int) or not isinstance(region, dict):
+            if (
+                not workload
+                or not isinstance(cores, int)
+                or not isinstance(region, dict)
+            ):
                 raise ComparisonError(
                     f"{solver}/{profile_id} contains an incomplete run record"
                 )
