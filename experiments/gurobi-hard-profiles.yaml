@@ -41,4 +41,4 @@ environment:
   idle_time_seconds: 0
 
 output:
-  directory: resultados_finais/gurobi_hard_profiles
+  directory: resultados_finais/gurobi_hard_profiles_minimize_300s
