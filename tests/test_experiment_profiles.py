@@ -9,6 +9,7 @@ sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from pascalpy.experiment_profiles import (  # noqa: E402
     InitialSolutionSpec,
+    ObjectiveSense,
     ProfileKind,
     SolverProfile,
     default_solver_profile,
@@ -21,7 +22,17 @@ class SolverProfileTests(unittest.TestCase):
 
         self.assertEqual(profile.id, "default")
         self.assertEqual(profile.kind, ProfileKind.DEFAULT)
+        self.assertEqual(profile.objective_sense, ObjectiveSense.PRESERVE)
         self.assertEqual(profile.parameters, {})
+
+    def test_profile_accepts_explicit_minimization(self):
+        profile = SolverProfile(
+            id="default",
+            kind=ProfileKind.DEFAULT,
+            objective_sense=ObjectiveSense.MINIMIZE,
+        )
+
+        self.assertEqual(profile.objective_sense, ObjectiveSense.MINIMIZE)
 
     def test_warm_start_resolves_solution_by_workload_filename(self):
         profile = SolverProfile(
@@ -64,3 +75,4 @@ class SolverProfileTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
