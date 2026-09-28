@@ -137,6 +137,12 @@ class SolverProfileMatrixSummaryTests(unittest.TestCase):
                 self.assertIn("id: default", configuration)
                 self.assertIn("id: presolve-off", configuration)
                 self.assertIn("id: warm-start", configuration)
+                self.assertEqual(
+                    configuration.count("objective_sense: minimize"),
+                    3,
+                )
+                self.assertIn("300", configuration)
+                self.assertIn("minimize-300s", configuration)
 
     def test_rejects_metadata_without_effective_minimization(self):
         with tempfile.TemporaryDirectory() as tmp:
