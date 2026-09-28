@@ -13,18 +13,27 @@ experiment:
   profiles:
     - id: default
       kind: default
+      objective_sense: minimize
+      parameters:
+        "limits/time": 300
     - id: presolve-off
       kind: presolve-off
+      objective_sense: minimize
+      parameters:
+        "limits/time": 300
     - id: warm-start
       kind: warm-start
+      objective_sense: minimize
+      parameters:
+        "limits/time": 300
       initial_solution:
         required: true
         files:
-          CFL_hard_instance_5.lp.gz: initial_solutions/scip/CFL_hard_instance_5.sol.gz
-          CFL_hard_instance_10.lp.gz: initial_solutions/scip/CFL_hard_instance_10.sol.gz
-          CFL_hard_instance_15.lp.gz: initial_solutions/scip/CFL_hard_instance_15.sol.gz
-          CFL_hard_instance_20.lp.gz: initial_solutions/scip/CFL_hard_instance_20.sol.gz
-          CFL_hard_instance_25.lp.gz: initial_solutions/scip/CFL_hard_instance_25.sol.gz
+          CFL_hard_instance_5.lp.gz: initial_solutions/scip-minimize-300s/CFL_hard_instance_5.sol.gz
+          CFL_hard_instance_10.lp.gz: initial_solutions/scip-minimize-300s/CFL_hard_instance_10.sol.gz
+          CFL_hard_instance_15.lp.gz: initial_solutions/scip-minimize-300s/CFL_hard_instance_15.sol.gz
+          CFL_hard_instance_20.lp.gz: initial_solutions/scip-minimize-300s/CFL_hard_instance_20.sol.gz
+          CFL_hard_instance_25.lp.gz: initial_solutions/scip-minimize-300s/CFL_hard_instance_25.sol.gz
 
 environment:
   track_cores: false
