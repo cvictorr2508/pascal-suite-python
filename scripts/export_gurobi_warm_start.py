@@ -38,6 +38,16 @@ def export_warm_start(
     output.parent.mkdir(parents=True, exist_ok=True)
 
     model = gp.read(str(workload))
+    source_sense = int(model.ModelSense)
+    fingerprint_before = getattr(model, "Fingerprint", None)
+    model.ModelSense = gp.GRB.MINIMIZE
+    model.update()
+    effective_sense = int(model.ModelSense)
+    if effective_sense != gp.GRB.MINIMIZE:
+        raise RuntimeError(
+            "Gurobi warm-start preparation failed to enforce minimization"
+        )
+    fingerprint_after = getattr(model, "Fingerprint", None)
     started = time.perf_counter()
     try:
         model.setParam("Threads", threads)
@@ -65,6 +75,19 @@ def export_warm_start(
                 "size_bytes": output.stat().st_size,
                 "sha256": _sha256(output),
             },
+            "objective_sense": {
+                "requested": "minimize",
+                "source_value": source_sense,
+                "source_name": (
+                    "minimize" if source_sense == gp.GRB.MINIMIZE else "maximize"
+                    if source_sense == gp.GRB.MAXIMIZE else f"unknown-{source_sense}"
+                ),
+                "effective_value": effective_sense,
+                "effective_name": "minimize",
+                "overridden": effective_sense != source_sense,
+                "fingerprint_before": fingerprint_before,
+                "fingerprint_after": fingerprint_after,
+            },
             "runtime": {
                 "python_version": platform.python_version(),
                 "gurobi_version": ".".join(map(str, gp.gurobi.version())),
@@ -78,6 +101,8 @@ def export_warm_start(
             "solution": {
                 "status": int(model.Status),
                 "objective": float(model.ObjVal),
+                "best_bound": float(model.ObjBound),
+                "mip_gap": float(model.MIPGap),
                 "solution_count": int(model.SolCount),
             },
         }
