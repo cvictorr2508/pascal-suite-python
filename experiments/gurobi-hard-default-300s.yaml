@@ -24,4 +24,3 @@ environment:
 
 output:
   directory: resultados_finais/gurobi_hard_default_300s
-
