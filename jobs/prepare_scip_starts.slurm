@@ -32,8 +32,17 @@ if ! "$PYTHON_BIN" -c 'import pyscipopt' >/dev/null 2>&1; then
     exit 10
 fi
 
+if [[ -d "$OUTPUT_DIR" ]] && \
+   [[ -n "$(find "$OUTPUT_DIR" -mindepth 1 -maxdepth 1 -print -quit)" ]]; then
+    printf 'preflight_error=warm_start_directory_not_empty path=%s\n' \
+        "$OUTPUT_DIR" >&2
+    exit 12
+fi
 mkdir -p "$OUTPUT_DIR"
+
+input_index=0
 for instance_id in 5 10 15 20 25; do
+    seed=$((10000 + input_index))
     workload="$DATASET_DIR/CFL_hard_instance_${instance_id}.lp.gz"
     output="$OUTPUT_DIR/CFL_hard_instance_${instance_id}.sol.gz"
     if [[ ! -s "$workload" ]]; then
