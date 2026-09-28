@@ -9,14 +9,23 @@ experiment:
   profiles:
     - id: default
       kind: default
+      objective_sense: minimize
+      parameters:
+        TimeLimit: 300
     - id: presolve-off
       kind: presolve-off
+      objective_sense: minimize
+      parameters:
+        TimeLimit: 300
     - id: warm-start
       kind: warm-start
+      objective_sense: minimize
+      parameters:
+        TimeLimit: 300
       initial_solution:
         required: true
         files:
-          CFL_hard_instance_20.lp.gz: initial_solutions/gurobi/CFL_hard_instance_20.mst
+          CFL_hard_instance_20.lp.gz: initial_solutions/gurobi-minimize-300s/CFL_hard_instance_20.mst
 
 environment:
   track_cores: false
@@ -25,4 +34,3 @@ environment:
 
 output:
   directory: resultados_finais/gurobi_profile_smoke
-
