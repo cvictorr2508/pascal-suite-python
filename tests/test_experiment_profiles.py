@@ -34,6 +34,23 @@ class SolverProfileTests(unittest.TestCase):
 
         self.assertEqual(profile.objective_sense, ObjectiveSense.MINIMIZE)
 
+    def test_profile_accepts_explicit_maximization(self):
+        profile = SolverProfile(
+            id="default",
+            kind=ProfileKind.DEFAULT,
+            objective_sense=ObjectiveSense.MAXIMIZE,
+        )
+
+        self.assertEqual(profile.objective_sense, ObjectiveSense.MAXIMIZE)
+
+    def test_profile_rejects_unknown_objective_sense(self):
+        with self.assertRaises(ValidationError):
+            SolverProfile(
+                id="default",
+                kind=ProfileKind.DEFAULT,
+                objective_sense="sideways",
+            )
+
     def test_warm_start_resolves_solution_by_workload_filename(self):
         profile = SolverProfile(
             id="warm-start",
