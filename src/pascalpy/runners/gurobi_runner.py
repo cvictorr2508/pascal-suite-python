@@ -32,6 +32,41 @@ def safe_get(model, attr_name, default=None):
         return default
 
 
+GUROBI_STATUS_NAMES = {
+    1: "LOADED",
+    2: "OPTIMAL",
+    3: "INFEASIBLE",
+    4: "INF_OR_UNBD",
+    5: "UNBOUNDED",
+    6: "CUTOFF",
+    7: "ITERATION_LIMIT",
+    8: "NODE_LIMIT",
+    9: "TIME_LIMIT",
+    10: "SOLUTION_LIMIT",
+    11: "INTERRUPTED",
+    12: "NUMERIC",
+    13: "SUBOPTIMAL",
+    14: "INPROGRESS",
+    15: "USER_OBJ_LIMIT",
+    16: "WORK_LIMIT",
+    17: "MEM_LIMIT",
+}
+
+GUROBI_OBJECTIVE_SENSE_NAMES = {
+    1: "minimize",
+    -1: "maximize",
+}
+
+
+def _finite_float(value):
+    """Return a finite float for solver metrics, otherwise ``None``."""
+
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    converted = float(value)
+    return converted if math.isfinite(converted) else None
+
+
 def _current_affinity():
     if not hasattr(os, "sched_getaffinity"):
         return None
@@ -39,6 +74,49 @@ def _current_affinity():
         return sorted(os.sched_getaffinity(0))
     except OSError:
         return None
+
+
+def _apply_objective_sense(model, profile: dict) -> dict:
+    """Apply and verify the objective direction declared by the profile."""
+
+    requested = str(profile.get("objective_sense", "preserve"))
+    original = int(model.ModelSense)
+    fingerprint_before = safe_get(model, "Fingerprint")
+    targets = {
+        "minimize": gp.GRB.MINIMIZE,
+        "maximize": gp.GRB.MAXIMIZE,
+    }
+
+    if requested == "preserve":
+        expected = original
+    elif requested in targets:
+        expected = int(targets[requested])
+        model.ModelSense = expected
+        model.update()
+    else:
+        raise ValueError(f"Unsupported objective sense: {requested}")
+
+    effective = int(model.ModelSense)
+    if effective != expected:
+        raise RuntimeError(
+            "Effective Gurobi objective sense differs from the requested sense: "
+            f"requested={requested}, original={original}, effective={effective}"
+        )
+
+    return {
+        "requested": requested,
+        "source_value": original,
+        "source_name": GUROBI_OBJECTIVE_SENSE_NAMES.get(
+            original, f"unknown-{original}"
+        ),
+        "effective_value": effective,
+        "effective_name": GUROBI_OBJECTIVE_SENSE_NAMES.get(
+            effective, f"unknown-{effective}"
+        ),
+        "overridden": effective != original,
+        "fingerprint_before": fingerprint_before,
+        "fingerprint_after": safe_get(model, "Fingerprint"),
+    }
 
 
 def _load_variable_starts(model, solution_path: Path) -> int:
@@ -69,7 +147,9 @@ def _load_variable_starts(model, solution_path: Path) -> int:
     return assigned
 
 
-def _resolve_initial_solution(profile: dict, workload: Path) -> tuple[Path | None, bool]:
+def _resolve_initial_solution(
+    profile: dict, workload: Path
+) -> tuple[Path | None, bool]:
     specification = profile.get("initial_solution")
     if not isinstance(specification, dict):
         return None, False
@@ -171,9 +251,17 @@ def main():
     workload_str = str(workload)
 
     try:
-        input_idx = base_config["workloads_list"].index(workload_str)
+        local_input_idx = base_config["workloads_list"].index(workload_str)
     except ValueError:
-        input_idx = 0
+        local_input_idx = 0
+    raw_global_input_index = os.environ.get("PASCAL_GLOBAL_INPUT_INDEX")
+    input_idx = (
+        int(raw_global_input_index)
+        if raw_global_input_index is not None
+        else local_input_idx
+    )
+    if input_idx < 0:
+        raise ValueError(f"PASCAL_GLOBAL_INPUT_INDEX must be non-negative: {input_idx}")
 
     start_timestamp = time.time()
     meta_path = (
@@ -198,13 +286,16 @@ def main():
         "workload": workload_str,
         "cores": cores,
         "input_idx": input_idx,
+        "local_input_idx": local_input_idx,
         "start_timestamp": start_timestamp,
         "cpu_affinity": affinity_effective,
         "solver": "gurobi",
         "profile": {
             "id": str(profile.get("id", "default")),
             "kind": str(profile.get("kind", "default")),
+            "objective_sense": str(profile.get("objective_sense", "preserve")),
         },
+        "objective_sense": {},
         "pascal_instrumentation": {
             "requested": True,
             "available": pascal_status["available"],
@@ -257,6 +348,7 @@ def main():
 
             model.setParam("Threads", cores)
             model.setParam("Seed", 10000 + input_idx)
+            metadata["objective_sense"] = _apply_objective_sense(model, profile)
             applied_profile = _apply_profile(model, workload, profile)
 
             metadata["parameters"].update(
@@ -286,16 +378,39 @@ def main():
                 model.optimize()
                 solve_wall_s = time.perf_counter() - solve_started
 
+        status = int(model.Status)
+        solution_count = int(safe_get(model, "SolCount", 0) or 0)
+        is_mip = bool(safe_get(model, "IsMIP", False))
+        objective = (
+            _finite_float(safe_get(model, "ObjVal"))
+            if solution_count > 0
+            else None
+        )
+        best_bound = (
+            _finite_float(safe_get(model, "ObjBound")) if is_mip else None
+        )
+        mip_gap = (
+            _finite_float(safe_get(model, "MIPGap"))
+            if is_mip and solution_count > 0
+            else None
+        )
         metadata["metrics"] = {
-            "status": int(model.Status),
+            "status": status,
+            "status_name": GUROBI_STATUS_NAMES.get(status, f"UNKNOWN_{status}"),
             "read_wall_clock_s": read_wall_s,
-            "gurobi_runtime_s": safe_get(model, "Runtime"),
+            "gurobi_runtime_s": _finite_float(safe_get(model, "Runtime")),
             "solve_wall_clock_s": solve_wall_s,
-            "work": safe_get(model, "Work"),
-            "node_count": safe_get(model, "NodeCount"),
-            "objective": (
-                float(model.ObjVal) if safe_get(model, "SolCount", 0) > 0 else None
-            ),
+            "work": _finite_float(safe_get(model, "Work")),
+            "node_count": _finite_float(safe_get(model, "NodeCount")),
+            "solution_count": solution_count,
+            "objective": objective,
+            "best_bound": best_bound,
+            "mip_gap": mip_gap,
+            "is_mip": is_mip,
+            "num_variables": int(safe_get(model, "NumVars", 0) or 0),
+            "num_constraints": int(safe_get(model, "NumConstrs", 0) or 0),
+            "num_binary_variables": int(safe_get(model, "NumBinVars", 0) or 0),
+            "num_integer_variables": int(safe_get(model, "NumIntVars", 0) or 0),
         }
     except Exception as exc:
         metadata["error"] = {
