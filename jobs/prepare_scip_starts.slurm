@@ -42,7 +42,8 @@ for instance_id in 5 10 15 20 25; do
         exit 11
     fi
     "$PYTHON_BIN" scripts/export_scip_warm_start.py \
-        "$workload" "$output" --seed 10000 --time-limit 300
+        "$workload" "$output" --seed "$seed" --time-limit 300
+    input_index=$((input_index + 1))
 done
 
 sha256sum "$OUTPUT_DIR"/*.sol.gz "$OUTPUT_DIR"/*.sol.gz.json \
