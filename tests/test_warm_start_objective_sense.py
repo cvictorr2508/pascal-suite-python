@@ -41,8 +41,12 @@ class WarmStartObjectiveSenseTests(unittest.TestCase):
 
         self.assertIn("initial_solutions/gurobi-minimize-300s", gurobi)
         self.assertIn("--time-limit 300", gurobi)
+        self.assertIn("seed=$((10000 + input_index))", gurobi)
+        self.assertIn("warm_start_directory_not_empty", gurobi)
         self.assertIn("initial_solutions/scip-minimize-300s", scip)
         self.assertIn("--time-limit 300", scip)
+        self.assertIn("seed=$((10000 + input_index))", scip)
+        self.assertIn("warm_start_directory_not_empty", scip)
 
 
 if __name__ == "__main__":
