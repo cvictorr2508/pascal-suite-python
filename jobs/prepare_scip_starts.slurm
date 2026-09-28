@@ -21,7 +21,7 @@ cd "$SLURM_SUBMIT_DIR"
 
 PYTHON_BIN="${PASCAL_PYTHON_BIN:-$(command -v python || true)}"
 DATASET_DIR="${CFL_HARD_DIR:-/home/Projeto_LAMFO_LAPPS/data/facility_location_easy/hard}"
-OUTPUT_DIR="${SCIP_START_DIR:-$SLURM_SUBMIT_DIR/initial_solutions/scip}"
+OUTPUT_DIR="${SCIP_START_DIR:-$SLURM_SUBMIT_DIR/initial_solutions/scip-minimize-300s}"
 
 if [[ -z "$PYTHON_BIN" || ! -x "$PYTHON_BIN" ]]; then
     printf 'preflight_error=python_not_available_on_path\n' >&2
@@ -42,7 +42,7 @@ for instance_id in 5 10 15 20 25; do
         exit 11
     fi
     "$PYTHON_BIN" scripts/export_scip_warm_start.py \
-        "$workload" "$output" --seed 10000
+        "$workload" "$output" --seed 10000 --time-limit 300
 done
 
 sha256sum "$OUTPUT_DIR"/*.sol.gz "$OUTPUT_DIR"/*.sol.gz.json \
