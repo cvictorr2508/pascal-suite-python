@@ -84,4 +84,3 @@ def default_solver_profile() -> SolverProfile:
     """Return a new default profile for backward-compatible configurations."""
 
     return SolverProfile(id="default", kind=ProfileKind.DEFAULT)
-
