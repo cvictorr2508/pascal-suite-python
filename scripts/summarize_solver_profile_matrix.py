@@ -6,7 +6,9 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import statistics
 import sys
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
@@ -35,6 +37,88 @@ def _single_file(directory: Path, pattern: str) -> Path:
     return matches[0]
 
 
+def _finite_numbers(values: list[Any]) -> list[float]:
+    numbers = []
+    for value in values:
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            continue
+        number = float(value)
+        if number == number and abs(number) != float("inf"):
+            numbers.append(number)
+    return numbers
+
+
+def _metadata_summary(
+    solver: str,
+    metadata_paths: list[Path],
+) -> dict[str, Any]:
+    """Summarize native solver metadata without using it as an energy gate.
+
+    Solver APIs may expose finite sentinel values when a bound or gap is not
+    available. These fields are retained for audit and must be interpreted with
+    the native status; they do not determine telemetry validity or acceptance.
+    """
+    statuses = Counter()
+    objectives = []
+    bounds = []
+    gaps = []
+    senses = []
+    time_limits = []
+
+    for path in metadata_paths:
+        metadata = _load_json(path)
+        sense = metadata.get("objective_sense", {})
+        effective_sense = sense.get("effective_name")
+        if effective_sense is not None:
+            senses.append(str(effective_sense))
+
+        effective = metadata.get("parameters", {}).get("profile_effective", {})
+        time_key = "TimeLimit" if solver == "gurobi" else "limits/time"
+        if time_key in effective:
+            time_limits.append(effective[time_key])
+
+        metrics = metadata.get("metrics", {})
+        status = (
+            metrics.get("status_name")
+            if solver == "gurobi"
+            else metrics.get("status")
+        )
+        if status is not None:
+            statuses[str(status)] += 1
+        objectives.append(metrics.get("objective"))
+        bounds.append(metrics.get("best_bound"))
+        gaps.append(
+            metrics.get("mip_gap")
+            if solver == "gurobi"
+            else metrics.get("gap")
+        )
+
+    finite_objectives = _finite_numbers(objectives)
+    finite_bounds = _finite_numbers(bounds)
+    finite_gaps = _finite_numbers(gaps)
+    finite_limits = _finite_numbers(time_limits)
+
+    return {
+        "objective_sense_effective": (
+            senses[0] if senses and len(set(senses)) == 1 else None
+        ),
+        "time_limit_s": (
+            finite_limits[0]
+            if finite_limits and len(set(finite_limits)) == 1
+            else None
+        ),
+        "status_counts": dict(sorted(statuses.items())),
+        "median_objective": (
+            statistics.median(finite_objectives) if finite_objectives else None
+        ),
+        "median_best_bound": (
+            statistics.median(finite_bounds) if finite_bounds else None
+        ),
+        "median_gap": statistics.median(finite_gaps) if finite_gaps else None,
+        "maximum_gap": max(finite_gaps) if finite_gaps else None,
+    }
+
+
 def _metadata_errors(
     solver: str,
     profile_id: str,
@@ -48,6 +132,25 @@ def _metadata_errors(
             errors.append(f"{path.name}: runner error: {metadata['error']}")
         if metadata.get("profile", {}).get("id") != profile_id:
             errors.append(f"{path.name}: profile ID mismatch")
+
+        objective_sense = metadata.get("objective_sense", {})
+        if objective_sense.get("requested") != "minimize":
+            errors.append(f"{path.name}: objective sense was not requested as minimize")
+        if objective_sense.get("effective_name") != "minimize":
+            errors.append(f"{path.name}: effective objective sense is not minimize")
+
+        effective_profile = metadata.get("parameters", {}).get(
+            "profile_effective", {}
+        )
+        time_key = "TimeLimit" if solver == "gurobi" else "limits/time"
+        try:
+            effective_time_limit = float(effective_profile.get(time_key))
+        except (TypeError, ValueError):
+            effective_time_limit = None
+        if effective_time_limit != 300.0:
+            errors.append(
+                f"{path.name}: effective {time_key} is not 300 seconds"
+            )
         if profile_kind == "presolve-off":
             effective = metadata.get("parameters", {}).get("profile_effective", {})
             presolve_disabled = (
@@ -142,6 +245,7 @@ def summarize_profile_matrix(
             "metadata_count": len(metadata_paths),
             "expected_attempt_count": expected_attempts,
             "metadata_errors": metadata_errors,
+            "solver_metadata": _metadata_summary(solver, metadata_paths),
             "energy": summary,
             "accepted": (
                 not metadata_errors

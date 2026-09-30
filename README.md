@@ -69,6 +69,8 @@ profile, and solver-core treatment. The validated hard-instance campaigns use:
 | Solvers | Gurobi and SCIP |
 | Workloads | MILPBench CFL hard instances 5, 10, 15, 20, and 25 |
 | Profiles | `default`, `presolve-off`, and `warm-start` |
+| Objective | Explicit minimization, verified after each native model import |
+| Solver budget | 300 s per attempt for both solvers |
 | Attempts | Six per configuration, with at least five valid attempts required |
 | Core treatments | Gurobi: 1, 2, and 4; SCIP comparison: 1 |
 | Comparison region | `0.2`, solve execution |
@@ -81,6 +83,21 @@ excluded without correction or imputation. Accuracy is evaluated by comparing
 sampled whole-program energy with the independent global RAPL value. Regional
 energy is then derived only for runs whose sampled series passes the validity
 checks.
+
+The supplied MILPBench LP files declare a maximization objective, whereas the
+capacitated facility-location experiment studied here is a minimization
+problem. Corrected campaigns therefore set the native objective direction to
+minimize after loading the file and record both the source and effective
+directions. Results produced before this contract was enforced are not valid
+evidence for solver-performance claims.
+
+If independent RAPL acquisition invalidates more than one of the six attempts
+in a configuration, only that configuration may be repeated. Retry attempts
+must use the same source commit, solver contract, workload, partition, and
+allocation policy. Composition is permitted only by a predeclared chronological
+rule based on telemetry validity; solver outcome, energy, duration, objective,
+bound, gap, and node count must not influence selection. The original evidence,
+retry evidence, and a checksummed composition manifest remain immutable.
 
 The study uses medians and coefficients of variation as descriptive statistics.
 It does not currently report confidence intervals, hypothesis tests, or
@@ -190,12 +207,12 @@ After a successful job, consolidate each solver matrix:
 
 ```bash
 python scripts/summarize_solver_profile_matrix.py \
-    resultados_finais/gurobi_hard_profiles \
+    resultados_finais/gurobi_hard_profiles_minimize_300s \
     --require-runs 5 \
     --require-configurations 15
 
 python scripts/summarize_solver_profile_matrix.py \
-    resultados_finais/scip_hard_profiles \
+    resultados_finais/scip_hard_profiles_minimize_300s \
     --require-runs 5 \
     --require-configurations 5
 ```
@@ -212,9 +229,9 @@ Build the comparison only from accepted matrices:
 
 ```bash
 python scripts/compare_solver_profile_matrices.py \
-    --gurobi-root resultados_finais/gurobi_hard_profiles \
-    --scip-root resultados_finais/scip_hard_profiles \
-    --output-dir resultados_finais/dual_solver_research_mvp
+    --gurobi-root resultados_finais/gurobi_hard_profiles_minimize_300s \
+    --scip-root resultados_finais/scip_hard_profiles_minimize_300s \
+    --output-dir resultados_finais/dual_solver_corrected_minimize_300s
 ```
 
 The comparison is eligible for a controlled performance claim only when both
@@ -229,7 +246,12 @@ campaigns:
 Otherwise, the tool still writes auditable outputs but labels them
 `exploratory-only`, rejects the final gate, and returns status 3.
 
-The accepted campaign and its bounded descriptive results are documented in
+The accepted corrected comparison contains 15 paired one-core configurations.
+Median SCIP-to-Gurobi duration ratios range from 1.011974 to 1.072602, energy
+ratios from 0.958652 to 1.000150, and EDP ratios from 0.970521 to 1.072563 across
+the three profiles. These are fixed-budget descriptive results, not solver-wide
+rankings or time-to-optimality measurements. The complete gate, ratios, evidence
+hashes, and bounded interpretation are documented in
 [Dual-solver research MVP validation](docs/research-mvp.md).
 
 ## Evidence and data availability
@@ -239,10 +261,11 @@ small, deterministic evidence package after an accepted controlled comparison:
 
 ```bash
 python scripts/export_research_evidence.py \
-    --gurobi-root resultados_finais/gurobi_hard_profiles \
-    --scip-root resultados_finais/scip_hard_profiles \
-    --comparison-root resultados_finais/dual_solver_research_mvp \
-    --output-dir resultados_finais/dual_solver_research_mvp/portable_evidence
+    --gurobi-root resultados_finais/gurobi_hard_profiles_minimize_300s \
+    --scip-root resultados_finais/scip_hard_profiles_minimize_300s \
+    --comparison-root resultados_finais/dual_solver_corrected_minimize_300s \
+    --output-dir \
+        resultados_finais/dual_solver_corrected_minimize_300s/portable_evidence
 ```
 
 The exporter verifies upstream hashes and gates, strips absolute paths, records
@@ -264,7 +287,9 @@ versioned here:
   PaScal versions.
 - **Internal validity:** exclusive allocation, partition matching, provenance,
   and workload hashes reduce confounding, but campaigns executed as separate
-  jobs may still experience node-level and temporal variation.
+  jobs may still experience node-level and temporal variation. Selective
+  telemetry retries add a further temporal block and must be disclosed with
+  their deterministic composition rule.
 - **Construct validity:** RAPL estimates CPU/package energy rather than complete
   facility or system energy. No carbon-emissions claim is made. EDP refers to
   the declared measurement region and telemetry domain.

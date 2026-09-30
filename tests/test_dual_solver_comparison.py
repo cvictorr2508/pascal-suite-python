@@ -76,6 +76,17 @@ def _write_campaign(
         energy = float(index * (10 if solver == "gurobi" else 15))
         profiles[profile] = {
             "accepted": True,
+            "solver_metadata": {
+                "objective_sense_effective": "minimize",
+                "time_limit_s": 300.0,
+                "status_counts": {
+                    "TIME_LIMIT" if solver == "gurobi" else "timelimit": 1
+                },
+                "median_objective": 100.0,
+                "median_best_bound": 10.0,
+                "median_gap": 0.9,
+                "maximum_gap": 0.9,
+            },
             "energy": {
                 "runs": [_run(profile, solver, duration, energy)],
             },
@@ -112,6 +123,16 @@ class DualSolverComparisonTests(unittest.TestCase):
             paths = COMPARISON.write_evidence(report, output)
 
             self.assertTrue(report["gate"]["accepted"])
+            self.assertTrue(report["gate"]["effective_objective_sense_match"])
+            self.assertTrue(report["gate"]["time_budget_match"])
+            self.assertEqual(
+                report["comparison_scope"]["objective_sense"],
+                "minimize",
+            )
+            self.assertEqual(
+                report["comparison_scope"]["solver_time_limit_s"],
+                300,
+            )
             self.assertEqual(len(report["paired_comparisons"]), 3)
             self.assertEqual(
                 report["paired_comparisons"][0][
@@ -133,6 +154,30 @@ class DualSolverComparisonTests(unittest.TestCase):
                 len(paths["checksums"].read_text().splitlines()),
                 3,
             )
+
+    def test_rejects_uncorrected_objective_sense(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            gurobi = base / "gurobi"
+            scip = base / "scip"
+            gurobi.mkdir()
+            scip.mkdir()
+            workload_sha = "c" * 64
+            _write_campaign(gurobi, "gurobi", workload_sha=workload_sha)
+            _write_campaign(scip, "scip", workload_sha=workload_sha)
+
+            summary_path = scip / "profile_matrix_summary.json"
+            summary = json.loads(summary_path.read_text(encoding="utf-8"))
+            summary["profiles"]["default"]["solver_metadata"][
+                "objective_sense_effective"
+            ] = "maximize"
+            summary_path.write_text(json.dumps(summary), encoding="utf-8")
+
+            with self.assertRaisesRegex(
+                COMPARISON.ComparisonError,
+                "did not record effective minimization",
+            ):
+                COMPARISON.build_comparison(gurobi, scip)
 
     def test_rejects_different_workload_fingerprints(self):
         with tempfile.TemporaryDirectory() as tmp:

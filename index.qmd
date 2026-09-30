@@ -30,13 +30,16 @@ abstract: |
   after fail-closed validity checks and compared with a separately acquired
   global RAPL reading, assessing internal consistency rather than absolute
   sensor accuracy. A companion adaptation of PaScal Viewer derives and
-  visualizes regional energy from the validated samples. All controlled Gurobi
-  and SCIP profile matrices met the predefined 5% median-error threshold and
-  the preferred 10% coefficient-of-variation threshold. In 15 matched
-  one-core configurations, median SCIP-to-Gurobi ratios ranged from 9.78 to
-  43.12 for solve duration and from 10.19 to 43.88 for regional energy. These
-  descriptive results demonstrate a bounded, reproducible research MVP in the
-  evaluated environment; they do not establish general solver superiority.
+  visualizes regional energy from the validated samples. The corrected
+  campaigns explicitly enforce minimization and a 300-second solver budget.
+  All Gurobi and SCIP profiles met the predefined 5% median-error threshold;
+  five of six met the preferred 10% coefficient-of-variation target, with the
+  single exceedance disclosed. Across 15 matched one-core configurations,
+  median SCIP-to-Gurobi ratios ranged from 1.011974 to 1.072602 for solve
+  duration and from 0.958652 to 1.000150 for regional energy. These descriptive
+  results demonstrate a bounded, reproducible research MVP in the evaluated
+  environment; they do not establish general solver superiority or time to
+  proven optimality.
 resumo: |
   Este artigo apresenta um fluxo Python agnóstico ao solver para medir e
   visualizar tempo e energia regional de Gurobi e SCIP com o PaScal Analyzer
@@ -46,8 +49,10 @@ resumo: |
   potência RAPL amostrada é integrada apenas após validações restritivas e
   comparada com uma leitura global RAPL adquirida separadamente, avaliando
   consistência interna, não exatidão absoluta. Todas as matrizes controladas
-  atenderam ao limite de erro mediano de 5% e ao coeficiente de variação
-  preferencial de 10%. Os resultados são descritivos e limitados ao ambiente,
+  atenderam ao limite obrigatório de erro mediano de 5%; cinco dos seis perfis
+  também atenderam à meta preferencial de 10% para o coeficiente de variação,
+  com a única excedência reportada explicitamente. Os resultados são
+  descritivos e limitados ao ambiente,
   às instâncias e às versões registradas; não constituem uma classificação
   universal dos solvers.
 keywords:
@@ -177,16 +182,17 @@ consumption and energy-efficiency monitoring on Linux. The Linux Intel RAPL
 kernel driver abstracts these counters through the powercap framework, exposing
 the data to user space through the sysfs directory tree at
 `/sys/class/powercap/intel-rapl`. Figure 1 shows PaScal Viewer
-renderings of the resulting `rapl-sysfs` energy maps.
+renderings of the resulting normalized `rapl-sysfs` energy maps.
 
-The `rapl-sysfs` heatmaps in Figure 1 were produced from a
-Gurobi-only validation campaign. Gurobi was executed using its implicit
-`default` profile. The columns `i1`, `i2`, `i3`, `i4`, and `i5`
+The corrected `rapl-sysfs` Viewer artifact was produced from the Gurobi
+`default` profile with explicit minimization and a 300-second solver budget.
+The columns `i1`, `i2`, `i3`, `i4`, and `i5`
 correspond, respectively, to MILPBench hard capacitated facility-location
 instances 5, 10, 15, 20, and 25. The rows labeled 1, 2, and 4 denote both the
 PaScal resource count and the corresponding Gurobi `Threads` setting. Six
 repetitions were executed for each core-instance configuration, for a total of
-90 attempts.
+90 attempts. The SCIP comparison uses the same five instances and the one-core
+treatment, but it is not represented in this Gurobi-only heatmap.
 
 Region 0.1 covers model loading through the native Gurobi API (`gp.read`),
 rather than algebraic model generation, whereas Region 0.2 contains only the
@@ -195,12 +201,14 @@ initial-solution loading occur inside the enclosing Region 0 but outside Regions
 0.1 and 0.2. PaScal Viewer labels these regions as 0.0.1 and 0.0.2 because it
 prefixes the Analyzer region paths with its whole-program root. Each heatmap
 cell therefore represents the regional `rapl-sysfs` energy associated with
-one core-instance configuration.
+one core-instance configuration. For visualization, the Viewer normalizes each
+instance independently across its available core treatments to a 0--100 scale;
+the underlying joule measurements remain in the checksummed evidence.
 
-![PaScal Viewer rendering of the `rapl-sysfs` energy maps for the model
-read/build and solve subregions of a Gurobi validation artifact. The Viewer
-prefixes the Analyzer paths `0.1` and `0.2` with its whole-program root, hence
-the displayed labels `0.0.1` and `0.0.2`.](manuscript/figures/pascal-viewer-regional-energy.png){#fig-viewer width=96%}
+![PaScal Viewer normalized `rapl-sysfs` energy maps for model loading (Region
+0.0.1) and optimization (Region 0.0.2) from the corrected Gurobi `default`
+campaign with explicit minimization and a 300-second solver budget. The Viewer
+prefixes Analyzer regions 0.1 and 0.2 with its whole-program root.](manuscript/figures/pascal-viewer-regional-energy.png){#fig-viewer width=100%}
 
 ## Viewer adaptation
 
@@ -225,6 +233,14 @@ partition with exclusive allocation requested and Slurm reporting
 scheduler metadata, and hashes for configurations, workloads, and starts.
 Gurobi 13.0.2 and SCIP 10.0 through PySCIPOpt 6.2.1 were evaluated.
 
+The source LP files declare maximization, whereas the intended capacitated
+facility-location experiment is minimization. Both runners therefore record the
+source objective direction, explicitly apply minimization after native model
+loading, and verify the effective direction before optimization. Every attempt
+uses a 300-second native solver limit. Consequently, reported region-0.2
+measurements characterize fixed-budget optimization rather than time to proven
+optimality.
+
 The Python validator requires finite non-negative power, sorts timestamps,
 retains the last sample at duplicate timestamps, and rejects gaps exceeding
 three median sampling periods. It requires at least two distinct samples and
@@ -247,42 +263,55 @@ divided by Gurobi. The analysis is descriptive; no hypothesis test is reported.
 
 | Solver | Profile | Valid / attempted | Median error (%) | Maximum CV (%) |
 |---|---|---:|---:|---:|
-| Gurobi | default | 88 / 90 | 0.201043 | 1.450886 |
-| Gurobi | presolve-off | 89 / 90 | 0.290858 | 1.877484 |
-| Gurobi | warm-start | 90 / 90 | 0.268701 | 1.124702 |
-| SCIP | default | 29 / 30 | 0.296794 | 1.654691 |
-| SCIP | presolve-off | 30 / 30 | 0.286874 | 0.671986 |
-| SCIP | warm-start | 28 / 30 | 0.290148 | 0.746351 |
+| Gurobi | default | 84 / 90 | 0.309447 | 1.031979 |
+| Gurobi | presolve-off | 84 / 90 | 0.317460 | 0.779982 |
+| Gurobi | warm-start | 83 / 90 | 0.315904 | 0.812490 |
+| SCIP | default | 29 / 30 | 0.246062 | 3.236270 |
+| SCIP | presolve-off | 28 / 30 | 0.288293 | 10.538866 |
+| SCIP | warm-start | 28 / 30 | 0.240095 | 0.784039 |
 
-All profile matrices passed. The largest median consistency error was 0.296794%
-(0.30% when rounded to two decimal places), well inside the 5% gate; the maximum
-CV was 1.877484% (1.88%), inside the preferred 10% bound. Six of 360 attempts
-were invalid. Every configuration retained the required five valid repetitions
-without imputation.
+All profile matrices passed the mandatory gate. The largest median consistency
+error was 0.317460%, well inside the 5% threshold. The maximum CV was 10.538866%
+for SCIP `presolve-off`, slightly above the preferred, non-binding 10% target;
+the other five profiles remained below it. The campaign produced 362 physical
+attempts and a 360-row logical matrix. Twenty-four logical attempts were invalid,
+and every configuration retained the required five valid observations.
+
+The SCIP default/instance-15 cell initially retained only four valid attempts.
+Two independent attempts were collected under the same contract and both
+passed telemetry validation. A deterministic compositor replaced the two
+invalid positions chronologically. Selection used only telemetry validity and
+did not consider solver outcome, energy, duration, objective, bound, gap, or
+node count. No measured value was corrected or imputed, and the original,
+retry, and composition artifacts remain checksummed.
 
 ## Controlled one-core comparison
 
 Fifteen matched configurations combine five workloads and three profiles. The
-comparison gate verified dataset fingerprints, profile contracts, partition,
+corrected comparison gate verifies dataset fingerprints, profile contracts,
+effective minimization, the 300-second native solver budget, partition,
 exclusive allocation, clean source worktrees, and accepted input matrices.
 
 | Profile | Duration ratio | Energy ratio | EDP ratio |
 |---|---:|---:|---:|
-| default | 26.314715 | 26.794993 | 707.638806 |
-| presolve-off | 43.115530 | 43.876481 | 1893.048508 |
-| warm-start | 9.775579 | 10.186012 | 99.737732 |
+| default | 1.069927 | 0.995437 | 1.064858 |
+| presolve-off | 1.011974 | 0.958652 | 0.970521 |
+| warm-start | 1.072602 | 1.000150 | 1.072563 |
 
-A ratio above one means that the SCIP median exceeded its matched Gurobi
-median. SCIP showed higher solve duration, regional energy, and EDP for all
-three profiles in this bounded experiment, with the smallest ratios under warm
-start. These observations apply only to the declared instances, versions,
-profiles, node class, and controls.
+Ratios are SCIP divided by Gurobi and are medians over the five paired
+instance-level ratios for each profile. Under `default`, SCIP used 0.46% less
+regional energy while taking 6.99% longer, yielding 6.49% higher EDP. Under
+`presolve-off`, SCIP used 4.13% less energy while taking 1.20% longer, yielding
+2.95% lower EDP. Under `warm-start`, energy was effectively equal (0.015%
+higher for SCIP), while duration and EDP were approximately 7.26% higher.
+These are fixed-budget regional-telemetry comparisons; they do not show time to
+proven optimality or equivalent terminal solution quality.
 
 These telemetry gates do not establish equivalent terminal solution quality.
-The status and objective of each included run require a separate audit, with
-native gaps and stopping tolerances reported where recorded. Missing gaps must
-not be inferred as zero, and the hard-split label does not establish difficulty
-for either solver.
+The status and objective of each included run require a separate audit. Native
+sentinel values such as SCIP `-1e20` and `1e20` indicate unavailable bounds or
+gaps and are not scientific measurements. Missing gaps must not be inferred as
+zero, and the hard-split label does not establish difficulty for either solver.
 
 # Discussion
 
@@ -294,13 +323,17 @@ RAPL paths agreed closely, and variability remained below the preferred bound
 after transparent run rejection. The fail-closed policy matters because
 negative or insufficiently covered series occurred even in completed jobs.
 
-RQ4 supports a bounded performance statement but not a universal ranking.
-Native defaults, presolve, start semantics, and campaign timing remain possible
-causes. The strong profile dependence reinforces the systematic-review warning
-that software-energy findings require explicit context [@bree2025softwaredesign].
-The warm-start result also illustrates why phase-level telemetry is useful:
-changes in solver configuration can alter solve energy separately from model
-loading. These observations could parameterize energy models such as
+RQ4 supports only a bounded fixed-budget telemetry comparison, not a universal
+ranking or a time-to-optimality claim. Native defaults, presolve, start
+semantics, and campaign timing remain possible causes. The corrected ratios are
+close to parity: SCIP duration is 1.20%--7.26% higher, whereas regional energy
+ranges from 4.13% lower to 0.015% higher. The resulting EDP changes direction
+across profiles, from 2.95% lower under `presolve-off` to 7.26% higher under
+`warm-start`. This profile dependence reinforces the systematic-review warning
+that software-energy findings require explicit context
+[@bree2025softwaredesign]. It also illustrates why phase-level telemetry is
+useful: changes in solver configuration can alter solve energy separately from
+model loading. These observations could parameterize energy models such as
 [@silva2022analytical] or inform schedulers such as
 [@springborg2023slurm], but predictive modeling and scheduling intervention
 remain future work.
@@ -320,7 +353,9 @@ require replication.
 
 **Internal validity.** Same-partition exclusive allocation and manifests reduce
 interference and drift, but solvers ran in separate jobs, leaving temporal and
-node effects.
+node effects. The selective SCIP telemetry retry introduced another temporal
+block; its chronological, outcome-independent composition rule mitigates but
+does not remove that threat.
 
 **Construct validity.** RAPL represents processor-domain rather than facility
 energy. Region boundaries include wrapper/API overhead; EDP is defined only
@@ -368,12 +403,14 @@ Supplementary material available:
 # Conclusion
 
 PaScal Suite Python demonstrates reproducible regional energy observability for
-Gurobi and SCIP on HPC infrastructure. Controlled campaigns met accuracy,
-replication, and repeatability gates; PaScal Viewer made the regional energy
-inspectable; and 15 matched one-core comparisons were exported as processed
-research data. This bounded MVP addresses measurement and observability for
-sustainable HPC. Broader claims require additional problem families, systems,
-versions, randomized campaign scheduling, and inferential analysis.
+Gurobi and SCIP on HPC infrastructure. Corrected fixed-budget campaigns met the
+mandatory accuracy and replication gates; five of six profiles also met the
+preferred repeatability target, with the remaining exceedance disclosed.
+PaScal Viewer made regional energy inspectable, and 15 matched one-core
+configurations were exported as processed research data. This bounded MVP
+addresses measurement and observability for sustainable HPC. Broader claims
+require additional problem families, systems, versions, randomized campaign
+scheduling, and inferential analysis.
 
 # Declaration of generative AI and AI-assisted technologies in the manuscript preparation process
 

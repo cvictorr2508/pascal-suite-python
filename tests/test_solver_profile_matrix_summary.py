@@ -39,9 +39,21 @@ def _write_matrix(root: Path, solver: str) -> None:
             "resources": [1],
             "repetitions": 1,
             "profiles": [
-                {"id": "default", "kind": "default"},
-                {"id": "presolve-off", "kind": "presolve-off"},
-                {"id": "warm-start", "kind": "warm-start"},
+                {
+                    "id": "default",
+                    "kind": "default",
+                    "objective_sense": "minimize",
+                },
+                {
+                    "id": "presolve-off",
+                    "kind": "presolve-off",
+                    "objective_sense": "minimize",
+                },
+                {
+                    "id": "warm-start",
+                    "kind": "warm-start",
+                    "objective_sense": "minimize",
+                },
             ],
         },
         "workloads": [{"path": "/data/instance.lp.gz"}],
@@ -65,9 +77,13 @@ def _write_matrix(root: Path, solver: str) -> None:
             json.dumps({"profile": {"id": profile_id}}),
             encoding="utf-8",
         )
-        effective = {}
+        effective = (
+            {"TimeLimit": 300.0}
+            if solver == "gurobi"
+            else {"limits/time": 300.0}
+        )
         if profile_kind == "presolve-off":
-            effective = (
+            effective.update(
                 {"Presolve": 0}
                 if solver == "gurobi"
                 else {"presolve": "off"}
@@ -80,9 +96,26 @@ def _write_matrix(root: Path, solver: str) -> None:
                 "format": "mst" if solver == "gurobi" else "sol.gz",
             }
         metadata = {
-            "profile": {"id": profile_id},
+            "profile": {
+                "id": profile_id,
+                "objective_sense": "minimize",
+            },
+            "objective_sense": {
+                "requested": "minimize",
+                "source_name": "maximize",
+                "effective_name": "minimize",
+                "overridden": True,
+            },
             "parameters": {"profile_effective": effective},
             "initial_solution": initial_solution,
+            "metrics": {
+                "status_name": "TIME_LIMIT" if solver == "gurobi" else None,
+                "status": "timelimit" if solver == "scip" else None,
+                "objective": 100.0,
+                "best_bound": 10.0,
+                "mip_gap": 0.9 if solver == "gurobi" else None,
+                "gap": 0.9 if solver == "scip" else None,
+            },
         }
         (directory / "meta_1.json").write_text(
             json.dumps(metadata),
@@ -104,6 +137,66 @@ class SolverProfileMatrixSummaryTests(unittest.TestCase):
                 self.assertIn("id: default", configuration)
                 self.assertIn("id: presolve-off", configuration)
                 self.assertIn("id: warm-start", configuration)
+                self.assertEqual(
+                    configuration.count("objective_sense: minimize"),
+                    3,
+                )
+                self.assertIn("300", configuration)
+                self.assertIn("minimize-300s", configuration)
+
+    def test_rejects_metadata_without_effective_minimization(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_matrix(root, "gurobi")
+            metadata_path = root / "gurobi" / "default" / "meta_1.json"
+            metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+            metadata["objective_sense"]["effective_name"] = "maximize"
+            metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
+
+            with patch.object(
+                SUMMARY.ENERGY_SUMMARY,
+                "summarize_document",
+                return_value=_energy_summary(),
+            ):
+                result = SUMMARY.summarize_profile_matrix(
+                    root,
+                    required_runs=1,
+                )
+
+            self.assertFalse(result["profiles"]["default"]["accepted"])
+            self.assertTrue(
+                any(
+                    "effective objective sense is not minimize" in error
+                    for error in result["profiles"]["default"]["metadata_errors"]
+                )
+            )
+
+    def test_rejects_metadata_with_wrong_time_budget(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_matrix(root, "scip")
+            metadata_path = root / "scip" / "default" / "meta_1.json"
+            metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+            metadata["parameters"]["profile_effective"]["limits/time"] = 600
+            metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
+
+            with patch.object(
+                SUMMARY.ENERGY_SUMMARY,
+                "summarize_document",
+                return_value=_energy_summary(),
+            ):
+                result = SUMMARY.summarize_profile_matrix(
+                    root,
+                    required_runs=1,
+                )
+
+            self.assertFalse(result["profiles"]["default"]["accepted"])
+            self.assertTrue(
+                any(
+                    "effective limits/time is not 300 seconds" in error
+                    for error in result["profiles"]["default"]["metadata_errors"]
+                )
+            )
 
     def test_accepts_complete_matrix_for_each_solver(self):
         for solver in ("gurobi", "scip"):

@@ -105,6 +105,11 @@ class ResearchManifestTests(unittest.TestCase):
         self.assertIn('ALLOCATION_ARGUMENTS=(--exclusive)', launcher)
         self.assertIn('ALLOCATION_ARGUMENTS=(--oversubscribe)', launcher)
         self.assertIn("submission_error=invalid_allocation_mode", launcher)
+        self.assertIn(
+            'SLURM_TIME="${PASCAL_SLURM_TIME:-04:00:00}"',
+            launcher,
+        )
+        self.assertIn('--time="$SLURM_TIME"', launcher)
         self.assertNotIn("#SBATCH --exclusive", slurm_job)
         self.assertIn("preflight_error=invalid_allocation_mode", slurm_job)
 
