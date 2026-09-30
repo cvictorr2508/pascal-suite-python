@@ -319,9 +319,10 @@ RQ1 is supported operationally: both solvers completed the same declarative
 profile and region contract, and the preceding PaScal Viewer figure renders the
 resulting hierarchy and energy domain. This is interface parity, not
 algorithmic equivalence. RQ2 and RQ3 are supported within the design: the two
-RAPL paths agreed closely, and variability remained below the preferred bound
-after transparent run rejection. The fail-closed policy matters because
-negative or insufficiently covered series occurred even in completed jobs.
+RAPL paths agreed closely, all profiles passed the mandatory gate, and five of
+six remained below the preferred variability bound after transparent run
+rejection. The fail-closed policy matters because negative or insufficiently
+covered series occurred even in completed jobs.
 
 RQ4 supports only a bounded fixed-budget telemetry comparison, not a universal
 ranking or a time-to-optimality claim. Native defaults, presolve, start
