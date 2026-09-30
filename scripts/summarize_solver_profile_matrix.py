@@ -52,6 +52,12 @@ def _metadata_summary(
     solver: str,
     metadata_paths: list[Path],
 ) -> dict[str, Any]:
+    """Summarize native solver metadata without using it as an energy gate.
+
+    Solver APIs may expose finite sentinel values when a bound or gap is not
+    available. These fields are retained for audit and must be interpreted with
+    the native status; they do not determine telemetry validity or acceptance.
+    """
     statuses = Counter()
     objectives = []
     bounds = []

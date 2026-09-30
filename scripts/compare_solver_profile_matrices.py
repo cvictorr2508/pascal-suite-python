@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Build a deterministic comparison from accepted Gurobi and SCIP matrices."""
+"""Compare fixed-budget regional telemetry from accepted solver matrices.
+
+The report describes duration, energy, and EDP under a matched experimental
+contract. It does not rank terminal solution quality or time to optimality.
+"""
 
 from __future__ import annotations
 
@@ -146,6 +150,11 @@ def _positive_number(value: Any, label: str) -> float:
 
 
 def _measurement_rows(campaign: dict[str, Any]) -> list[dict[str, Any]]:
+    """Aggregate only validated region-0.2 telemetry for the comparison.
+
+    Objective, bound, gap, status, and node-count metadata remain provenance;
+    they never select attempts or enter the duration, energy, and EDP ratios.
+    """
     solver = campaign["solver"]
     grouped: dict[tuple[str, str, int], list[tuple[float, float, float]]] = (
         defaultdict(list)
