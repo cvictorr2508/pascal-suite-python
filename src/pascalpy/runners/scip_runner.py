@@ -25,7 +25,7 @@ from pascalpy.instrumentation.solver_regions import (  # noqa: E402
 )
 
 try:
-    from pyscipopt import Model, SCIP_PARAMSETTING
+    from pyscipopt import SCIP_PARAMSETTING, Model
 except ImportError:
     Model = None
     SCIP_PARAMSETTING = None
@@ -45,6 +45,59 @@ def _safe_call(model: Any, method_name: str, default=None):
         return getattr(model, method_name)()
     except Exception:
         return default
+
+
+def _finite_float(value: Any) -> float | None:
+    """Return a finite float for solver metrics, otherwise None."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    converted = float(value)
+    return converted if math.isfinite(converted) else None
+
+
+def _objective_sense_name(value: Any) -> str:
+    """Normalize the PySCIPOpt objective-sense representation."""
+    normalized = str(value).strip().lower()
+    aliases = {
+        "min": "minimize",
+        "minimize": "minimize",
+        "minimization": "minimize",
+        "max": "maximize",
+        "maximize": "maximize",
+        "maximization": "maximize",
+    }
+    return aliases.get(normalized, normalized)
+
+
+def _apply_objective_sense(model: Any, profile: dict) -> dict:
+    """Apply and verify the objective direction declared by the profile."""
+    requested = str(profile.get("objective_sense", "preserve"))
+    source = _objective_sense_name(model.getObjectiveSense())
+
+    if requested == "preserve":
+        expected = source
+    elif requested == "minimize":
+        model.setMinimize()
+        expected = "minimize"
+    elif requested == "maximize":
+        model.setMaximize()
+        expected = "maximize"
+    else:
+        raise ValueError(f"Unsupported objective sense: {requested}")
+
+    effective = _objective_sense_name(model.getObjectiveSense())
+    if effective != expected:
+        raise RuntimeError(
+            "Effective SCIP objective sense differs from the requested sense: "
+            f"requested={requested}, source={source}, effective={effective}"
+        )
+
+    return {
+        "requested": requested,
+        "source_name": source,
+        "effective_name": effective,
+        "overridden": effective != source,
+    }
 
 
 def _resolve_initial_solution(
@@ -233,7 +286,9 @@ def main() -> None:
         "profile": {
             "id": str(profile.get("id", "default")),
             "kind": str(profile.get("kind", "default")),
+            "objective_sense": str(profile.get("objective_sense", "preserve")),
         },
+        "objective_sense": {},
         "pascal_instrumentation": {
             "requested": True,
             "available": pascal_status["available"],
@@ -282,6 +337,7 @@ def main() -> None:
                 model.readProblem(str(workload))
                 read_wall_s = time.perf_counter() - read_started
 
+            metadata["objective_sense"] = _apply_objective_sense(model, profile)
             model.setIntParam("randomization/randomseedshift", seed)
             applied_profile = _apply_profile(model, workload, profile)
             metadata["parameters"].update(
@@ -310,12 +366,15 @@ def main() -> None:
         metadata["metrics"] = {
             "status": str(model.getStatus()),
             "read_wall_clock_s": read_wall_s,
-            "scip_solving_time_s": _safe_call(model, "getSolvingTime"),
+            "scip_solving_time_s": _finite_float(
+                _safe_call(model, "getSolvingTime")
+            ),
             "solve_wall_clock_s": solve_wall_s,
-            "node_count": _safe_call(model, "getNNodes"),
-            "gap": _safe_call(model, "getGap"),
+            "node_count": _finite_float(_safe_call(model, "getNNodes")),
+            "gap": _finite_float(_safe_call(model, "getGap")),
+            "best_bound": _finite_float(_safe_call(model, "getDualbound")),
             "objective": (
-                float(model.getObjVal()) if solution_count > 0 else None
+                _finite_float(model.getObjVal()) if solution_count > 0 else None
             ),
             "solution_count": solution_count,
         }

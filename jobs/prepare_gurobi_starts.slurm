@@ -22,7 +22,7 @@ cd "$SLURM_SUBMIT_DIR"
 PYTHON_BIN="${PASCAL_PYTHON_BIN:-$(command -v python || true)}"
 LICENSE_FILE="${GRB_LICENSE_FILE:-$SLURM_SUBMIT_DIR/secret/gurobi.lic}"
 DATASET_DIR="${CFL_HARD_DIR:-/home/Projeto_LAMFO_LAPPS/data/facility_location_easy/hard}"
-OUTPUT_DIR="${GUROBI_START_DIR:-$SLURM_SUBMIT_DIR/initial_solutions/gurobi}"
+OUTPUT_DIR="${GUROBI_START_DIR:-$SLURM_SUBMIT_DIR/initial_solutions/gurobi-minimize-300s}"
 
 if [[ -z "$PYTHON_BIN" || ! -x "$PYTHON_BIN" ]]; then
     printf 'preflight_error=python_not_available_on_path\n' >&2
@@ -35,9 +35,17 @@ if [[ ! -s "$LICENSE_FILE" ]]; then
 fi
 
 export GRB_LICENSE_FILE="$LICENSE_FILE"
+if [[ -d "$OUTPUT_DIR" ]] && \
+   [[ -n "$(find "$OUTPUT_DIR" -mindepth 1 -maxdepth 1 -print -quit)" ]]; then
+    printf 'preflight_error=warm_start_directory_not_empty path=%s\n' \
+        "$OUTPUT_DIR" >&2
+    exit 12
+fi
 mkdir -p "$OUTPUT_DIR"
 
+input_index=0
 for instance_id in 5 10 15 20 25; do
+    seed=$((10000 + input_index))
     workload="$DATASET_DIR/CFL_hard_instance_${instance_id}.lp.gz"
     output="$OUTPUT_DIR/CFL_hard_instance_${instance_id}.mst"
     if [[ ! -s "$workload" ]]; then
@@ -46,7 +54,8 @@ for instance_id in 5 10 15 20 25; do
         exit 11
     fi
     "$PYTHON_BIN" scripts/export_gurobi_warm_start.py \
-        "$workload" "$output" --threads 1 --seed 10000
+        "$workload" "$output" --threads 1 --seed "$seed" --time-limit 300
+    input_index=$((input_index + 1))
 done
 
 sha256sum "$OUTPUT_DIR"/*.mst "$OUTPUT_DIR"/*.mst.json \

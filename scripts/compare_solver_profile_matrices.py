@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Build a deterministic comparison from accepted Gurobi and SCIP matrices."""
+"""Compare fixed-budget regional telemetry from accepted solver matrices.
+
+The report describes duration, energy, and EDP under a matched experimental
+contract. It does not rank terminal solution quality or time to optimality.
+"""
 
 from __future__ import annotations
 
@@ -109,6 +113,21 @@ def _load_campaign(root: Path) -> dict[str, Any]:
     for profile_id in EXPECTED_PROFILES:
         if summary["profiles"][profile_id].get("accepted") is not True:
             raise ComparisonError(f"{solver}/{profile_id} is not accepted")
+        solver_metadata = summary["profiles"][profile_id].get(
+            "solver_metadata", {}
+        )
+        if solver_metadata.get("objective_sense_effective") != "minimize":
+            raise ComparisonError(
+                f"{solver}/{profile_id} did not record effective minimization"
+            )
+        try:
+            time_limit_s = float(solver_metadata.get("time_limit_s"))
+        except (TypeError, ValueError):
+            time_limit_s = None
+        if time_limit_s != 300.0:
+            raise ComparisonError(
+                f"{solver}/{profile_id} did not record a 300-second time limit"
+            )
 
     return {
         "root": root,
@@ -131,6 +150,11 @@ def _positive_number(value: Any, label: str) -> float:
 
 
 def _measurement_rows(campaign: dict[str, Any]) -> list[dict[str, Any]]:
+    """Aggregate only validated region-0.2 telemetry for the comparison.
+
+    Objective, bound, gap, status, and node-count metadata remain provenance;
+    they never select attempts or enter the duration, energy, and EDP ratios.
+    """
     solver = campaign["solver"]
     grouped: dict[tuple[str, str, int], list[tuple[float, float, float]]] = (
         defaultdict(list)
@@ -142,7 +166,11 @@ def _measurement_rows(campaign: dict[str, Any]) -> list[dict[str, Any]]:
             workload = Path(str(configuration.get("workload", ""))).name
             cores = configuration.get("cores")
             region = run.get("regions", {}).get(REGION_ID)
-            if not workload or not isinstance(cores, int) or not isinstance(region, dict):
+            if (
+                not workload
+                or not isinstance(cores, int)
+                or not isinstance(region, dict)
+            ):
                 raise ComparisonError(
                     f"{solver}/{profile_id} contains an incomplete run record"
                 )
@@ -253,6 +281,12 @@ def build_comparison(
             "allocation": _allocation_record(manifest),
             "resources": manifest.get("experiment", {}).get("resources"),
             "repetitions": manifest.get("experiment", {}).get("repetitions"),
+            "solver_metadata": {
+                profile_id: campaign["summary"]["profiles"][profile_id][
+                    "solver_metadata"
+                ]
+                for profile_id in EXPECTED_PROFILES
+            },
         }
 
     allocations = {
@@ -269,8 +303,29 @@ def build_comparison(
         and allocations["gurobi"]["partition"]
         == allocations["scip"]["partition"]
     )
+    effective_objective_sense_match = all(
+        inputs[solver]["solver_metadata"][profile_id].get(
+            "objective_sense_effective"
+        )
+        == "minimize"
+        for solver in ("gurobi", "scip")
+        for profile_id in EXPECTED_PROFILES
+    )
+    time_budget_match = all(
+        float(
+            inputs[solver]["solver_metadata"][profile_id].get(
+                "time_limit_s", -1
+            )
+        )
+        == 300.0
+        for solver in ("gurobi", "scip")
+        for profile_id in EXPECTED_PROFILES
+    )
     performance_comparison_eligible = (
-        exclusive_allocation_verified and same_partition
+        exclusive_allocation_verified
+        and same_partition
+        and effective_objective_sense_match
+        and time_budget_match
     )
     claim_status = (
         "controlled-comparison"
@@ -285,6 +340,8 @@ def build_comparison(
             "region_semantics": "solve execution",
             "paired_resources": [1],
             "profiles": list(EXPECTED_PROFILES),
+            "objective_sense": "minimize",
+            "solver_time_limit_s": 300,
             "performance_claim_status": claim_status,
         },
         "inputs": inputs,
@@ -302,6 +359,8 @@ def build_comparison(
             "common_one_core_configurations_complete": True,
             "exclusive_allocation_verified": exclusive_allocation_verified,
             "same_partition": same_partition,
+            "effective_objective_sense_match": effective_objective_sense_match,
+            "time_budget_match": time_budget_match,
             "performance_comparison_eligible": performance_comparison_eligible,
             "accepted": performance_comparison_eligible,
         },

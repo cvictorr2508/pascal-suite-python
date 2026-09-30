@@ -89,6 +89,7 @@ def _profile_record(profile_id: str, result: dict[str, Any]) -> dict[str, Any]:
     energy = result.get("energy", {})
     accuracy = energy.get("accuracy", {})
     variability = energy.get("variability", {})
+    solver_metadata = result.get("solver_metadata", {})
     return {
         "id": profile_id,
         "kind": result.get("profile_kind"),
@@ -105,6 +106,15 @@ def _profile_record(profile_id: str, result: dict[str, Any]) -> dict[str, Any]:
             "maximum_group_region_0_cv_percent"
         ),
         "variability_preferred": variability.get("preferred"),
+        "objective_sense_effective": solver_metadata.get(
+            "objective_sense_effective"
+        ),
+        "time_limit_s": solver_metadata.get("time_limit_s"),
+        "status_counts": solver_metadata.get("status_counts", {}),
+        "median_objective": solver_metadata.get("median_objective"),
+        "median_best_bound": solver_metadata.get("median_best_bound"),
+        "median_gap": solver_metadata.get("median_gap"),
+        "maximum_gap": solver_metadata.get("maximum_gap"),
     }
 
 
@@ -284,7 +294,10 @@ def build_portable_manifest(
     return manifest
 
 
-def write_portable_evidence(manifest: dict[str, Any], output_dir: Path) -> dict[str, Path]:
+def write_portable_evidence(
+    manifest: dict[str, Any],
+    output_dir: Path,
+) -> dict[str, Path]:
     if output_dir.exists() and any(output_dir.iterdir()):
         raise EvidenceError(f"Output directory is not empty: {output_dir}")
     output_dir.mkdir(parents=True, exist_ok=True)

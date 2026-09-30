@@ -6,15 +6,24 @@ import argparse
 import gzip
 import hashlib
 import json
+import math
 import platform
 import shutil
 import tempfile
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 from pyscipopt import Model
+
+
+def _finite_float(value: Any) -> float | None:
+    """Return a finite float for solver metrics, otherwise None."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    converted = float(value)
+    return converted if math.isfinite(converted) else None
 
 
 def _sha256(path: Path) -> str:
@@ -114,6 +123,13 @@ def export_warm_start(
     try:
         model.hideOutput()
         model.readProblem(str(workload))
+        source_sense = str(model.getObjectiveSense()).lower()
+        model.setMinimize()
+        effective_sense = str(model.getObjectiveSense()).lower()
+        if effective_sense != "minimize":
+            raise RuntimeError(
+                "SCIP warm-start preparation failed to enforce minimization"
+            )
         model.setIntParam("randomization/randomseedshift", seed)
         if time_limit_s is not None:
             model.setRealParam("limits/time", time_limit_s)
@@ -127,7 +143,7 @@ def export_warm_start(
         serialization = _write_solution_artifact(model, solution, output)
         metadata = {
             "schema_version": 1,
-            "created_at_utc": datetime.now(timezone.utc).isoformat(),
+            "created_at_utc": datetime.now(UTC).isoformat(),
             "purpose": "unmeasured-warm-start-preparation",
             "workload": {
                 "path": str(workload),
@@ -140,6 +156,12 @@ def export_warm_start(
                 "size_bytes": output.stat().st_size,
                 "sha256": _sha256(output),
                 **serialization,
+            },
+            "objective_sense": {
+                "requested": "minimize",
+                "source_name": source_sense,
+                "effective_name": effective_sense,
+                "overridden": effective_sense != source_sense,
             },
             "runtime": {
                 "python_version": platform.python_version(),
@@ -156,7 +178,9 @@ def export_warm_start(
             },
             "solution": {
                 "status": str(model.getStatus()),
-                "objective": float(model.getSolObjVal(solution)),
+                "objective": _finite_float(model.getSolObjVal(solution)),
+                "best_bound": _finite_float(model.getDualbound()),
+                "gap": _finite_float(model.getGap()),
                 "solution_count": int(model.getNSols()),
             },
         }
