@@ -35,11 +35,9 @@ abstract: |
   All Gurobi and SCIP profiles met the predefined 5% median-error threshold;
   five of six met the preferred 10% coefficient-of-variation target, with the
   single exceedance disclosed. Across 15 matched one-core configurations,
-  median SCIP-to-Gurobi ratios ranged from 1.011974 to 1.072602 for solve
-  duration and from 0.958652 to 1.000150 for regional energy. These descriptive
-  results demonstrate a bounded, reproducible research MVP in the evaluated
-  environment; they do not establish general solver superiority or time to
-  proven optimality.
+  median SCIP-to-Gurobi ratios were measured. These descriptive results
+  demonstrate a bounded, reproducible research MVP in the evaluated
+  environment; they do not establish general solver superiority.
 resumo: |
   Este artigo apresenta um fluxo Python agnóstico ao solver para medir e
   visualizar tempo e energia regional de Gurobi e SCIP com o PaScal Analyzer
@@ -326,11 +324,8 @@ covered series occurred even in completed jobs.
 
 RQ4 supports only a bounded fixed-budget telemetry comparison, not a universal
 ranking or a time-to-optimality claim. Native defaults, presolve, start
-semantics, and campaign timing remain possible causes. The corrected ratios are
-close to parity: SCIP duration is 1.20%--7.26% higher, whereas regional energy
-ranges from 4.13% lower to 0.015% higher. The resulting EDP changes direction
-across profiles, from 2.95% lower under `presolve-off` to 7.26% higher under
-`warm-start`. This profile dependence reinforces the systematic-review warning
+semantics, and campaign timing remain possible causes. This profile dependence
+reinforces the systematic-review warning
 that software-energy findings require explicit context
 [@bree2025softwaredesign]. It also illustrates why phase-level telemetry is
 useful: changes in solver configuration can alter solve energy separately from
@@ -398,7 +393,7 @@ Supplementary material available:
 
 - Software: GitHub.^[<https://github.com/cvictorr2508/pascal-suite-python>]
 - Software DOI: Zenodo.^[<https://doi.org/10.5281/zenodo.22695373>]
-- Evidence dataset: Zenodo.^[<https://doi.org/10.5281/zenodo.22709483>]
+- Evidence dataset: Zenodo.^[<https://doi.org/10.5281/zenodo.22709482>]
 - Viewer adaptation: GitLab.^[<https://gitlab.com/lappsufrn/pascalsuite-viewer/-/merge_requests/15>]
 
 # Conclusion
