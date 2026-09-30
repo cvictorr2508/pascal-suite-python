@@ -3,15 +3,15 @@ title: "Reproducible Regional Energy Telemetry for Mathematical Optimization Sol
 author:
   - name: "Victor Rafael R. Celestino"
     institute: 1
-  - name: "Kayo Gon├ºalves e Silva"
+  - name: "Kayo Gonçalves e Silva"
     institute: 2
   - name: "Samuel Xavier-de-Souza"
     institute: 2
 sbc-affiliations:
   - lines:
       - "Laboratory of Machine Learning in Finance and Organizations (LAMFO)"
-      - "University of Bras├¡lia (UnB)"
-      - "Campus Darcy Ribeiro -- 70910-900 -- Bras├¡lia, DF, Brazil"
+      - "University of Brasília (UnB)"
+      - "Campus Darcy Ribeiro -- 70910-900 -- Brasília, DF, Brazil"
     email: "vrcelestino@unb.br"
   - lines:
       - "Laboratory of Parallel Architectures and Signal Processing (LAPPS)"
@@ -41,19 +41,19 @@ abstract: |
   environment; they do not establish general solver superiority or time to
   proven optimality.
 resumo: |
-  Este artigo apresenta um fluxo Python agn├│stico ao solver para medir e
+  Este artigo apresenta um fluxo Python agnóstico ao solver para medir e
   visualizar tempo e energia regional de Gurobi e SCIP com o PaScal Analyzer
-  em HPC. Matrizes declarativas definem cinco inst├óncias dif├¡ceis de localiza├º├úo
-  capacitada, tr├¬s perfis, tratamentos de n├║cleos, seis tentativas por
-  configura├º├úo e regi├Áes hier├írquicas para leitura do modelo e solu├º├úo. A
-  pot├¬ncia RAPL amostrada ├® integrada apenas ap├│s valida├º├Áes restritivas e
+  em HPC. Matrizes declarativas definem cinco instâncias difíceis de localização
+  capacitada, três perfis, tratamentos de núcleos, seis tentativas por
+  configuração e regiões hierárquicas para leitura do modelo e solução. A
+  potência RAPL amostrada é integrada apenas após validações restritivas e
   comparada com uma leitura global RAPL adquirida separadamente, avaliando
-  consist├¬ncia interna, n├úo exatid├úo absoluta. Todas as matrizes controladas
-  atenderam ao limite obrigat├│rio de erro mediano de 5%; cinco dos seis perfis
-  tamb├®m atenderam ├á meta preferencial de 10% para o coeficiente de varia├º├úo,
-  com a ├║nica exced├¬ncia reportada explicitamente. Os resultados s├úo
+  consistência interna, não exatidão absoluta. Todas as matrizes controladas
+  atenderam ao limite obrigatório de erro mediano de 5%; cinco dos seis perfis
+  também atenderam à meta preferencial de 10% para o coeficiente de variação,
+  com a única excedência reportada explicitamente. Os resultados são
   descritivos e limitados ao ambiente,
-  ├ás inst├óncias e ├ás vers├Áes registradas; n├úo constituem uma classifica├º├úo
+  às instâncias e às versões registradas; não constituem uma classificação
   universal dos solvers.
 keywords:
   - sustainable high-performance computing
