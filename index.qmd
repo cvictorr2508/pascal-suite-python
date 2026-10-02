@@ -217,8 +217,13 @@ regional-energy maps and hierarchical identifiers, rejects a complete sampled
 series when power or timestamps violate the validity contract, falls back to
 valid samples when a global scalar is non-positive, and does not mutate the
 Analyzer JSON. The implementation and nine focused parser tests are identified
-by Viewer commit `e78e96ff` and GitLab MR !15.^[Viewer repository:
-<https://gitlab.com/lappsufrn/pascalsuite-viewer>.]
+by Viewer commit `e78e96ff`. GitLab MR !15 was subsequently merged into
+`ang-pascal-viewer` as squash commit `db78d7ea`; its deployment pipeline passed,
+and the integrated Viewer is publicly accessible.^[MR and deployment:
+<https://gitlab.com/lappsufrn/pascalsuite-viewer/-/merge_requests/15>; target
+branch: <https://gitlab.com/lappsufrn/pascalsuite-viewer/-/tree/ang-pascal-viewer>;
+public Viewer: <https://pascalsuite.imd.ufrn.br/viewer/>; deployed application:
+<https://pascalsuite.imd.ufrn.br/dev-ang-pascal-viewer/>.]
 
 # Experimental Method
 
@@ -394,7 +399,9 @@ Supplementary material available:
 - Software: GitHub.^[<https://github.com/cvictorr2508/pascal-suite-python>]
 - Software DOI: Zenodo.^[<https://doi.org/10.5281/zenodo.22695373>]
 - Evidence dataset: Zenodo.^[<https://doi.org/10.5281/zenodo.22709482>]
-- Viewer adaptation: GitLab.^[<https://gitlab.com/lappsufrn/pascalsuite-viewer/-/merge_requests/15>]
+- Viewer adaptation: GitLab MR !15 and public PaScal Viewer.^[MR:
+  <https://gitlab.com/lappsufrn/pascalsuite-viewer/-/merge_requests/15>; public
+  access: <https://pascalsuite.imd.ufrn.br/viewer/>.]
 
 # Conclusion
 
