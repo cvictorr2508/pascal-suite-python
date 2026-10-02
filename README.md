@@ -308,7 +308,13 @@ results.
 The wrapper requests both global energy (`--rple`) and sampled RAPL power
 (`--rpls`). The PaScal Viewer integrates the sampled series over the union of
 region intervals and displays Energy and EDP without modifying the uploaded
-JSON. Viewer integration is maintained in a separate repository.
+JSON. The sampled-energy adaptation was merged through
+[GitLab MR !15](https://gitlab.com/lappsufrn/pascalsuite-viewer/-/merge_requests/15)
+into the Viewer
+[`ang-pascal-viewer` branch](https://gitlab.com/lappsufrn/pascalsuite-viewer/-/tree/ang-pascal-viewer)
+as squash commit `db78d7ea`, with a passing deployment pipeline. The
+[public PaScal Viewer page](https://pascalsuite.imd.ufrn.br/viewer/) links to
+the [deployed Angular version](https://pascalsuite.imd.ufrn.br/dev-ang-pascal-viewer/).
 
 ## Testing
 
