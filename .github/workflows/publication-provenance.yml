@@ -1,0 +1,30 @@
+name: Check publication result lineage
+
+on:
+  pull_request:
+    branches: [develop]
+    paths:
+      - "publication/**"
+      - "docs/research-mvp.md"
+      - "index.qmd"
+      - "scripts/check_publication_provenance.py"
+      - "tests/test_publication_provenance.py"
+      - ".gitattributes"
+      - ".github/workflows/publication-provenance.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  provenance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Validate frozen generations without solvers or network requests
+        run: python scripts/check_publication_provenance.py
+      - name: Exercise consistency and negative provenance cases
+        run: python -m unittest discover -s tests -p test_publication_provenance.py

@@ -1,0 +1,7 @@
+solver,profile,attempted_runs,valid_runs,invalid_runs,configurations,median_energy_error_percent,max_cv_percent,accepted
+gurobi,default,90,84,6,15,0.309447,1.031979,true
+gurobi,presolve-off,90,84,6,15,0.317460,0.779982,true
+gurobi,warm-start,90,83,7,15,0.315904,0.812490,true
+scip,default,30,29,1,5,0.246062,3.236270,true
+scip,presolve-off,30,28,2,5,0.288293,10.538866,true
+scip,warm-start,30,28,2,5,0.240095,0.784039,true
