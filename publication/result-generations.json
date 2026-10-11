@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "reviewed_on": "2026-10-10",
+  "submitted_generation": "corrected-minimize-300s-v2",
+  "generations": [
+    {
+      "id": "historical-source-sense-20260911",
+      "role": "historical-only; not the corrected submission results",
+      "directory": "publication/results",
+      "campaign_source_commits": [
+        "915bd7974edf2a03a279d24a0e3a69dc5f54082f",
+        "b03b6f298db70834192fb499f8fd248e91de22e9"
+      ],
+      "slurm_jobs": [
+        "2084725",
+        "2084503"
+      ],
+      "effective_objective_sense": "source-declared maximize; no explicit minimization override",
+      "solver_time_limit_s": null,
+      "files": {
+        "publication/results/controlled-one-core-comparison.csv": "66657534431efd42e01f57adc46f3dd85ec394f1f95b95d435f7b12dfd766682",
+        "publication/results/profile-matrix-validity.csv": "ea015d5005e09095a62b00fe6670942ce23a795df89f05350698e2491664ed9a",
+        "publication/results/provenance.json": "a8032446da856fa8ac6bedd0984589def08107b810764b0beb904e0187d971d9"
+      }
+    },
+    {
+      "id": "corrected-minimize-300s-v2",
+      "role": "submitted WPADS 2026 results",
+      "directory": "publication/results/corrected-minimize-300s-v2",
+      "campaign_source_commits": [
+        "fbbf7d7178e022ff8cf759d8fd7568359b583cf8"
+      ],
+      "effective_objective_sense": "minimize",
+      "solver_time_limit_s": 300,
+      "files": {
+        "publication/results/corrected-minimize-300s-v2/controlled-one-core-comparison.csv": "3772461916f6579d974f4c35fce9add2e88c81a4e2fb8aa4ac74f94acde4760b",
+        "publication/results/corrected-minimize-300s-v2/paired_one_core_comparisons.csv": "9a6d1bf09cf8091ca4f80c230eb72c1a06dd602d7e5f4a542262d41909dc328d",
+        "publication/results/corrected-minimize-300s-v2/profile-matrix-validity.csv": "5460d3de26e99dd2081163c5c3a7737d518ff6227bdeb71d6d71ad460d16f4fd",
+        "publication/results/corrected-minimize-300s-v2/provenance.json": "c62a0c75e4e6e8f097c1ab435233c46330113aaaffbb4918bebc19c596a03a82",
+        "publication/results/corrected-minimize-300s-v2/solver_measurements.csv": "68b8395d2ce4656e72099e673e5a5ab36d0c1b081347cb3934fcd94503b8069b"
+      }
+    }
+  ],
+  "submission": {
+    "id": "36682",
+    "status": "submitted; awaiting peer review (author-reported)",
+    "pdf_sha256": "5dbd1085bf83271b198e348d72cfcef953fdc3b75a17bba1593cb5cdcc474faf",
+    "html_sha256": "f6a0401531387cb157278bd34ae7581ef1cb095a22ae6a9610a80891551d241f",
+    "artifacts_in_git": false
+  }
+}
