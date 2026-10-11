@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "recorded_date": "2026-10-11",
+  "evidence_source": "Author-supplied NPAD terminal output; the repository maintainer did not independently execute the audit on NPAD.",
+  "audit_script_commit": "6b72ad46707273652aa12df45297c33fcce0d0be",
+  "reported_exit_code": 3,
+  "interpretation": "The declared integrity checks passed; retry parameter equivalence failed as expected. This closes the authorized documentary investigation, not the experimental limitation.",
+  "result": {
+    "causal_seed_effect_estimated": false,
+    "cell_diagnostics": {
+      "composite": {
+        "median_duration_s": 325.519229054451,
+        "median_edp_js": 5395754.011401108,
+        "median_energy_j": 16575.73359594972,
+        "telemetry_valid_count": 6
+      },
+      "original": {
+        "median_duration_s": 324.36956810951233,
+        "median_edp_js": 5355285.812304856,
+        "median_energy_j": 16511.088010611,
+        "telemetry_valid_count": 4
+      },
+      "retry": {
+        "median_duration_s": 353.7350835800171,
+        "median_edp_js": 6263024.786988024,
+        "median_energy_j": 17705.404949952885,
+        "telemetry_valid_count": 2
+      }
+    },
+    "cell_diagnostics_region": "0.2",
+    "checks_performed": 135,
+    "composite_summary_sha256_observed": "21b4942de96f4f7f309673933762f3dc646a62696905491370f78253da73ba10",
+    "composite_vs_original_median_change_percent": {
+      "median_duration_s": 0.3544293478698002,
+      "median_edp_js": 0.7556683343261872,
+      "median_energy_j": 0.39152831901310137
+    },
+    "diagnostic_only": true,
+    "failed_checks": [],
+    "integrity_accepted": true,
+    "parameter_differences": [
+      {
+        "fields": ["parameters.seed_effective", "parameters.seed_requested"],
+        "file": "meta_c1_i0_1790777882661.json",
+        "original_seed": 10002,
+        "retry_seed": 10000
+      },
+      {
+        "fields": ["parameters.seed_effective", "parameters.seed_requested"],
+        "file": "meta_c1_i0_1790778277579.json",
+        "original_seed": 10002,
+        "retry_seed": 10000
+      }
+    ],
+    "pipeline_composite_vs_original_median_change_percent": {
+      "median_duration_s": 0.3203690905558165,
+      "median_edp_js": 0.691866316363221,
+      "median_energy_j": 0.3697828298942829
+    },
+    "pipeline_region_0_diagnostics": {
+      "composite": {
+        "median_duration_s": 342.5342891216278,
+        "median_edp_js": 5973150.98798636,
+        "median_energy_j": 17438.008593172228,
+        "telemetry_valid_count": 6
+      },
+      "original": {
+        "median_duration_s": 341.4404195547104,
+        "median_edp_js": 5932108.7258620765,
+        "median_energy_j": 17373.763399215473,
+        "telemetry_valid_count": 4
+      },
+      "retry": {
+        "median_duration_s": 369.3597364425659,
+        "median_edp_js": 6833492.8603404835,
+        "median_energy_j": 18500.89039785879,
+        "telemetry_valid_count": 2
+      }
+    },
+    "publication_artifacts_modified": false,
+    "raw_power_reintegrated": false,
+    "retry_parameter_equivalence": false,
+    "same_contract_valid_count": 4,
+    "scheduler_allocation_equivalence_checked": false,
+    "stored_summary_values_independently_recomputed": false
+  }
+}

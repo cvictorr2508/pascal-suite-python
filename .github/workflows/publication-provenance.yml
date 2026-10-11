@@ -9,6 +9,9 @@ on:
       - "index.qmd"
       - "scripts/check_publication_provenance.py"
       - "tests/test_publication_provenance.py"
+      - "scripts/audit_scip_retry_composition.py"
+      - "tests/test_scip_retry_audit.py"
+      - "docs/scip-retry-audit.md"
       - ".gitattributes"
       - ".github/workflows/publication-provenance.yml"
   workflow_dispatch:
@@ -28,3 +31,5 @@ jobs:
         run: python scripts/check_publication_provenance.py
       - name: Exercise consistency and negative provenance cases
         run: python -m unittest discover -s tests -p test_publication_provenance.py
+      - name: Exercise read-only retry auditing with synthetic evidence
+        run: python -m unittest discover -s tests -p test_scip_retry_audit.py

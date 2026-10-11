@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "review_date": "2026-10-11",
+  "generation_id": "corrected-minimize-300s-v2",
+  "campaign_source_commit": "fbbf7d7178e022ff8cf759d8fd7568359b583cf8",
+  "submission_id": "36682",
+  "affected_configuration": {
+    "solver": "scip",
+    "profile": "default",
+    "workload": "CFL_hard_instance_15.lp.gz",
+    "cores": 1,
+    "original_input_index": 2,
+    "retry_input_index": 0,
+    "original_seed_effective": 10002,
+    "retry_seed_effective": 10000,
+    "original_telemetry_valid_count": 4,
+    "retry_telemetry_valid_count": 2,
+    "required_same_contract_valid_count": 5
+  },
+  "reviewed_files": {
+    "compose_scip_default_i2_retry.py": "a772c307ec7fc9a35002414d582d2d7c697c288e69196ce3ca33dbca26cbdd3a",
+    "composition_manifest.json": "9e3c780d2628efaa72d8f408bcd816fc2d6ba42f427de2fd0219762040c5a03d",
+    "meta_c1_i2_1790777882661.json": "3c1fadda50c099644cab4ac2dd4ced1e6309a8144de97f37185448cd95f02bbd",
+    "meta_c1_i2_1790778277579.json": "ee43721ff7f678f68dec5cd4d293674fdc5d8095760b89e1d3deff100eee7138"
+  },
+  "verified_findings": [
+    "All four supplied file hashes match their previously recorded values.",
+    "The compositor remaps input_idx from 0 to 2 but retains the executed seed 10000.",
+    "Original input 2 metadata records seed 10002; retry metadata records seed 10000.",
+    "The frozen runner derives seed as 10000 plus the local input index.",
+    "Static review found whole-record copying, not numerical adjustment of telemetry.",
+    "The compositor does not enforce parameter equivalence and hard-codes some provenance assertions."
+  ],
+  "verification_boundary": {
+    "full_npad_source_hash_and_record_comparison": "author reports 135 declared checks passed; limited to the audit script scope",
+    "numerical_sensitivity": "affected-cell stored-summary diagnostics reported; no causal seed effect or full aggregate impact estimated",
+    "retry_parameter_equivalence": false,
+    "causal_seed_effect_estimated": false,
+    "complete_physical_chain_certified": false
+  },
+  "documentary_closure": {
+    "status": "completed within authorized scope; known experimental limitation remains",
+    "date": "2026-10-11",
+    "execution_record": "publication/audits/scip-retry-npad-result-20261011.json",
+    "reported_exit_code": 3,
+    "declared_integrity_checks_passed": 135,
+    "post_congress_backlog_resolved": false
+  },
+  "impact_scope": {
+    "directly_affected_comparison_pair": "scip/default/CFL_hard_instance_15.lp.gz/cores=1",
+    "potentially_affected_aggregates": [
+      "SCIP/default profile validity and variability summaries",
+      "Default-profile one-core duration, energy and EDP ratios"
+    ],
+    "gurobi_measurements_modified_by_this_compositor": false,
+    "other_profiles_selected_for_replacement": false,
+    "same_seed_replication_requirement_met": false
+  },
+  "author_editorial_decision": {
+    "date": "2026-10-11",
+    "reported_by": "corresponding author, speaking for the coauthors",
+    "action": "Preserve the submitted article unchanged; author considers its Gurobi-focused contribution unaffected.",
+    "scientific_zero_impact_proven": false,
+    "does_not_override_retry_parameter_finding": true
+  },
+  "post_congress_backlog": [
+    "Separate privacy sanitization from experimental parameter equivalence.",
+    "Make workload identity and effective seed independent of a filtered workload list.",
+    "Fail closed on retry parameter drift, including missing or changed seeds.",
+    "Preserve original, retry and composed evidence as distinct immutable generations.",
+    "Review missing distributed retry provenance, outer PNG checksum and outer report privacy before any separately authorized archive revision."
+  ],
+  "restrictions": {
+    "new_hpc_jobs_authorized": false,
+    "retroactive_seed_edit_authorized": false,
+    "submitted_manuscript_edit_authorized": false,
+    "zenodo_modification_authorized": false,
+    "main_merge_or_pages_publication_authorized": false
+  }
+}

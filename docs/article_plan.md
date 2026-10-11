@@ -20,6 +20,26 @@ gaps separately for possible discussion after peer review.
 
 ## Stable scientific content
 
+### October 11 author decision
+
+The corresponding author, speaking for the coauthors, decided to preserve
+the submitted article unchanged after the SCIP/default retry seed mismatch
+was identified. The author considers the Gurobi-focused contribution
+unaffected. Preserve that decision separately from the technical finding:
+the SCIP-dependent aggregate impact has not been quantified, and same-seed
+replication in the affected cell is not certified. No Quarto, PDF, LaTeX or
+published evidence changes are authorized by this maintenance task.
+Post-congress SCIP work requires a distinct plan and approval, with no
+retroactive seed edits or automatic new jobs.
+
+The author-reported October 11 audit passed 135 declared integrity checks and
+returned the expected exit 3 for seed inequivalence. Affected-cell region-0.2
+median changes were +0.354429% duration, +0.391528% energy and +0.755668% EDP
+relative to the four valid originals. These descriptive diagnostics do not
+estimate a causal seed effect or resolve under-replication. The documentary
+stage is complete within the scope recorded in `docs/scip-retry-audit.md`;
+post-congress experimental and archival work remains deferred.
+
 The submitted study is bounded by:
 
 - explicit minimization after native model import;

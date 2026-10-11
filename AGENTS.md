@@ -42,6 +42,8 @@ Before changing code, experiments, documentation, or the manuscript, read:
   gap, duration, energy, EDP, or solver outcome.
 - A selective retry is allowed only for a failed telemetry-replication cell,
   under the same scientific contract and in a separate immutable output root.
+- Local workload reindexing must not silently change the effective seed.
+  Verify retry parameter equivalence separately from telemetry validity.
 - Treat the 5% median energy-consistency threshold as mandatory and the 10%
   configuration CV threshold as preferred and non-binding, with exceedances
   disclosed.

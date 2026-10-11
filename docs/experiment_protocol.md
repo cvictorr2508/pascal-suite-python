@@ -64,6 +64,8 @@ leaves a configuration below the replication requirement. The retry must:
 - use the same source commit and scientific contract;
 - use the same workload, solver profile, resource treatment, partition, and
   allocation mode;
+- preserve the original requested and effective seed and other solver
+  parameters independently of any local workload-list reindexing;
 - write to a separate output root;
 - be selected chronologically using telemetry validity only;
 - preserve original, retry, and composed evidence with a checksummed
@@ -78,6 +80,14 @@ attempts. The accepted logical matrix remains distinct from the reported
 physical collection count. Inspect the preserved external records read-only
 before asserting that the full physical retry chain is independently verified.
 This finding does not authorize new retries or experiments.
+
+The October 11 follow-up confirmed preservation of the supplied composition
+files but found seed drift from 10002 to 10000 in SCIP/default/instance 15.
+Consequently, the composed cell is telemetry-valid but cannot be certified as
+six repetitions of the original fixed-seed contract. Preserve the historical
+gate output and disclose this limitation in the audit. Do not retroactively
+change metadata to satisfy the contract. Repairing future retry admission is
+a post-congress task, not authorization for new HPC runs now.
 
 ## Reproducible execution sequence
 
