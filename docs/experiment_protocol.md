@@ -72,6 +72,13 @@ leaves a configuration below the replication requirement. The retry must:
 Never select a retry by solver status, objective, bound, gap, node count,
 duration, energy, or EDP. Never overwrite the original matrix.
 
+The October 10 documentary audit found that the public v2.0.0 archive does not
+include the standalone composition manifest or the two replaced original
+attempts. The accepted logical matrix remains distinct from the reported
+physical collection count. Inspect the preserved external records read-only
+before asserting that the full physical retry chain is independently verified.
+This finding does not authorize new retries or experiments.
+
 ## Reproducible execution sequence
 
 1. Verify the intended source commit, clean tracked worktree, Python 3.13

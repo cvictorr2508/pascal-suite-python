@@ -67,6 +67,21 @@ Large evidence remains outside Git. The repository stores the code, contracts,
 processed publication data, documentation, and persistent identifiers needed
 to reconstruct the evidence chain.
 
+### Generation-aware interpretation
+
+The October 10 audit identified coexistence of historical source-sense results
+and corrected explicit-minimization/300-second results. Do not treat the
+unqualified path `publication/results/` as proof of the current generation.
+Resolve a result's generation, campaign source commit, contract, and checksum
+before citing it. The software release commit and campaign execution commit
+are separate identifiers.
+
+An accepted processed-result gate does not certify complete distributed raw
+provenance. The corrected dataset has pending outer-PNG checksum, retry-chain,
+and sanitization documentation issues. Preserve published evidence and record
+these gaps rather than silently repairing it or inferring a numerical error
+in the submitted manuscript.
+
 ## Public research objects
 
 - Software concept DOI: <https://doi.org/10.5281/zenodo.22695373>.

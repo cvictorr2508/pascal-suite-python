@@ -75,3 +75,8 @@ Before changing code, experiments, documentation, or the manuscript, read:
 - Keep commands reproducible and non-destructive. Ask before publishing,
   releasing, merging, deleting evidence, cancelling jobs, or changing a
   scientific acceptance rule.
+- Resolve the experimental generation before using a processed result. Never
+  replace historical CSVs with corrected values under the same identifier.
+- Distinguish numerical consistency, telemetry validity, and completeness of
+  the distributed physical provenance chain. Do not mark missing retry records
+  verified merely because the logical matrix gate passed.
