@@ -250,6 +250,7 @@ def validate_snapshot(snapshot: dict) -> dict:
         "paired_configurations": len(pairs),
         "logical_attempts": 360,
         "archival_chain_complete": False,
+        "retry_parameter_equivalence_checked": False,
         "preferred_cv_exceedances": [
             f"{s}/{p}"
             for (s, p), r in validity.items()

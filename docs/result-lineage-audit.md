@@ -82,6 +82,17 @@ corrections require a separate author decision after investigation.
 
 ## Automated checks and remaining decisions
 
+### October 11 follow-up
+
+PRs #29, #30 and #28 were merged into `develop`. Subsequent author-supplied
+NPAD records and files verified the preserved composition manifest and the
+two composed retry metadata hashes. A new parameter mismatch was identified:
+original SCIP/default/instance-15 seed 10002 versus retry seed 10000. Numerical
+consistency and historical gate acceptance do not certify equivalent retries.
+See [the follow-up audit](scip-retry-audit.md) for the verification boundary,
+read-only diagnostic and post-congress backlog. The author's decision to keep
+the submitted article unchanged is recorded separately from this finding.
+
 Run `python scripts/check_publication_provenance.py`. Optionally add
 `--submission-pdf <preserved-PDF>` and `--submission-html <preserved-HTML>` to
 verify the local submission copies without copying or editing them.
@@ -93,7 +104,7 @@ reported precision. It deliberately returns `archival_chain_complete=false`.
 It does not reread raw RAPL samples or infer solver quality from an accepted
 telemetry gate.
 
-Pending author decisions are the manual merges into `develop`, whether the
+Pending author decisions are whether the
 operational-memory documents should ever be promoted to `main`, and whether a
 future archive correction should address the PNG checksum, missing retry chain,
 and outer-report sanitization. The live manuscript's software-version wording

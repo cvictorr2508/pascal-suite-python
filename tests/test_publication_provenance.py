@@ -25,6 +25,7 @@ class PublicationProvenanceTests(unittest.TestCase):
         self.assertEqual(result["paired_configurations"], 15)
         self.assertEqual(result["configurations"], 60)
         self.assertFalse(result["archival_chain_complete"])
+        self.assertFalse(result["retry_parameter_equivalence_checked"])
         self.assertEqual(result["preferred_cv_exceedances"], ["scip/presolve-off"])
 
     def test_checksum_tampering_is_rejected(self):

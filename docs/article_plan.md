@@ -20,6 +20,18 @@ gaps separately for possible discussion after peer review.
 
 ## Stable scientific content
 
+### October 11 author decision
+
+The corresponding author, speaking for the coauthors, decided to preserve
+the submitted article unchanged after the SCIP/default retry seed mismatch
+was identified. The author considers the Gurobi-focused contribution
+unaffected. Preserve that decision separately from the technical finding:
+the SCIP-dependent aggregate impact has not been quantified, and same-seed
+replication in the affected cell is not certified. No Quarto, PDF, LaTeX or
+published evidence changes are authorized by this maintenance task.
+Post-congress SCIP work requires a distinct plan and approval, with no
+retroactive seed edits or automatic new jobs.
+
 The submitted study is bounded by:
 
 - explicit minimization after native model import;

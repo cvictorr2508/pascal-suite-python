@@ -1,6 +1,6 @@
 # Current research status
 
-Last reviewed: 2026-10-10.
+Last reviewed: 2026-10-11.
 
 ## Executive status
 
@@ -22,8 +22,8 @@ separately approved material correction.
 | Object | Status |
 | --- | --- |
 | Corrected solver contract | Explicit minimization and matched 300-second budget validated |
-| Controlled matrices | Gurobi and SCIP profile matrices accepted under the declared gates |
-| Controlled comparison | Accepted for the bounded one-core fixed-budget comparison |
+| Controlled matrices | Historical gates passed; SCIP/default retry seed equivalence failed in the October 11 audit |
+| Controlled comparison | Recorded gate passed; affected SCIP/default pair requires parameter-equivalence qualification |
 | Software | Version 0.2.0 published; DOI `10.5281/zenodo.23082727` |
 | Dataset | Corrected version 2.0.0 published; DOI `10.5281/zenodo.23071850` |
 | Viewer integration | GitLab MR !15 merged and publicly deployed |
@@ -79,22 +79,40 @@ chain until the missing records have been checked.
 
 ## Integration and approval state
 
-- PR #29 proposes the seven existing `main` commits into `develop`; no merge
-  has been performed. At inspection, `develop` was an ancestor of `main`.
-- The independent `data/47-result-lineage` PR targets `develop` and preserves
-  old results. Its numerical-consistency checks are not raw-telemetry or
-  solution-quality certification.
-- PR #28 (`docs/46-research-memory`) also targets `develop`. Keep it separate
-  from result data and from manuscript publication.
-- Recommended manual integration order: history synchronization, result
-  lineage, operational memory. Review each independently and revalidate
-  integration against the then-current base before merging.
+- PRs #29 (history synchronization), #30 (result lineage) and #28 (operational
+  memory) were reviewed and merged into `develop`, verified through GitHub.
+- The October 11 retry audit is a separate maintenance change based on
+  `develop`. It does not replace historical or corrected published results.
 - Promotion of the operational memory to `main` remains an explicit author
   decision. Zenodo corrections, new archival versions, and any future Pages
   deployment require separate authorization.
 
 Editorial status is author-reported as awaiting peer review; a fresh JEMS
 decision has not been independently retrieved. Preserve submission ID 36682.
+
+## October 11 retry finding and author decision
+
+Preserved NPAD output and four supplied files confirm that the six original
+SCIP/default/instance-15 attempts used seed 10002, while two valid retries used
+seed 10000. The compositor remapped local input index 0 to 2 without changing
+the executed seed. The same-seed original cell retains four valid attempts,
+below the requirement of five. Accepted telemetry is not proof of identical
+experimental parameters. The old numerical-consistency check does not check
+retry parameter equivalence.
+
+The author authorized read-only chain checking, stored-summary diagnostics,
+documentation and offline negative tests. Full NPAD source-hash/record
+comparison and numerical sensitivity remain pending author-executed output.
+See [SCIP retry audit](scip-retry-audit.md) and
+`publication/audits/scip-retry-seed-20261011.json`.
+
+Speaking for the coauthors, the author decided to keep submission 36682
+unchanged because of its Gurobi focus. This is an editorial decision, not
+proof of zero effect on every SCIP-dependent statistic. No manuscript edits,
+new jobs, artificial seed correction, Zenodo changes or public deployment are
+authorized. Defer stable workload/seed handling, strict retry admission and
+SCIP archival/privacy sanitization to post-congress planning under separate
+authorization. Preserve every original and retry record.
 
 ## Restart triggers
 
