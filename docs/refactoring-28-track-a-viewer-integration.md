@@ -97,3 +97,15 @@ established the component-level TRL 5 MVP. End-to-end Viewer integration was the
 remaining step toward the bounded TRL 6 demonstration and was subsequently
 validated in the separate Viewer repository.
 
+## Merge and public deployment
+
+The sampled-energy integration was merged through
+[GitLab MR !15](https://gitlab.com/lappsufrn/pascalsuite-viewer/-/merge_requests/15)
+into
+[`ang-pascal-viewer`](https://gitlab.com/lappsufrn/pascalsuite-viewer/-/tree/ang-pascal-viewer)
+on 1 October 2026. GitLab records squash commit `db78d7ea` and a passing
+deployment pipeline. The
+[public PaScal Viewer page](https://pascalsuite.imd.ufrn.br/viewer/) provides
+access to the
+[deployed Angular version](https://pascalsuite.imd.ufrn.br/dev-ang-pascal-viewer/).
+

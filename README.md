@@ -308,7 +308,13 @@ results.
 The wrapper requests both global energy (`--rple`) and sampled RAPL power
 (`--rpls`). The PaScal Viewer integrates the sampled series over the union of
 region intervals and displays Energy and EDP without modifying the uploaded
-JSON. Viewer integration is maintained in a separate repository.
+JSON. The sampled-energy adaptation was merged through
+[GitLab MR !15](https://gitlab.com/lappsufrn/pascalsuite-viewer/-/merge_requests/15)
+into the Viewer
+[`ang-pascal-viewer` branch](https://gitlab.com/lappsufrn/pascalsuite-viewer/-/tree/ang-pascal-viewer)
+as squash commit `db78d7ea`, with a passing deployment pipeline. The
+[public PaScal Viewer page](https://pascalsuite.imd.ufrn.br/viewer/) links to
+the [deployed Angular version](https://pascalsuite.imd.ufrn.br/dev-ang-pascal-viewer/).
 
 ## Testing
 
@@ -338,20 +344,22 @@ Merges to `main` publish the HTML manuscript through GitHub Pages at
 <https://cvictorr2508.github.io/pascal-suite-python/>. GitHub Pages must be
 configured to use **GitHub Actions** as its source.
 
-Release `v0.1.0` is archived on Zenodo under the version DOI
-[10.5281/zenodo.22695374](https://doi.org/10.5281/zenodo.22695374). Cite the
-concept DOI [10.5281/zenodo.22695373](https://doi.org/10.5281/zenodo.22695373)
-when referring to the software across versions. This source archive is distinct
-from raw HPC telemetry, restricted solver material, and benchmark archives,
-which remain outside Git. Checksummed portable evidence is the shareable
-archival unit for the validated campaigns.
+The historical `v0.1.0` release is archived on Zenodo under version DOI
+[10.5281/zenodo.22695374](https://doi.org/10.5281/zenodo.22695374). Release
+`v0.2.0` introduces the corrected explicit-minimization and fixed-budget
+evidence contract. Cite the stable software concept DOI
+[10.5281/zenodo.22695373](https://doi.org/10.5281/zenodo.22695373) when referring
+to the software across versions, and the version DOI shown by Zenodo when exact
+release reproducibility is required. Software archives remain distinct from raw
+HPC telemetry, restricted solver material, and benchmark archives, which stay
+outside Git. Checksummed portable evidence is the shareable archival unit for
+the validated campaigns.
 
 Machine-readable processed results reported by the manuscript are published in
 [the publication data directory](publication/README.md). They include matrix
-validity, controlled one-core comparisons, and campaign provenance. Because the
-v0.1.0 archive predates these files, they will first appear on Zenodo in the
-next reviewed software release; a separate evidence dataset will preserve the
-sanitized per-run package.
+validity, controlled one-core comparisons, and campaign provenance. They first
+appear in the reviewed `v0.2.0` software release; a separate Zenodo dataset
+preserves the sanitized per-run package and controlled-comparison outputs.
 
 ## Bibliography provenance
 
