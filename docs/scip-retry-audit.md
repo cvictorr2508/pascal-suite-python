@@ -70,10 +70,43 @@ parameters. It reports original/retry/composite region-0 and region-0.2 medians
 from existing valid-run summaries, not from a new power integration. Original four-run statistics are
 under-replicated diagnostics, not a newly accepted comparison. Their changes
 cannot isolate a causal seed effect from run timing, hardware or other factors.
-Full NPAD execution remains pending until the author returns its output.
+The author returned the NPAD output on October 11; the reported execution and
+its verification boundaries are recorded below.
 The composite summary's observed hash is printed for comparison with the
 preserved checksum list. Stored summary measurements are not independently
 recomputed and scheduler allocation equivalence is outside this narrow check.
+
+## Documentary closure, October 11
+
+The author-reported execution of the script at commit `6b72ad4` performed 135
+declared integrity checks with no failed checks. It returned exit 3 because
+retry parameter equivalence remains false, not because the audit crashed.
+The complete supplied JSON result is preserved in
+`publication/audits/scip-retry-npad-result-20261011.json`. This is a transcript
+record of the author's execution, not an independent NPAD run by the maintainer.
+
+For the affected cell, changes from the four valid originals to the six valid
+composed observations are:
+
+| Region | Median duration change (%) | Median energy change (%) | Median EDP change (%) |
+| --- | ---: | ---: | ---: |
+| 0.2, optimization | 0.354429 | 0.391528 | 0.755668 |
+| 0, pipeline | 0.320369 | 0.369783 | 0.691866 |
+
+These are descriptive stored-summary diagnostics. The original four-run group
+is under-replicated; the changes neither identify a causal seed effect nor
+prove zero impact on all article claims or profile-level aggregates. Six
+telemetry-valid composed observations still include two different-seed retries;
+the same-contract count remains four, below five.
+
+The observed composed-summary SHA-256 is
+`21b4942de96f4f7f309673933762f3dc646a62696905491370f78253da73ba10`.
+No raw power was reintegrated, stored measurements independently recomputed,
+scheduler allocation equivalence checked, or complete physical chain certified.
+The authorized documentary investigation is complete within these boundaries.
+The seed mismatch and archival/privacy backlog remain open for post-congress
+planning; no further PR or experiment is required to close this maintenance
+stage. The author authorized completing PR #31 and merging it into `develop`.
 
 ## Post-congress backlog and boundaries
 
@@ -86,5 +119,6 @@ workload identity and explicit effective seeds when preparing a filtered retry.
 Add fail-closed checks for seed and other parameter differences before admitting
 retries, then review archival completeness and privacy. Keep original and
 corrected generations distinct. Any future experiments or Zenodo revision need
-new explicit authorization. No new jobs, retroactive seed edits, automatic
-merges, public deployment or article edits are authorized now.
+new explicit authorization. The PR #31 merge authorization is limited to
+`develop`; no new jobs, retroactive seed edits, `main` merge, public deployment
+or article edits are authorized now.

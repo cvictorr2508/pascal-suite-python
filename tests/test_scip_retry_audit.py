@@ -319,6 +319,48 @@ class RetryAuditTests(unittest.TestCase):
 
 
 class RecordedFindingTests(unittest.TestCase):
+    def test_reported_npad_closure_preserves_boundaries_and_diagnostics(self):
+        record = json.loads(
+            (ROOT / "publication/audits/scip-retry-npad-result-20261011.json")
+            .read_text()
+        )
+        result = record["result"]
+        self.assertEqual(record["reported_exit_code"], 3)
+        self.assertEqual(result["checks_performed"], 135)
+        self.assertEqual(result["failed_checks"], [])
+        self.assertTrue(result["integrity_accepted"])
+        self.assertTrue(result["diagnostic_only"])
+        self.assertEqual(result["same_contract_valid_count"], 4)
+        for boundary in (
+            "retry_parameter_equivalence",
+            "causal_seed_effect_estimated",
+            "publication_artifacts_modified",
+            "raw_power_reintegrated",
+            "scheduler_allocation_equivalence_checked",
+            "stored_summary_values_independently_recomputed",
+        ):
+            self.assertFalse(result[boundary], boundary)
+        self.assertEqual(len(result["parameter_differences"]), 2)
+        for difference in result["parameter_differences"]:
+            self.assertEqual(difference["original_seed"], 10002)
+            self.assertEqual(difference["retry_seed"], 10000)
+        for diagnostics_key, changes_key in (
+            ("cell_diagnostics", "composite_vs_original_median_change_percent"),
+            (
+                "pipeline_region_0_diagnostics",
+                "pipeline_composite_vs_original_median_change_percent",
+            ),
+        ):
+            diagnostics = result[diagnostics_key]
+            for group, count in (("original", 4), ("retry", 2), ("composite", 6)):
+                self.assertEqual(diagnostics[group]["telemetry_valid_count"], count)
+            for metric, change in result[changes_key].items():
+                recomputed = 100 * (
+                    diagnostics["composite"][metric]
+                    / diagnostics["original"][metric] - 1
+                )
+                self.assertAlmostEqual(recomputed, change, places=10)
+
     def test_audit_record_does_not_claim_zero_scientific_impact(self):
         record = json.loads(
             (ROOT / "publication/audits/scip-retry-seed-20261011.json").read_text()

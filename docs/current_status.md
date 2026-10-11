@@ -12,9 +12,10 @@ on HPC Systems` was submitted as submission 36682 and is awaiting peer review.
 
 The author authorized a limited maintenance sprint on October 10: propose
 `main` to `develop` history synchronization, reconcile result generations in
-an independent PR, and update this operational memory. No automatic merges,
-Pages publication, Zenodo changes, manuscript edits, or new HPC runs are
-authorized. Scientific revisions remain deferred until peer review or a
+an independent PR, and update this operational memory. On October 11 the author
+additionally authorized completing PR #31 and merging it into `develop` after
+validation. No `main` merge, Pages publication, Zenodo changes, manuscript edits,
+or new HPC runs are authorized. Scientific revisions remain deferred until peer review or a
 separately approved material correction.
 
 ## Verified milestones
@@ -81,8 +82,9 @@ chain until the missing records have been checked.
 
 - PRs #29 (history synchronization), #30 (result lineage) and #28 (operational
   memory) were reviewed and merged into `develop`, verified through GitHub.
-- The October 11 retry audit is a separate maintenance change based on
-  `develop`. It does not replace historical or corrected published results.
+- The October 11 retry audit is a separate maintenance change, PR #31, based on
+  `develop`. Its documentary closure and merge into `develop` were explicitly
+  authorized. It does not replace historical or corrected published results.
 - Promotion of the operational memory to `main` remains an explicit author
   decision. Zenodo corrections, new archival versions, and any future Pages
   deployment require separate authorization.
@@ -100,9 +102,17 @@ below the requirement of five. Accepted telemetry is not proof of identical
 experimental parameters. The old numerical-consistency check does not check
 retry parameter equivalence.
 
-The author authorized read-only chain checking, stored-summary diagnostics,
-documentation and offline negative tests. Full NPAD source-hash/record
-comparison and numerical sensitivity remain pending author-executed output.
+The author returned the read-only NPAD audit output: all 135 declared integrity
+checks passed, with exit 3 retaining the expected seed-equivalence failure.
+The affected-cell region-0.2 composite medians differ from the four valid
+originals by +0.354429% duration, +0.391528% energy and +0.755668% EDP. These
+stored-summary diagnostics do not estimate a causal seed effect or full
+aggregate impact. Same-contract valid count remains four. The narrow documentary
+investigation is complete; the experimental limitation is not resolved. The
+author-reported output is preserved in
+`publication/audits/scip-retry-npad-result-20261011.json`; no independent NPAD
+execution, raw-power reintegration, scheduler-equivalence check or full
+physical-chain certification is claimed.
 See [SCIP retry audit](scip-retry-audit.md) and
 `publication/audits/scip-retry-seed-20261011.json`.
 

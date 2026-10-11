@@ -32,11 +32,19 @@
     "The compositor does not enforce parameter equivalence and hard-codes some provenance assertions."
   ],
   "verification_boundary": {
-    "full_npad_source_hash_and_record_comparison": "pending author-executed read-only audit",
-    "numerical_sensitivity": "pending stored-summary diagnostic",
+    "full_npad_source_hash_and_record_comparison": "author reports 135 declared checks passed; limited to the audit script scope",
+    "numerical_sensitivity": "affected-cell stored-summary diagnostics reported; no causal seed effect or full aggregate impact estimated",
     "retry_parameter_equivalence": false,
     "causal_seed_effect_estimated": false,
     "complete_physical_chain_certified": false
+  },
+  "documentary_closure": {
+    "status": "completed within authorized scope; known experimental limitation remains",
+    "date": "2026-10-11",
+    "execution_record": "publication/audits/scip-retry-npad-result-20261011.json",
+    "reported_exit_code": 3,
+    "declared_integrity_checks_passed": 135,
+    "post_congress_backlog_resolved": false
   },
   "impact_scope": {
     "directly_affected_comparison_pair": "scip/default/CFL_hard_instance_15.lp.gz/cores=1",
