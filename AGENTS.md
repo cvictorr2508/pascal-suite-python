@@ -17,6 +17,25 @@ Before changing code, experiments, documentation, or the manuscript, read:
 4. `docs/article_plan.md` for the submission and peer-review workflow;
 5. the narrower implementation document relevant to the requested change.
 
+## Current operating authorization
+
+The author authorized autonomous development in the user's Codex area and on
+GitHub on 26 October 2026, including branch, commit and PR preparation. Request
+explicit approval before every merge and every NPAD execution. This does not
+turn a proposed scientific protocol into an executed or validated result.
+
+- Store any local development artifacts under `C:\Users\cvict\.codex`, not in
+  the OneDrive `Temp Codex/pascal-suite-python` directory or the old source clone.
+- Keep private correspondence and reviewer text outside the public repository.
+- Do not create anything under `/home/vrrcelestino` on NPAD, including code,
+  worktrees, evidence, temporary files, caches, logs and generated manifests.
+- Before requesting NPAD execution approval, specify exact authorized code,
+  evidence, scratch/cache and log roots outside that prohibited path, commands,
+  resource limits and outputs. Include implicit Python, solver, build and Slurm
+  outputs in the path review. Do not run remote probes before approval.
+- Directory names in a screenshot and historical checkpoint paths do not
+  establish approved absolute destinations. Do not invent their parent paths.
+
 ## Branch and publication policy
 
 - Use a narrowly scoped branch and pull request for every change.
