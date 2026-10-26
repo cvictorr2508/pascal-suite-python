@@ -1,6 +1,30 @@
 # Current research status
 
-Last reviewed: 2026-10-11.
+Last reviewed: 2026-10-26.
+
+## Journal planning update on October 26
+
+The author supplied the WPADS 2026 decision: submission 36682 was not accepted.
+The supplied notification includes review material, retained privately. The
+current next step is planning a new submission to Sustainable Computing:
+Informatics and Systems; no experimental campaign or journal submission is
+approved by this status update. See [the journal development plan](journal-development-plan.md)
+for the proposed contribution, staged PRs, measurement validation and resource gates.
+
+The author permits autonomous development in the Codex area and on GitHub.
+Explicit approval is required before a merge or NPAD execution. Do not create
+anything under `/home/vrrcelestino`; use explicit authorized code/evidence,
+scratch/cache and log roots in the future execution packet. Folder names in a
+screenshot do not establish their absolute paths.
+
+Development should be recorded primarily in GitHub PRs against `develop`.
+Any local development artifacts belong under the user's Codex area, not in the
+OneDrive temporary-materials directory. Preserve the submitted artifacts,
+legacy generations and public `main`/Pages state.
+
+The remaining sections preserve the October 11 baseline and its historical
+authorizations. Their pending-review statements describe that earlier date;
+they are superseded by this update for current editorial status.
 
 ## Executive status
 
