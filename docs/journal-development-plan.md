@@ -4,7 +4,7 @@ Prepared on 26 October 2026. Target: Sustainable Computing: Informatics and Syst
 
 The next research contribution should establish when regional energy measurements around native optimization calls are reliable, what instrumentation costs, and how the measurements support a bounded energy and solution-quality comparison. The conference prototype supplies software and exploratory evidence. A journal submission requires a validated method and new evidence.
 
-This document is a proposed research and development sequence. The current change records planning and the updated publication route. It does not approve experiments, HPC access, solver runs, scientific acceptance thresholds, releases, public deployment, or submission.
+This document is a proposed research and development sequence. On 26 October the author authorized autonomous work in the user's Codex area and on GitHub, including preparation of development branches and PRs. Request explicit approval before any merge or any NPAD execution. This documentation change starts no measurement campaign or submission. Experimental thresholds and budgets are proposals to resolve in the concrete pre-execution packet.
 
 ## Publication route and preserved baseline
 
@@ -158,12 +158,20 @@ Keep source, tests, contracts, documentation, compact processed tables and check
 
 Protect the existing WPADS manuscript and public `main`/Pages state. Future journal sources should live in a separate manuscript directory and must not overwrite `index.qmd` as a migration shortcut. English remains the language of repository documentation and PRs.
 
+### NPAD directory and execution rule
+
+Do not create anything under `/home/vrrcelestino`. This includes checkouts, worktrees, evidence, temporary files, caches, logs and generated manifests. Historical paths in older checkpoints are not approved destinations for new work.
+
+The supplied screenshot identifies directory names such as `pascal-suite-python`, `pascal-suite-python-evidence`, `pascal-suite-python-worktrees` and `pascal-suite-python-archive`, but it does not establish their absolute paths. Do not infer a home, scratch or project parent from those names.
+
+Before requesting NPAD execution approval, prepare the exact commands and explicit authorized code, evidence, scratch/cache and log roots; demonstrate that none create files beneath the prohibited home path; include resource/walltime/memory/retry limits and expected outputs. Apply the same rule to implicit Python, solver, build and scheduler outputs. Do not test a connection or run remote inspection commands as a substitute for execution approval.
+
 ## Decisions and next bounded task
 
 The next recommended implementation is P1: stable workload and replicate identity with an explicit seed contract, followed by P2 strict retry admission. It removes a known scientific failure mode before investment in new measurement. Do not repeat the closed legacy NPAD audit.
 
-Before authorizing that task, settle only the decisions that affect its behavior: preserve fixed-seed repeatability or introduce a versioned per-replicate seed schedule; required identity fields; and backward-compatible handling of old records. Resource availability and experimental ceilings can be decided later, before the pilot.
+Autonomous preparation of that development PR is authorized. Start with a backward-compatible policy that preserves each intended replicate's effective seed independently of local workload order; keep a future multi-seed schedule explicit and versioned rather than silently changing the historical design. Define the identity fields and old-record behavior in the PR for review. Resource availability and experimental ceilings can be resolved in the pre-execution packet before the pilot.
 
-A future P1 instruction should name the base commit/branch, exact schema/adapter/runner/CLI scope, negative tests, backward-compatibility expectations and stop condition. It must exclude solvers, HPC, retrospective metadata repair, manuscript edits, release and deployment. This planning PR does not start P1.
+A future P1 instruction should name the base commit/branch, exact schema/adapter/runner/CLI scope, negative tests, backward-compatibility expectations and stop condition. It must exclude solvers, HPC, retrospective metadata repair, manuscript edits, release and deployment. This planning PR does not implement P1; a separate focused development PR can be prepared autonomously.
 
-Before a pilot, the researchers must also approve the dual-solver scope, reference-measurement availability, hardware/resource limits, measurement tolerances and statistical protocol. Merge, resource execution and publication remain separate decisions.
+Before a pilot, present the dual-solver scope, reference-measurement availability, exact non-home directory roots, hardware/resource limits, measurement tolerances and statistical protocol in one reviewable NPAD execution packet. Request approval for that execution and for every merge. This plan does not initiate journal submission or public deployment.
