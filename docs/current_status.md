@@ -11,6 +11,12 @@ Informatics and Systems; no experimental campaign or journal submission is
 approved by this status update. See [the journal development plan](journal-development-plan.md)
 for the proposed contribution, staged PRs, measurement validation and resource gates.
 
+The author permits autonomous development in the Codex area and on GitHub.
+Explicit approval is required before a merge or NPAD execution. Do not create
+anything under `/home/vrrcelestino`; use explicit authorized code/evidence,
+scratch/cache and log roots in the future execution packet. Folder names in a
+screenshot do not establish their absolute paths.
+
 Development should be recorded primarily in GitHub PRs against `develop`.
 Any local development artifacts belong under the user's Codex area, not in the
 OneDrive temporary-materials directory. Preserve the submitted artifacts,
