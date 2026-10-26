@@ -5,8 +5,12 @@
 Title: `Reproducible Regional Energy Telemetry for Mathematical Optimization
 Solvers on HPC Systems`.
 
-Venue: WPADS 2026. Submission identifier: 36682. Status as of 2026-10-10:
-submitted and awaiting peer review, as reported by the author.
+Venue of the original submission: WPADS 2026. Submission identifier: 36682.
+On 2026-10-26 the author supplied the decision that the submission was not
+accepted. The notification includes review material, retained privately.
+The current route is planning a new submission to Sustainable Computing:
+Informatics and Systems. See [the journal development plan](journal-development-plan.md)
+for scope, evidence needs, staged changes and resource decisions.
 
 The submitted PDF and submission-system export are immutable records. The
 Quarto manuscript is the maintained repository source, but changes made after
@@ -118,7 +122,9 @@ When reviews arrive:
   policy.
 - Submitted and revised artifacts have distinct filenames and checksums.
 
-Until a review decision arrives, preserve the submission and limit work to the
-authorized generation reconciliation and operational-memory maintenance. Any
-scientific revision, public promotion, archival change, or additional campaign
-requires a separate decision.
+The WPADS decision is now available. Preserve that submission as a historical
+record and prepare future journal sources separately. The current task records
+journal planning; implementation, measurement protocols, resource use, merge,
+public promotion, archival changes and submission remain separate decisions.
+Do not treat the historical October 11 permissions as authorization for a
+new campaign.
