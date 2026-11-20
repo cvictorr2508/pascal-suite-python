@@ -1,0 +1,199 @@
+{
+  "schema_version": 1,
+  "generation_id": "corrected-minimize-300s-v2",
+  "campaign_id": "run-20260928T201840Z",
+  "submission_id": "36682",
+  "dataset_version_doi": "10.5281/zenodo.23071850",
+  "software_version_doi": "10.5281/zenodo.23082727",
+  "software_release_commit": "7e9735808b8ca5f45732d7254a20028d187493bd",
+  "campaign_source_commit": "fbbf7d7178e022ff8cf759d8fd7568359b583cf8",
+  "contract": {
+    "objective_sense": "minimize",
+    "paired_resources": [
+      1
+    ],
+    "performance_claim_status": "controlled-comparison",
+    "profiles": [
+      "default",
+      "presolve-off",
+      "warm-start"
+    ],
+    "region_id": "0.2",
+    "region_semantics": "solve execution",
+    "solver_time_limit_s": 300
+  },
+  "gate": {
+    "accepted": true,
+    "common_one_core_configurations_complete": true,
+    "dataset_fingerprints_match": true,
+    "effective_objective_sense_match": true,
+    "exclusive_allocation_verified": true,
+    "input_matrices_accepted": true,
+    "performance_comparison_eligible": true,
+    "profile_contract_matches": true,
+    "same_partition": true,
+    "source_worktrees_clean": true,
+    "time_budget_match": true
+  },
+  "dataset": {
+    "fingerprints_match": true,
+    "workloads": [
+      {
+        "name": "CFL_hard_instance_10.lp.gz",
+        "sha256": "af80d09064bd9ed9c497ef37b43afad7b3e4b7ea97c7a6553997d1b0075d32f8",
+        "size_bytes": 135812992
+      },
+      {
+        "name": "CFL_hard_instance_15.lp.gz",
+        "sha256": "4b4302ee25c63ae92d105087f33b614aa35acc08f300775390e5e4942655ec57",
+        "size_bytes": 135836613
+      },
+      {
+        "name": "CFL_hard_instance_20.lp.gz",
+        "sha256": "9f95036756be3ce65eb93a5ed6f629d168c0e45a504deca8308650ab29e6b4e1",
+        "size_bytes": 135823234
+      },
+      {
+        "name": "CFL_hard_instance_25.lp.gz",
+        "sha256": "d615e368236abf98cf8bc0a7deb1dddb50b764d263e099b7174a267b900c292c",
+        "size_bytes": 135856517
+      },
+      {
+        "name": "CFL_hard_instance_5.lp.gz",
+        "sha256": "7f0b9a9d11ed28eae8ec295035c507e00477387114b510c984811131873d9454",
+        "size_bytes": 135846967
+      }
+    ]
+  },
+  "inputs": {
+    "gurobi": {
+      "source": {
+        "capture_method": "submission-environment",
+        "git_branch": "fix/41-explicit-minimization-contract",
+        "git_commit": "fbbf7d7178e022ff8cf759d8fd7568359b583cf8",
+        "tracked_worktree_clean": true
+      },
+      "allocation": {
+        "explicit_policy_recorded": true,
+        "partition": "intel-128",
+        "requested_mode": "exclusive",
+        "scheduler_exclusive": null,
+        "scheduler_oversubscribe": "NO"
+      },
+      "resources": [
+        1,
+        2,
+        4
+      ],
+      "repetitions": 6,
+      "research_manifest": {
+        "name": "research_manifest.json",
+        "sha256": "2291d6476adc16cc9eec0c9140ebe2251937496f354bcd048dd22339bc50bb93",
+        "size_bytes": 6177
+      },
+      "profile_summary": {
+        "name": "profile_matrix_summary.json",
+        "sha256": "baca683ccd90073c9d725c0f07c0b525efe47caf0d263720a33dd148a46dbbc9",
+        "size_bytes": 389849
+      },
+      "solver_status_counts": {
+        "default": {
+          "TIME_LIMIT": 90
+        },
+        "presolve-off": {
+          "TIME_LIMIT": 90
+        },
+        "warm-start": {
+          "TIME_LIMIT": 90
+        }
+      }
+    },
+    "scip": {
+      "source": {
+        "capture_method": "submission-environment",
+        "git_branch": "fix/41-explicit-minimization-contract",
+        "git_commit": "fbbf7d7178e022ff8cf759d8fd7568359b583cf8",
+        "tracked_worktree_clean": true
+      },
+      "allocation": {
+        "explicit_policy_recorded": true,
+        "partition": "intel-128",
+        "requested_mode": "exclusive",
+        "scheduler_exclusive": null,
+        "scheduler_oversubscribe": "NO"
+      },
+      "resources": [
+        1
+      ],
+      "repetitions": 6,
+      "research_manifest": {
+        "name": "research_manifest.json",
+        "sha256": "d7b142970a4c98213442b63baeee72e6af58c1baf9848fec86e74878962cee40",
+        "size_bytes": 6817
+      },
+      "profile_summary": {
+        "name": "profile_matrix_summary.json",
+        "sha256": "21b4942de96f4f7f309673933762f3dc646a62696905491370f78253da73ba10",
+        "size_bytes": 137765
+      },
+      "solver_status_counts": {
+        "default": {
+          "timelimit": 30
+        },
+        "presolve-off": {
+          "timelimit": 30
+        },
+        "warm-start": {
+          "timelimit": 30
+        }
+      }
+    }
+  },
+  "counts": {
+    "logical_attempts": 360,
+    "physical_attempts_reported": 362,
+    "valid_logical_attempts": 336,
+    "invalid_logical_attempts": 24,
+    "paired_configurations": 15
+  },
+  "retry": {
+    "job_id": "2135641",
+    "solver": "scip",
+    "profile": "default",
+    "instance_id": 15,
+    "original_input_index": 2,
+    "retry_input_index": 0,
+    "physical_retry_attempts": 2,
+    "replaced_original_run_keys": [
+      "1;2;2",
+      "1;2;3"
+    ],
+    "selected_retry_run_keys": [
+      "1;0;1",
+      "1;0;2"
+    ],
+    "selection_policy": "chronological; telemetry validity only",
+    "distributed_composition_manifest_present": false,
+    "full_physical_chain_independently_verified": false
+  },
+  "public_source_files": [
+    {
+      "name": "dual_solver_comparison.json",
+      "sha256": "a799ed44b0be5001ac71ca0b1ef59bc3269f369a554235ae92509d7876b425f8"
+    },
+    {
+      "name": "solver_measurements.csv",
+      "sha256": "68b8395d2ce4656e72099e673e5a5ab36d0c1b081347cb3934fcd94503b8069b"
+    },
+    {
+      "name": "paired_one_core_comparisons.csv",
+      "sha256": "9a6d1bf09cf8091ca4f80c230eb72c1a06dd602d7e5f4a542262d41909dc328d"
+    }
+  ],
+  "limitations": [
+    "This is a compact, path-neutral provenance extract, not the original comparison JSON.",
+    "Validity aggregates are transcribed from the accepted matrix summaries and cross-checked against configuration measurements and manuscript tables.",
+    "362 physical attempts are reported by the composition record; the distributed archive contains 360 logical metadata records and omits the standalone composition manifest.",
+    "Native time budgets are not strict wall-clock deadlines. Time-limited solver outcomes do not establish equal solution quality."
+  ]
+}
