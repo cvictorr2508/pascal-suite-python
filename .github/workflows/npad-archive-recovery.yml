@@ -1,0 +1,26 @@
+name: Test NPAD archive recovery
+
+on:
+  pull_request:
+    branches: [develop]
+    paths:
+      - scripts/npad_archive_pascal.py
+      - tests/test_npad_archive_pascal.py
+      - .github/workflows/npad-archive-recovery.yml
+
+permissions:
+  contents: read
+
+jobs:
+  recovery:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Test recovery and deletion guards using synthetic repositories
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+          PYTHONPATH: scripts
+        run: python -B -m unittest discover -s tests -p test_npad_archive_pascal.py -v
