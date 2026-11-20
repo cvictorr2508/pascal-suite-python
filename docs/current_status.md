@@ -1,30 +1,37 @@
 # Current research status
 
-Last reviewed: 2026-10-26.
+Last reviewed: 2026-11-20.
 
-## Journal planning update on October 26
+## Closeout status on November 20
 
-The author supplied the WPADS 2026 decision: submission 36682 was not accepted.
-The supplied notification includes review material, retained privately. The
-current next step is planning a new submission to Sustainable Computing:
-Informatics and Systems; no experimental campaign or journal submission is
-approved by this status update. See [the journal development plan](journal-development-plan.md)
-for the proposed contribution, staged PRs, measurement validation and resource gates.
+The NPAD archive and cleanup were completed by the author and the supplied
+validation output was reviewed. See [the cleanup record](npad-archive-cleanup.md#completed-npad-execution-on-20-november-2026)
+and [the closeout checkpoint](checkpoints/2026-11-20-closeout.md) for the preserved
+private archive, checksums, removed roots and restart constraints. Old evidence,
+backup and worktree source directories have been retired; recover a copy from
+the verified archive when needed.
 
-The author permits autonomous development in the Codex area and on GitHub.
-Explicit approval is required before a merge or NPAD execution. Do not create
-anything under `/home/vrrcelestino`; use explicit authorized code/evidence,
-scratch/cache and log roots in the future execution packet. Folder names in a
-screenshot do not establish their absolute paths.
+WPADS 2026 submission 36682 was not accepted on October 26, as established by
+the author-supplied notification. Review material remains private. The author subsequently authorized integrating the SUSCOM planning PR #32 into
+develop and then main before the temporary project pause. See
+[the journal development plan](journal-development-plan.md) for the proposed
+research sequence. Integration records a plan; no implementation, journal
+campaign or submission has been executed by this task.
 
-Development should be recorded primarily in GitHub PRs against `develop`.
-Any local development artifacts belong under the user's Codex area, not in the
-OneDrive temporary-materials directory. Preserve the submitted artifacts,
-legacy generations and public `main`/Pages state.
+PR #33 was merged into develop, followed by promotion PR #34 into main. The
+author's terminal receipt at 2026-11-20T19:52:20Z confirmed the retained NPAD
+clone clean at `83c9694560827cd4e2989b927714bac4ff110f73`, its only worktree,
+and the preserved archive checksum. PR #33 records that completed maintenance
+stage. This synchronization predates the additional PR #32 integration.
 
-The remaining sections preserve the October 11 baseline and its historical
-authorizations. Their pending-review statements describe that earlier date;
-they are superseded by this update for current editorial status.
+Final PR #32 integration commits and the subsequent NPAD synchronization
+receipt are recorded in PR #32's closeout metadata and the local Codex
+checkpoint, without another source commit after synchronization. The project
+is deferred for future resumption at the author's request. The journal plan's
+proposed P1 implementation must not start before a new author request.
+
+The following sections preserve the October 11 historical baseline. Their
+pending-review status and old directory locations are superseded by this update.
 
 ## Executive status
 
