@@ -7,8 +7,11 @@ Solvers on HPC Systems`.
 
 Original venue: WPADS 2026. Submission identifier: 36682. On October 26 the
 author supplied the notification that the submission was not accepted. Review
-material is retained privately. The proposed SUSCOM journal direction remains
-in open PR #32; this maintenance closeout does not merge or implement that plan.
+material is retained privately. The author authorized integrating the SUSCOM
+planning PR #32 before the temporary project pause. See the
+[journal development plan](journal-development-plan.md) for the proposed route
+to Sustainable Computing: Informatics and Systems; implementation and new
+evidence remain future work.
 See [the November 20 checkpoint](checkpoints/2026-11-20-closeout.md) before resuming.
 
 The submitted PDF and submission-system export are immutable records. The
@@ -124,5 +127,6 @@ When reviews arrive:
 Preserve the original submission and keep any future journal manuscript
 separate. The November 20 task closes archive maintenance and authorized
 repository integration; the research stream is deferred for future resumption.
-It does not initiate a new campaign, journal submission or retrospective change
+Incorporating the journal plan does not initiate implementation, a new campaign,
+journal submission or retrospective change
 to the WPADS submission or published datasets.

@@ -12,15 +12,23 @@ backup and worktree source directories have been retired; recover a copy from
 the verified archive when needed.
 
 WPADS 2026 submission 36682 was not accepted on October 26, as established by
-the author-supplied notification. Review material remains private. The SUSCOM
-planning proposal is still in open PR #32 and is not included in this maintenance
-integration. No journal campaign or submission has been executed by this task.
+the author-supplied notification. Review material remains private. The author subsequently authorized integrating the SUSCOM planning PR #32 into
+develop and then main before the temporary project pause. See
+[the journal development plan](journal-development-plan.md) for the proposed
+research sequence. Integration records a plan; no implementation, journal
+campaign or submission has been executed by this task.
 
-The author authorized merging PR #33 into develop after verification, followed
-by promotion to main, fresh NPAD synchronization and a saved checkpoint. Final
-merge commits and synchronization observations are recorded in PR #33's closeout
-metadata. The project is deferred for future resumption at the author's request;
-do not start additional development or HPC work from this checkpoint.
+PR #33 was merged into develop, followed by promotion PR #34 into main. The
+author's terminal receipt at 2026-11-20T19:52:20Z confirmed the retained NPAD
+clone clean at `83c9694560827cd4e2989b927714bac4ff110f73`, its only worktree,
+and the preserved archive checksum. PR #33 records that completed maintenance
+stage. This synchronization predates the additional PR #32 integration.
+
+Final PR #32 integration commits and the subsequent NPAD synchronization
+receipt are recorded in PR #32's closeout metadata and the local Codex
+checkpoint, without another source commit after synchronization. The project
+is deferred for future resumption at the author's request. The journal plan's
+proposed P1 implementation must not start before a new author request.
 
 The following sections preserve the October 11 historical baseline. Their
 pending-review status and old directory locations are superseded by this update.
