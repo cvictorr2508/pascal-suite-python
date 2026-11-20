@@ -131,6 +131,19 @@ class RecoveryTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, 'locked'):
             self.prepare()
 
+    def test_effective_git_limits_override_auto_settings_without_editing_config(self):
+        settings = {'pack.threads': ('0', '1'),
+                    'index.threads': ('0', '1'),
+                    'core.preloadIndex': ('true', 'false'),
+                    'gc.auto': ('100', '0')}
+        for key, (local_value, _) in settings.items():
+            archive.git(self.repo, 'config', '--local', key, local_value)
+        before = (self.repo / '.git/config').read_bytes()
+        for key, (local_value, effective) in settings.items():
+            self.assertEqual(archive.git(self.repo, 'config', '--get', key), effective)
+            self.assertEqual(archive.git(self.repo, 'config', '--local', '--get', key), local_value)
+        self.assertEqual((self.repo / '.git/config').read_bytes(), before)
+
     def test_tracked_change_blocks_preparation(self):
         wt = self.base / archive.ROOTS['worktrees'] / next(iter(self.worktrees))
         (wt / 'tracked.txt').write_text('uncommitted change\n')
