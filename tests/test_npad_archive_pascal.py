@@ -5,11 +5,13 @@ import json
 import os
 from pathlib import Path
 import shutil
+import sys
 import tarfile
 import tempfile
 import unittest
 from unittest.mock import patch
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 import npad_archive_pascal as archive
 
 TEST_TMP = Path(__file__).resolve().parent / 'test-tmp'
