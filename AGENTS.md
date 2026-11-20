@@ -29,12 +29,21 @@ turn a proposed scientific protocol into an executed or validated result.
 - Keep private correspondence and reviewer text outside the public repository.
 - Do not create anything under `/home/vrrcelestino` on NPAD, including code,
   worktrees, evidence, temporary files, caches, logs and generated manifests.
+- The author's November 20 maintenance request is a scoped exception: the
+  completed archive/cleanup used `/home/vrrcelestino/projects-archive`, and
+  the author may synchronize the existing `/home/vrrcelestino/pascal-suite-python`
+  clone through explicitly supplied commands. This does not authorize new
+  research workspaces, campaigns or evidence roots under home.
 - Before requesting NPAD execution approval, specify exact authorized code,
   evidence, scratch/cache and log roots outside that prohibited path, commands,
   resource limits and outputs. Include implicit Python, solver, build and Slurm
   outputs in the path review. Do not run remote probes before approval.
 - Directory names in a screenshot and historical checkpoint paths do not
   establish approved absolute destinations. Do not invent their parent paths.
+
+The author requested a temporary project pause after integrating the journal
+plan and confirming NPAD synchronization. Save the checkpoint; resume new
+implementation or research execution only on a new author request.
 
 ## Branch and publication policy
 
