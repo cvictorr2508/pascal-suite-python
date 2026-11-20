@@ -34,6 +34,12 @@ ROOTS = {
     'sync-backups': 'pascal-suite-python-sync-backups',
     'git-recovery.git': 'pascal-suite-python/.git',
 }
+GIT_RESOURCE_OPTIONS = (
+    '-c', 'pack.threads=1',
+    '-c', 'index.threads=1',
+    '-c', 'core.preloadIndex=false',
+    '-c', 'gc.auto=0',
+)
 
 
 def require(condition, message):
@@ -50,12 +56,17 @@ def digest(path):
 
 
 def command(args, cwd=None):
+    args = [str(value) for value in args]
+    if args[0] == 'git':
+        # Service nodes may expose many CPUs but forbid creating worker threads.
+        # CLI settings also reach clone/pack children without editing Git config.
+        args = [args[0], *GIT_RESOURCE_OPTIONS, *args[1:]]
     env = os.environ.copy()
     for name in list(env):
         if name.startswith('GIT_'):
             del env[name]
     env['GIT_OPTIONAL_LOCKS'] = '0'
-    result = subprocess.run([str(x) for x in args], cwd=cwd, env=env,
+    result = subprocess.run(args, cwd=cwd, env=env,
                             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                             text=True, encoding='utf-8', errors='replace')
     require(result.returncode == 0,
