@@ -1,6 +1,29 @@
 # Current research status
 
-Last reviewed: 2026-10-11.
+Last reviewed: 2026-11-20.
+
+## Closeout status on November 20
+
+The NPAD archive and cleanup were completed by the author and the supplied
+validation output was reviewed. See [the cleanup record](npad-archive-cleanup.md#completed-npad-execution-on-20-november-2026)
+and [the closeout checkpoint](checkpoints/2026-11-20-closeout.md) for the preserved
+private archive, checksums, removed roots and restart constraints. Old evidence,
+backup and worktree source directories have been retired; recover a copy from
+the verified archive when needed.
+
+WPADS 2026 submission 36682 was not accepted on October 26, as established by
+the author-supplied notification. Review material remains private. The SUSCOM
+planning proposal is still in open PR #32 and is not included in this maintenance
+integration. No journal campaign or submission has been executed by this task.
+
+The author authorized merging PR #33 into develop after verification, followed
+by promotion to main, fresh NPAD synchronization and a saved checkpoint. Final
+merge commits and synchronization observations are recorded in PR #33's closeout
+metadata. The project is deferred for future resumption at the author's request;
+do not start additional development or HPC work from this checkpoint.
+
+The following sections preserve the October 11 historical baseline. Their
+pending-review status and old directory locations are superseded by this update.
 
 ## Executive status
 
