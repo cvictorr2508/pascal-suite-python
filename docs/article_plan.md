@@ -5,8 +5,11 @@
 Title: `Reproducible Regional Energy Telemetry for Mathematical Optimization
 Solvers on HPC Systems`.
 
-Venue: WPADS 2026. Submission identifier: 36682. Status as of 2026-10-10:
-submitted and awaiting peer review, as reported by the author.
+Original venue: WPADS 2026. Submission identifier: 36682. On October 26 the
+author supplied the notification that the submission was not accepted. Review
+material is retained privately. The proposed SUSCOM journal direction remains
+in open PR #32; this maintenance closeout does not merge or implement that plan.
+See [the November 20 checkpoint](checkpoints/2026-11-20-closeout.md) before resuming.
 
 The submitted PDF and submission-system export are immutable records. The
 Quarto manuscript is the maintained repository source, but changes made after
@@ -118,7 +121,8 @@ When reviews arrive:
   policy.
 - Submitted and revised artifacts have distinct filenames and checksums.
 
-Until a review decision arrives, preserve the submission and limit work to the
-authorized generation reconciliation and operational-memory maintenance. Any
-scientific revision, public promotion, archival change, or additional campaign
-requires a separate decision.
+Preserve the original submission and keep any future journal manuscript
+separate. The November 20 task closes archive maintenance and authorized
+repository integration; the research stream is deferred for future resumption.
+It does not initiate a new campaign, journal submission or retrospective change
+to the WPADS submission or published datasets.
