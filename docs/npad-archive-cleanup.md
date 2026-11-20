@@ -132,3 +132,25 @@ It tests recovery, corruption/source-change guards, worktree locks, tracked
 changes, unsafe archive paths, confined deletion and relocatable links. The
 Linux CI workflow runs the complete suite. Local Windows runs may skip Linux
 deletion and symlink-privilege cases; these skips are not NPAD validation.
+
+## Resource-limited service nodes and retry
+
+Every Git invocation in this maintenance tool uses command-scoped `pack.threads=1`,
+`index.threads=1`, `core.preloadIndex=false` and `gc.auto=0`. These settings bound
+packing/index work and avoid automatic maintenance without editing the user's
+or repository's persistent configuration. They apply to bundle creation and
+independent clone/recovery operations as well as repository inspection.
+
+A reported `unable to create thread` failure during `bundle create` occurs
+before the tar is created or any source cleanup. It does not identify whether
+memory, process limits or another service-node constraint caused thread creation
+to fail. Preserve that failed run and its logs. Download the corrected pinned
+script/test pair into a new maintenance tools directory and repeat `prepare`;
+it chooses a fresh exclusive run directory. Use `cleanup` only with the newly
+printed `VALIDATED_RUN`, never a failed or partial run. All existing recovery and
+source-content checks remain mandatory. Do not compensate by running unbounded
+packing, changing system limits, or moving work to a compute node without the
+author's execution plan.
+
+Official configuration reference:
+https://git-scm.com/docs/git-config#Documentation/git-config.txt-packthreads
