@@ -1,10 +1,36 @@
 # Development plan for a SUSCOM journal submission
 
-Prepared on 26 October 2026. Target: Sustainable Computing: Informatics and Systems, Elsevier, ISSN 2210-5379.
+Prepared on 26 October 2026; reconciled with the closeout on 20 November 2026. Target: Sustainable Computing: Informatics and Systems, Elsevier, ISSN 2210-5379.
 
 The next research contribution should establish when regional energy measurements around native optimization calls are reliable, what instrumentation costs, and how the measurements support a bounded energy and solution-quality comparison. The conference prototype supplies software and exploratory evidence. A journal submission requires a validated method and new evidence.
 
 This document is a proposed research and development sequence. On 26 October the author authorized autonomous work in the user's Codex area and on GitHub, including preparation of development branches and PRs. Request explicit approval before any merge or any NPAD execution. This documentation change starts no measurement campaign or submission. Experimental thresholds and budgets are proposals to resolve in the concrete pre-execution packet.
+
+## November 20 integration and pause
+
+The author authorized merging PR #32 into develop and then promoting it to main
+before a temporary project pause. This integrates the planning document only;
+it does not execute the proposed work packages. Read
+[the closeout checkpoint](checkpoints/2026-11-20-closeout.md), the current status
+and PR #32's final receipt before resuming. The October 26 baseline identities,
+resource estimates and dated source checks below remain historical/provisional;
+recheck them before implementing or preparing a submission.
+
+The evidence, worktrees, sync-backups and previous archive directories were
+preserved and retired by the completed November 20 cleanup. Their archive path,
+checksums and recovery boundaries are recorded in the checkpoint. Do not assume
+that old source roots still exist or repeat the completed legacy audit/cleanup.
+
+The no-new-home rule for future research remains in force. The author's scoped
+maintenance exception allowed archive outputs in projects-archive and explicit
+synchronization of the retained home clone; it does not establish research,
+scratch, cache or log destinations for a future campaign.
+
+The original recommendation to prepare P1 autonomously is deferred by the
+latest author request: resume implementation only after the author returns to
+the project. Journal requirements and literature currency must be verified at
+that time. No new experiment, journal manuscript, release or submission is
+started by integrating this plan.
 
 ## Publication route and preserved baseline
 
