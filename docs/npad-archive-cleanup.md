@@ -6,6 +6,39 @@ outputs go only beneath `/home/vrrcelestino/projects-archive`, and the four
 inspected source directories may be removed only after their recovery checks.
 The author executes these commands on NPAD; the maintainer does not access NPAD.
 
+## Completed NPAD execution on 20 November 2026
+
+The author supplied the successful preparation, recovery and cleanup output.
+The maintainer reviewed that transcript; no independent remote NPAD session is
+claimed. Ten synthetic tests passed on NPAD before the real-data operation.
+
+Preserved private archive:
+
+```text
+/home/vrrcelestino/projects-archive/pascal-suite-python-20261120T193312Z-d4e0ebe7/pascal-suite-python-archive.tar.gz
+```
+
+- Archive SHA-256: `228a10f362d4876c404276ce1e30c50f2eee85d63e8f2f1160bc02a496fa5886`.
+- Git bundle SHA-256: `1b6a44f6b77bf67eb2e47ffb40c78ef933780be8f56e851968eee1b589e7ae36`.
+- Archived source file bytes: 945633522; compressed archive bytes: 611904502.
+- Thirty symlinks verified; exact restoration and independent Git recovery passed.
+- `cleanup_completed=true`; the final archive checksum passed again after cleanup.
+- The two inspected worktrees were removed through Git; their empty parent,
+  sync-backups, evidence and previous archive source directories were removed.
+- The retained main clone was clean at `810317984e1b4050db05634ce7d30de64145fdba`,
+  with only its own worktree registered, immediately after cleanup and before
+  the subsequently authorized GitHub integration.
+
+The tar, checksum, bundle, source manifests and validation/progress records stay
+in that timestamped projects-archive directory. The first failed bundle attempt
+and the maintenance tools/log directories were retained. Do not rerun cleanup
+against the completed run or assume that the old source paths still exist.
+
+The [closeout checkpoint](checkpoints/2026-11-20-closeout.md) identifies restart
+constraints. Final integration commits and the later NPAD synchronization
+receipt are recorded in [PR #33](https://github.com/cvictorr2508/pascal-suite-python/pull/33)
+without changing source commits after the clone synchronization check.
+
 ## Findings and preservation policy
 
 - The main clone is clean on `main` at
